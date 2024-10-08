@@ -1,0 +1,51 @@
+# Ignorowanie plików dla frontendu (React)
+
+# dependencies
+client/node_modules
+client/.pnp
+client/.pnp.js
+
+# testing
+client/coverage
+
+# production build
+client/build
+
+# environment variables
+client/.env.local
+client/.env.development.local
+client/.env.test.local
+client/.env.production.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignorowanie plików dla backendu (Flask)
+
+# Python virtual environment
+server/.venv
+
+# Byte-compiled Python files
+server/__pycache__/
+__pycache__/
+server/*.pyc
+
+# Logs and runtime files
+server/logs/
+server/*.log
+server/tmp/
+server/*.pid
+
+# IDE/editor config files
+.vscode/
+.idea/
+.DS_Store
+
+# Environment variables (backend)
+server/.env
+server/.flaskenv
+
+# General .env (in case there are env files in the root folder)
+.env
