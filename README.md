@@ -1,6 +1,6 @@
-# Flask + React App
+# Aplikacja Flask + React do Analizy i Eksploracji Danych
 
-Ten projekt to aplikacja webowa typu full-stack, która korzysta z Flaska po stronie backendu oraz Reacta po stronie frontendowej. Poniżej znajdują się instrukcje, jak sklonować i uruchomić projekt lokalnie.
+Jest to aplikacja webowa typu full-stack, która służy do analizy i eksploracji danych. Backend aplikacji został stworzony przy użyciu frameworka **Flask** (Python), natomiast frontend opiera się na **React** (JavaScript). Aplikacja umożliwia użytkownikom przesyłanie plików danych (CSV, Excel), ich przetwarzanie, wyświetlanie podstawowych statystyk oraz wykonywanie operacji takich jak redukcja wymiarów, klasteryzacja i klasyfikacja.
 
 ## Wymagania
 
@@ -11,14 +11,24 @@ Upewnij się, że masz zainstalowane następujące narzędzia:
 
 ## Klonowanie Repozytorium
 
-Aby sklonować projekt, uruchom poniższe polecenie w terminalu:
+Aby sklonować projekt i otworzyć go w VS Code, wykonaj poniższe kroki:
+
+1. Sklonuj projekt, uruchamiając poniższe polecenie w terminalu:
 
 ```
-git clone https://github.com/twoja-nazwa-uzytkownika/flask-react-app.git
+git clone https://github.com/pardonmyfriend/flask-react-app.git
 ```
+
+2. Przejdź do katalogu głównego aplikacji:
 
 ```
 cd flask-react-app
+```
+
+3. Otwórz projekt w Visual Studio Code:
+
+```
+code .
 ```
 
 ## Konfiguracja Backend (Flask)
@@ -55,10 +65,10 @@ Backend powinien teraz działać pod adresem http://localhost:5000.
 
 ## Konfiguracja Frontend (React)
 
-1. Przejdź do katalogu client:
+1. Otwórz nowy terminal i przejdź do katalogu client:
 
 ```
-cd ../client
+cd client
 ```
 
 2. Zainstaluj zależności:
