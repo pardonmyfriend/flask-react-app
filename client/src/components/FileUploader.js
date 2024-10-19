@@ -1,7 +1,8 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Button, Box, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
+import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 const FileUploader = () => {
   const [file, setFile] = useState(null);
@@ -13,6 +14,14 @@ const FileUploader = () => {
       simulateFileUpload();
     }
   }, []);
+
+  const handleButtonClick = (event) => {
+    const files = event.target.files;
+    if (files.length) {
+      setFile(files[0]);
+      simulateFileUpload();
+    }
+  };
 
   const simulateFileUpload = () => {
     const interval = setInterval(() => {
@@ -35,10 +44,16 @@ const FileUploader = () => {
     onDrop,
     accept: '.csv, .xlsx',
     maxFiles: 1,
+    maxSize: 5242880,
+    noClick: true,
   });
 
   return (
     <>
+      <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+        File upload
+      </Typography>
+
       <Box
         {...getRootProps()}
         sx={{
@@ -47,27 +62,44 @@ const FileUploader = () => {
           padding: '20px',
           textAlign: 'center',
           backgroundColor: isDragActive ? '#f0f0f0' : '#fff',
-          cursor: 'pointer',
           marginBottom: '20px',
+          cursor: 'default',
         }}
       >
-        <input {...getInputProps()} />
+        <CloudUploadIcon sx={{ fontSize: 60, color: '#1976d2', marginBottom: '20px' }} />
+
+        {/* <input {...getInputProps()} /> */}
         {isDragActive ? (
           <Typography variant="body1">Drop the file here...</Typography>
         ) : (
-          <Typography variant="body1">
-            Drag & Drop a CSV or Excel file here, or click to select one
-          </Typography>
+          <>
+            <Typography variant="body1">
+              Drag & Drop a CSV or Excel file here, or click to select one.
+            </Typography>
+
+            <Typography variant="body2" sx={{ marginBottom: '16px' }}>
+              OR
+            </Typography>
+          </>
         )}
 
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => document.querySelector('input[type="file"]').click()}
-          sx={{ marginTop: '20px' }}
-        >
-          Browse Files
-        </Button>
+
+        <input
+          type="file"
+          accept=".csv, .xlsx"
+          onChange={handleButtonClick}
+          style={{ display: 'none' }}
+          id="fileInput"
+        />
+
+        <label htmlFor="fileInput">
+          <Button
+            variant='contained'
+            component="span"
+          >
+            Browse files
+          </Button>
+        </label>
       </Box>
 
       {file && (
