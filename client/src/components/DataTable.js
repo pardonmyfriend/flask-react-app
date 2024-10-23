@@ -10,7 +10,8 @@ function DataTable() {
             method: 'GET',
             headers: {
             'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include'
         })
         .then(resp => resp.json())
         .then(resp => setData(JSON.parse(resp)))
