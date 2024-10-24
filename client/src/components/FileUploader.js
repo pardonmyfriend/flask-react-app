@@ -3,15 +3,10 @@ import { useDropzone } from 'react-dropzone';
 import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import axios from 'axios';
-import DataTable from './DataTable';
 
-const FileUploader = () => {
+const FileUploader = ({ setData }) => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  
-  const [rows, setRows] = useState([]);
-  const [columns, setColumns] = useState([]);
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length) {
@@ -59,15 +54,19 @@ const FileUploader = () => {
     formData.append('file', file);
 
     try {
-      // Wysyłanie pliku na backend
-      const response = await axios.post('http://127.0.0.1:5000/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await fetch('http://127.0.0.1:5000/upload', {
+        method: 'POST',
+        body: formData,
       });
-      console.log('File uploaded successfully:', response.data);
 
-      const data = response.data;
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const responseData = await response.json();  // Oczekujemy na odpowiedź serwera w formacie JSON
+      console.log(responseData);  // Wyświetlenie odpowiedzi w konsoli
+    
+      const data = responseData;
 
       if (data && data.length > 0) {
         const cols = Object.keys(data[0]).map((key) => ({
@@ -76,12 +75,14 @@ const FileUploader = () => {
           width: 150,
         }));
 
-        setColumns(cols);  // Ustawienie kolumn
-        setRows(data);     // Ustawienie wierszy
-      }
+        const rows = data;
 
+        setData({ rows, columns: cols });
+        
+      }
+    
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('There was a problem with the fetch operation:', error);
     }
   };
 
@@ -159,23 +160,18 @@ const FileUploader = () => {
       <label htmlFor="fileUpload">
         <Button
           sx={{
-            m: 2,  // ogólny margines z każdej strony
-            mt: 4, // margines górny
-            mb: 3, // margines dolny
+            m: 2,  
+            mt: 4, 
+            mb: 3, 
           }}
           variant="contained"
           component="span"
           onClick={sendFileToBackend}
+          disabled={!file}
         >
           Upload
         </Button>
       </label>
-
-      {rows.length > 0 && columns.length > 0 ? (
-        <DataTable rows={rows} columns={columns} />
-      ) : (
-        <p>No data available</p>
-      )}
     </>
   );
 };

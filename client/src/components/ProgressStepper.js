@@ -10,6 +10,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 function ProgressStepper({ steps, stepContent }) {
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState({});
+  const [data, setData] = useState(null);
 
   const totalSteps = steps.length;
   const completedSteps = Object.keys(completed).length;
@@ -84,7 +85,7 @@ function ProgressStepper({ steps, stepContent }) {
                   minHeight: '150vh'
                 }}
               >
-                {stepContent[activeStep]}
+                {React.cloneElement(stepContent[activeStep], { data, setData })}
               </Box>
               <Fab 
                 color="primary" 
