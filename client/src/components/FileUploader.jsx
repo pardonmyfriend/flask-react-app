@@ -4,9 +4,11 @@ import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
-const FileUploader = ({ setData }) => {
+const FileUploader = ({ setData, setActiveStepFulfilled, activeStepFulfilled }) => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  //setActiveStepFulfilled(0);
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length) {
@@ -67,6 +69,8 @@ const FileUploader = ({ setData }) => {
       console.log(responseData);  // Wyświetlenie odpowiedzi w konsoli
     
       const data = responseData;
+      setActiveStepFulfilled(1);
+      console.log(activeStepFulfilled);
 
       if (data && data.length > 0) {
         const cols = Object.keys(data[0]).map((key) => ({
