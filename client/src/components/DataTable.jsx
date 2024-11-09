@@ -33,8 +33,9 @@ const DataTable = ({ data, onProceed }) => {
             setIsDataLoaded(true);
             onProceed(true);
         }
+        return () => {}; 
     }, [isDataLoaded, onProceed]);
-    
+
     if(isDataLoaded) {
         return (
             <Box sx={{ height: 500, width: '100%' }}>

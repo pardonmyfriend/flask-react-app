@@ -54,6 +54,21 @@ const FileUploader = ({ setData, onProceed }) => {
     const formData = new FormData();
     formData.append('file', file);
 
+  // const normalizeData = (rows) => {
+  //   return rows.map(row => {
+  //     // Jeśli istnieje jakiekolwiek pole 'id', 'Id' lub 'ID', przypisz je do nowego pola 'id'
+  //     if (row.hasOwnProperty('id')) {
+  //       return { ...row, id: row.id };
+  //     } else if (row.hasOwnProperty('Id')) {
+  //       return { ...row, id: row.Id };
+  //     } else if (row.hasOwnProperty('ID')) {
+  //       return { ...row, id: row.ID };
+  //     } else {
+  //       return rows; // Jeśli brak tych pól, po prostu zwróć oryginalny wiersz
+  //     }
+  //   });
+  // };
+
     try {
       const response = await fetch('http://127.0.0.1:5000/upload', {
         method: 'POST',
@@ -72,13 +87,24 @@ const FileUploader = ({ setData, onProceed }) => {
       console.log("onProceed invoked");
 
       if (data && data.length > 0) {
-        const cols = Object.keys(data[0]).map((key) => ({
+
+        const keys = Object.keys(data[0]);
+
+        // Przenieś kolumnę `id` na początek, jeśli istnieje
+        const orderedKeys = keys.includes('id') 
+        ? ['id', ...keys.filter((key) => key !== 'id')] 
+        : keys;
+
+        // Zmapuj kolumny do obiektu dla DataGrid
+        const cols = orderedKeys.map((key) => ({
           field: key,
           headerName: key.toUpperCase(),
           width: 150,
         }));
 
         const rows = data;
+
+        //const normalizedRows = normalizeData(rows);
 
         setData({ rows, columns: cols });
         
