@@ -4,7 +4,7 @@ import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
-const FileUploader = ({ setData, setActiveStepFulfilled, activeStepFulfilled }) => {
+const FileUploader = ({ setData }) => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -13,7 +13,7 @@ const FileUploader = ({ setData, setActiveStepFulfilled, activeStepFulfilled }) 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length) {
       setFile(acceptedFiles[0]);
-      simulateFileUpload();
+      sendFileToBackend(acceptedFiles[0]);
     }
   }, []);
 
@@ -21,20 +21,8 @@ const FileUploader = ({ setData, setActiveStepFulfilled, activeStepFulfilled }) 
     const files = event.target.files;
     if (files.length) {
       setFile(files[0]);
-      simulateFileUpload();
+      sendFileToBackend(files[0]);
     }
-  };
-
-  const simulateFileUpload = () => {
-    const interval = setInterval(() => {
-      setUploadProgress((oldProgress) => {
-        if (oldProgress === 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return Math.min(oldProgress + 10, 100);
-      });
-    }, 500);
   };
 
   const removeFile = () => {
@@ -51,43 +39,55 @@ const FileUploader = ({ setData, setActiveStepFulfilled, activeStepFulfilled }) 
     noClick: true,
   });
 
-  const sendFileToBackend = async () => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('http://127.0.0.1:5000/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-  
-      const responseData = await response.json();  // Oczekujemy na odpowiedź serwera w formacie JSON
-      console.log(responseData);  // Wyświetlenie odpowiedzi w konsoli
-    
-      const data = responseData;
-      setActiveStepFulfilled(1);
-      console.log(activeStepFulfilled);
-
-      if (data && data.length > 0) {
-        const cols = Object.keys(data[0]).map((key) => ({
-          field: key,
-          headerName: key.toUpperCase(),
-          width: 150,
-        }));
-
-        const rows = data;
-
-        setData({ rows, columns: cols });
-        
-      }
-    
-    } catch (error) {
-      console.error('There was a problem with the fetch operation:', error);
+  const sendFileToBackend = (fileToSend) => {
+    if (!fileToSend) {
+      console.error("No file to send");
+      return;
     }
+
+    const formData = new FormData();
+    formData.append('file', fileToSend);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'http://127.0.0.1:5000/upload', true);
+
+    // Ustawienie zdarzenia `onprogress`, aby śledzić postęp przesyłania
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percentComplete); // Aktualizuje pasek postępu
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const responseData = JSON.parse(xhr.responseText);
+        console.log(responseData);
+  
+        if (responseData && responseData.length > 0) {
+          const cols = Object.keys(responseData[0]).map((key) => ({
+            field: key,
+            headerName: key.toUpperCase(),
+            width: 150,
+          }));
+  
+          setData({ rows: responseData, columns: cols });
+        }
+        setUploadProgress(100); // Ustawia postęp na 100% po zakończeniu
+      } else {
+        console.error('Błąd podczas przesyłania pliku');
+        setUploadProgress(0);
+      }
+    };
+  
+    // Obsługa błędów
+    xhr.onerror = () => {
+      console.error('Wystąpił błąd podczas połączenia z serwerem');
+      setUploadProgress(0);
+    };
+  
+    // Wysłanie pliku
+    xhr.send(formData);
   };
 
   return (
@@ -160,22 +160,6 @@ const FileUploader = ({ setData, setActiveStepFulfilled, activeStepFulfilled }) 
           />
         </Box>
       )}
-
-      <label htmlFor="fileUpload">
-        <Button
-          sx={{
-            m: 2,  
-            mt: 4, 
-            mb: 3, 
-          }}
-          variant="contained"
-          component="span"
-          onClick={sendFileToBackend}
-          disabled={!file}
-        >
-          Upload
-        </Button>
-      </label>
     </>
   );
 };

@@ -25,6 +25,19 @@ class Algorithm:
                     'default': False
                 }
             }
+        elif self.algorithm_name == 'T-SNE':
+            return {
+                'n_components': {
+                    'type': 'int',
+                    'min': 2,
+                    'max': 3,
+                    'default': 2
+                },
+                'perplexity': {
+                    'type': 'float',
+                    'default': 30.0
+                }
+            }
         else:
             return {}
 

@@ -2,15 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box } from '@mui/material';  
 
-const DataTable = ({ data, setActiveStepFulfilled }) => {
+const DataTable = ({ data }) => {
 
     
-    if (!data.rows || !data.columns) {
+    if (!data || !data.rows || !data.columns) {
         return <p>No data available</p>;
     }
-
     else {
-        setActiveStepFulfilled(1);
+        // setActiveStepFulfilled(1);
         return (
             <Box sx={{ height: 500, width: '100%' }}>
                 <h2>Twój plik</h2>

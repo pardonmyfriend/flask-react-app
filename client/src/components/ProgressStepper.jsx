@@ -9,7 +9,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 function ProgressStepper({ steps, stepContent }) {
   const [activeStep, setActiveStep] = useState(0);
-  const [activeStepFulfilled, setActiveStepFulfilled] = useState(0);
+  // const [activeStepFulfilled, setActiveStepFulfilled] = useState(0);
   const [completed, setCompleted] = useState({});
   const [data, setData] = useState(null);
 
@@ -29,7 +29,7 @@ function ProgressStepper({ steps, stepContent }) {
     newCompleted[activeStep] = true;
     setCompleted(newCompleted)
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    setActiveStepFulfilled(0);
+    // setActiveStepFulfilled(0);
   };
 
   const handleReset = () => {
@@ -87,7 +87,9 @@ function ProgressStepper({ steps, stepContent }) {
                   minHeight: '150vh'
                 }}
               >
-                {React.cloneElement(stepContent[activeStep], { data, setData, activeStepFulfilled, setActiveStepFulfilled })}
+                {/* {React.cloneElement(stepContent[activeStep], { data, setData, activeStepFulfilled, setActiveStepFulfilled })} */}
+                {React.cloneElement(stepContent[activeStep], { data, setData })}
+
               </Box>
               <Fab 
                 color="primary" 
@@ -105,8 +107,8 @@ function ProgressStepper({ steps, stepContent }) {
               <Fab 
                 color="primary" 
                 onClick={handleNext}
-                //disabled={activeStep === totalSteps - 1}
-                disabled={activeStepFulfilled === 0}
+                disabled={activeStep === totalSteps - 1}
+                // disabled={activeStepFulfilled === 0}
                 sx={{
                   position: 'fixed',
                   right: '20px',
