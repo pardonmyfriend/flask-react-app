@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Box, AppBar, Tabs, Tab, Typography} from '@mui/material';
+import React, { useState } from 'react';
+import { Box, AppBar, Tabs, Tab } from '@mui/material';
 import TabPanel from '../../components/TabPanel';
 import DimensionReduction from './DimensionReduction';
 import ClusterAnalysis from './ClusterAnalysis';
@@ -13,6 +13,8 @@ function Algorithms() {
   const [paramInfo, setParamInfo] = useState({});
 
   const handleTileClick = (algorithm) => {
+    setAlgorithmName('')
+    setParamInfo({});
     fetch('http://localhost:5000/algorithms/set_algorithm', {
       method: 'POST',
       headers: {
@@ -22,7 +24,6 @@ function Algorithms() {
     })
     .then(response => response.json())
     .then(data => {
-      console.log(data);
       if (data.algorithm) {
         setDialogOpen(true);
         setAlgorithmName(data.algorithm.algorithm_name)
@@ -35,8 +36,8 @@ function Algorithms() {
   };
 
   const handleSaveParams = (params) => {
+    console.log(algorithmName)
     console.log('Zapisano parametry:', params);
-    // Możesz tutaj wysłać parametry do backendu lub zapisać je w sesji.
   };
 
   const handleDialogClose = () => {

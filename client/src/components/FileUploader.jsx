@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,8 +12,15 @@ const FileUploader = ({ setData }) => {
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length) {
-      setFile(acceptedFiles[0]);
-      sendFileToBackend(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+
+    if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
+      setFile(file);
+      sendFileToBackend(file);
+    } else {
+      console.warn("Incorrect file extension.");
+    }
     }
   }, []);
 
@@ -33,7 +40,6 @@ const FileUploader = ({ setData }) => {
 
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
     onDrop,
-    accept: '.csv, .xlsx',
     maxFiles: 1,
     maxSize: 5242880,
     noClick: true,

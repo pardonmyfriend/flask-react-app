@@ -1,6 +1,9 @@
 import { React, useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, FormControlLabel, Checkbox, Box, Typography, Tooltip, IconButton, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import NumericInput from 'react-numeric-input';
+import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, FormControlLabel, Checkbox, Box, Typography, Tooltip, IconButton, Select, MenuItem, FormControl } from '@mui/material';
+// import NumericInput from 'react-numeric-input';
+// import InputNumber from 'rc-input-number';
+// import { NumericFormat } from 'react-number-format';
+import NumericInput from './NumericInput';
 import InfoIcon from '@mui/icons-material/Info';
 
 function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramInfo }) {
@@ -15,6 +18,12 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramInfo })
       setParams(defaultParams)
     }
   }, [open, paramInfo])
+
+  useEffect(() => {
+    if (!open) {
+      setParams({})
+    }
+  }, [open])
 
   const handleParamChange = (paramName, value) => {
     setParams(prevParams => ({
@@ -46,26 +55,12 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramInfo })
         </Typography>
         {type === 'int' || type === 'float' ? (
           <NumericInput
-          value={params[paramName] !== undefined ? params[paramName] : ''}
-            defaultValue={paramInfo.default}
             min={paramInfo.min}
             max={paramInfo.max}
+            defaultValue={paramInfo.default}
             step={type === 'float' ? paramInfo.step : 1}
             precision={type === 'float' ? paramInfo.precision : 0}
             onChange={(value) => handleParamChange(paramName, value)}
-            style={{
-              input: {
-                width: '100px',
-                padding: '8px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                fontSize: '16px'
-              },
-              'input:focus': {
-                borderColor: '#3f51b5',
-                outline: 'none'
-              }
-            }}
           />
         ) : type === 'boolean' ? (
           <FormControlLabel

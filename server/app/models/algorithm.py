@@ -1,15 +1,60 @@
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+
 class Algorithm:
+    sklearn_classes = {
+        'PCA': PCA,
+        't-SNE': TSNE,
+        'K-Means': KMeans,
+        'Agglomerative Clustering': AgglomerativeClustering,
+        'DBSCAN': DBSCAN,
+        'KNN': KNeighborsClassifier,
+        'Decision Tree': DecisionTreeClassifier,
+        'Logistic Regression': LogisticRegression
+    }
+
     def __init__(self, algorithm_name, params=None):
         self.algorithm_name = algorithm_name
         self.param_info = self.get_algorithm_param_info()
 
         if not self.param_info:
-            raise ValueError(f"Nieznany algorytm: {algorithm_name}")
+            raise ValueError(f"Unknown algorithm: {algorithm_name}")
         
         if params is None:
             self.params = self.get_default_params()
         else:
             self.params = params
+
+        self.sklearn_class = self.sklearn_classes.get(algorithm_name)
+
+        if not self.sklearn_class:
+            raise ValueError(f"Unknown algorithm for sklearn: {algorithm_name}")
+
+    def get_default_params(self):
+        default_params = {}
+        for param, info in self.param_info.items():
+            default_params[param] = info['default']
+        return default_params
+    
+    def to_dict(self):
+        return {
+            'algorithm_name': self.algorithm_name,
+            'params': self.params,
+            'param_info': self.param_info
+        }
+    
+    def run_algorithm(self, data):
+        model = self.sklearn_class(**self.params)
+        if hasattr(model, 'fit'):
+            return model.fit(data)  # .fit() dla algorytmów, które wymagają dopasowania
+        elif hasattr(model, 'transform'):
+            return model.transform(data)  # .transform() jeśli jest tylko przekształcenie
+        else:
+            raise ValueError(f"The selected algorithm '{self.algorithm_name}' is not supported.")
     
     def get_algorithm_param_info(self):
         if self.algorithm_name == 'PCA':
@@ -38,7 +83,7 @@ class Algorithm:
                     'max': 1.0,
                     'default': 0.0,
                     'step': 0.1,
-                    'precison': 1,
+                    'precision': 1,
                     'description': 'Error tolerance for "arpack" solver',
                 }
             }
@@ -57,7 +102,7 @@ class Algorithm:
                     'max': 50.0,
                     'default': 30.0,
                     'step': 0.1,
-                    'precison': 1,
+                    'precision': 1,
                     'description': 'Balancing factor for neighborhood size',
                 },
                 'learning_rate': {
@@ -66,7 +111,7 @@ class Algorithm:
                     'max': 1000.0,
                     'default': 200.0,
                     'step': 0.1,
-                    'precison': 1,
+                    'precision': 1,
                     'description': 'Rate at which embedding is adjusted',
                 },
                 'n_iter': {
@@ -124,7 +169,7 @@ class Algorithm:
                     'max': 1.0,
                     'default': 0.0001,
                     'step': 0.0001,
-                    'precison': 4,
+                    'precision': 4,
                     'description': 'Tolerance to declare convergence',
                 },
                 'algorithm': {
@@ -161,7 +206,7 @@ class Algorithm:
                     'max': 100.0,
                     'default': None,
                     'step': 0.1,
-                    'precison': 1,
+                    'precision': 1,
                     'description': 'Max distance between clusters to merge',
                     'nullable': True
                 }
@@ -174,7 +219,7 @@ class Algorithm:
                     'max': 10.0,
                     'default': 0.5,
                     'step': 0.1,
-                    'precison': 1,
+                    'precision': 1,
                     'description': 'Max distance for neighboring points',
                 },
                 'min_samples': {
@@ -297,16 +342,3 @@ class Algorithm:
             }
         else:
             return {}
-
-    def get_default_params(self):
-        default_params = {}
-        for param, info in self.param_info.items():
-            default_params[param] = info['default']
-        return default_params
-    
-    def to_dict(self):
-        return {
-            'algorithm_name': self.algorithm_name,
-            'params': self.params,
-            'param_info': self.param_info
-        }

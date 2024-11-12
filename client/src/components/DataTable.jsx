@@ -20,9 +20,9 @@ const DataTable = ({ data }) => {
                     pageSize={10}
                     rowsPerPageOptions={[10, 20, 50]}
                     //density='compact'
-                    showCellVerticalBorder = 'true'
-                    showColumnVerticalBorder = 'true'
-                    checkboxSelection = 'true'
+                    showCellVerticalBorder
+                    showColumnVerticalBorder
+                    checkboxSelection
                     sx={{
                         '& .MuiDataGrid-columnHeaderTitle': {
                           fontWeight: 'bold', 
