@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';  
 
+
 const DataTable = ({ data, onProceed }) => {
 
     //const [rows, setRows] = useState(data);
@@ -26,14 +27,13 @@ const DataTable = ({ data, onProceed }) => {
     // }
 
     useEffect(() => {
-        if (!data.rows || !data.columns) {
+        if (!data || !data.rows || !data.columns) {
             return <p>No data available</p>;
         }
         else {
             setIsDataLoaded(true);
             onProceed(true);
-        }
-        return () => {}; 
+        } 
     }, [isDataLoaded, onProceed]);
 
     if(isDataLoaded) {
@@ -47,8 +47,8 @@ const DataTable = ({ data, onProceed }) => {
                     pageSize={10}
                     rowsPerPageOptions={[10, 20, 50]}
                     //density='compact'
-                    showCellVerticalBorder = {true}
-                    showColumnVerticalBorder = {true}
+                    showCellVerticalBorder
+                    showColumnVerticalBorder
                     checkboxSelection
                     //onSelectionModelChange={handleSelectionChange}
                     //selectionModel={selectionModel}

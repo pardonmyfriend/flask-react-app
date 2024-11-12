@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 
 const Tile = ({ title, IconComponent, color, onClick }) => {
   return (

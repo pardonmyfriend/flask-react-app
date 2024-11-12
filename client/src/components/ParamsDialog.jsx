@@ -1,6 +1,10 @@
 import { React, useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, FormControlLabel, Checkbox } from '@mui/material';
-import NumericInput from 'react-numeric-input';
+import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, FormControlLabel, Checkbox, Box, Typography, Tooltip, IconButton, Select, MenuItem, FormControl } from '@mui/material';
+// import NumericInput from 'react-numeric-input';
+// import InputNumber from 'rc-input-number';
+// import { NumericFormat } from 'react-number-format';
+import NumericInput from './NumericInput';
+import InfoIcon from '@mui/icons-material/Info';
 
 function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramInfo }) {
   const [params, setParams] = useState({});
@@ -15,6 +19,12 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramInfo })
     }
   }, [open, paramInfo])
 
+  useEffect(() => {
+    if (!open) {
+      setParams({})
+    }
+  }, [open])
+
   const handleParamChange = (paramName, value) => {
     setParams(prevParams => ({
       ...prevParams,
@@ -28,49 +38,67 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramInfo })
   };
 
   const renderParamInput = (paramName, paramInfo) => {
-    const paramType = paramInfo.type;
+    const type = paramInfo.type;
+    const description = paramInfo.description;
 
-    if (paramType === 'int') {
-      return (
-        <NumericInput
-          key={paramName}
-          label={paramName}
-          value={params[paramName] || ''}
-          min={paramInfo.min}
-          max={paramInfo.max}
-          onChange={(value) => handleParamChange(paramName, value)}
-        />
-      );
-    } else if (paramType === 'boolean') {
-      return (
-        <FormControlLabel
-          key={paramName}
-          control={
-            <Checkbox
-              checked={!!params[paramName]}
-              onChange={(e) => handleParamChange(paramName, e.target.checked)}
-            />
-          }
-          label={paramName}
-        />
-      );
-    }
-    // Możesz dodać inne typy, np. string, float, itp.
     return (
-      <TextField
-        key={paramName}
-        label={paramName}
-        value={params[paramName] || ''}
-        onChange={(e) => handleParamChange(paramName, e.target.value)}
-        margin="dense"
-        fullWidth
-      />
+      <Box key={paramName} display="flex" alignItems="center" mb={2}>
+        <Typography variant="body1" component="label" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+          {paramName}
+          {description && (
+            <Tooltip title={description} arrow>
+              <IconButton size="small" sx={{ marginLeft: '4px' }}>
+                <InfoIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Typography>
+        {type === 'int' || type === 'float' ? (
+          <NumericInput
+            min={paramInfo.min}
+            max={paramInfo.max}
+            defaultValue={paramInfo.default}
+            step={type === 'float' ? paramInfo.step : 1}
+            precision={type === 'float' ? paramInfo.precision : 0}
+            onChange={(value) => handleParamChange(paramName, value)}
+          />
+        ) : type === 'boolean' ? (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={!!params[paramName]}
+                onChange={(e) => handleParamChange(paramName, e.target.checked)}
+              />
+            }
+            label=""
+          />
+        ) : type === 'select' ? (
+          <FormControl fullWidth>
+            <Select
+              value={params[paramName] || ''}
+              onChange={(e) => handleParamChange(paramName, e.target.value)}
+            >
+              {paramInfo.options.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <TextField
+            value={params[paramName] || ''}
+            onChange={(e) => handleParamChange(paramName, e.target.value)}
+            fullWidth
+          />
+        )}
+      </Box>
     );
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Ustaw parametry dla {algorithmName}</DialogTitle>
+      <DialogTitle>Set parameters for {algorithmName}</DialogTitle>
       <DialogContent>
         {Object.keys(paramInfo).map((paramName) => renderParamInput(paramName, paramInfo[paramName]))}
       </DialogContent>

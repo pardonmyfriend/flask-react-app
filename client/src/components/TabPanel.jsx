@@ -8,7 +8,7 @@ const TabPanel = (props) => {
     <div hidden={value !== index}>
       {value === index && (
         <Box mt={2} mx={2}>
-          <Typography>{children}</Typography>
+          <Typography component="div">{children}</Typography>
         </Box>
       )}
     </div>
