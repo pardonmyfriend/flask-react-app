@@ -1,29 +1,33 @@
 import React, { useEffect, useState } from 'react'
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid, GridToolbar, useGridApiRef } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';  
 
 const DataTable = ({ data, onProceed }) => {
 
-    //const [rows, setRows] = useState(data);
-    const [deletedRows, setDeletedRows] = useState();
-    const [selectionModel, setSelectionModel] = useState([]);
+    const [rows, setRows] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [selectedRows, setSelectedRows] = useState([]);
 
-    // const handleSelectionChange = (newSelection) => {
-    //     console.log('handleSelectionChange wywołane');
-    //     setSelectionModel(newSelection);
+    useEffect(() => {
+        if (data && data.rows) {
+            setRows(data.rows);
+        }
+    }, [data]);
 
-    //     const selectedRows = data.rows.filter((row) => newSelection.includes(row.id));
-    //     console.log(selectedRows);
-    //     console.log("sth done");
-    //   };
-    
-    // const handleDeleteRows = async () => {
-    //     const selectedRows = data.rows.filter((row) => selectionModel.includes(row.id));
-    //     console.log(selectedRows);
-    //     console.log(deletedRows);
-    //     console.log("sth done");
-    // }
+    const apiRef = useGridApiRef();
+
+    const handleDeleteSelected = () => {
+        setRows((prevRows) => {
+             const updatedRows = prevRows.filter((row) => !selectedRows.includes(row.id));
+             console.log(updatedRows);
+             return updatedRows;
+    });
+    };
+
+    const handleStateChange = () => {
+        const selectedIDs = apiRef.current.getSelectedRows();
+        setSelectedRows(Array.from(selectedIDs.keys()));
+    };
 
     useEffect(() => {
         if (!data.rows || !data.columns) {
@@ -34,24 +38,24 @@ const DataTable = ({ data, onProceed }) => {
             onProceed(true);
         }
         return () => {}; 
-    }, [isDataLoaded, onProceed]);
+    }, [isDataLoaded, onProceed, data]);
 
     if(isDataLoaded) {
         return (
             <Box sx={{ height: 500, width: '100%' }}>
                 <h2>Twój plik</h2>
                 <DataGrid
-                    rows={data.rows}
+                    key={rows.length}
+                    rows={rows}
                     columns={data.columns}
-                    loading={!data.rows.length}
+                    loading={!rows.length}
                     pageSize={10}
                     rowsPerPageOptions={[10, 20, 50]}
-                    //density='compact'
                     showCellVerticalBorder = {true}
                     showColumnVerticalBorder = {true}
                     checkboxSelection
-                    //onSelectionModelChange={handleSelectionChange}
-                    //selectionModel={selectionModel}
+                    apiRef={apiRef}
+                    onStateChange={handleStateChange}
                     sx={{
                         '& .MuiDataGrid-columnHeaderTitle': {
                           fontWeight: 'bold', 
@@ -97,9 +101,15 @@ const DataTable = ({ data, onProceed }) => {
                         },
                       }}
                 />
-                {/* <Button variant="contained" color="secondary" onClick={handleDeleteRows} style={{ margin: '10px' }}>
-                Usuń zaznaczone wiersze
-                </Button> */}
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleDeleteSelected}
+                    disabled={selectedRows.length === 0}
+                    style={{ marginBottom: 10 }}
+                >
+                    Delete selected
+                </Button>
             </Box>
         )
     }
