@@ -1,15 +1,43 @@
 import React, { useEffect, useState } from 'react'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Box } from '@mui/material';  
+import { Box, Button } from '@mui/material';  
 
-const DataTable = ({ data }) => {
 
+const DataTable = ({ data, onProceed }) => {
+
+    //const [rows, setRows] = useState(data);
+    const [deletedRows, setDeletedRows] = useState();
+    const [selectionModel, setSelectionModel] = useState([]);
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+    // const handleSelectionChange = (newSelection) => {
+    //     console.log('handleSelectionChange wywołane');
+    //     setSelectionModel(newSelection);
+
+    //     const selectedRows = data.rows.filter((row) => newSelection.includes(row.id));
+    //     console.log(selectedRows);
+    //     console.log("sth done");
+    //   };
     
-    if (!data || !data.rows || !data.columns) {
-        return <p>No data available</p>;
-    }
-    else {
-        // setActiveStepFulfilled(1);
+    // const handleDeleteRows = async () => {
+    //     const selectedRows = data.rows.filter((row) => selectionModel.includes(row.id));
+    //     console.log(selectedRows);
+    //     console.log(deletedRows);
+    //     console.log("sth done");
+    // }
+
+    useEffect(() => {
+        if (!data || !data.rows || !data.columns) {
+            return <p>No data available</p>;
+        }
+        else {
+            setIsDataLoaded(true);
+            onProceed(true);
+        }
+        return () => {}; 
+    }, [isDataLoaded, onProceed]);
+
+    if(isDataLoaded) {
         return (
             <Box sx={{ height: 500, width: '100%' }}>
                 <h2>Twój plik</h2>
@@ -23,6 +51,8 @@ const DataTable = ({ data }) => {
                     showCellVerticalBorder
                     showColumnVerticalBorder
                     checkboxSelection
+                    //onSelectionModelChange={handleSelectionChange}
+                    //selectionModel={selectionModel}
                     sx={{
                         '& .MuiDataGrid-columnHeaderTitle': {
                           fontWeight: 'bold', 
@@ -68,10 +98,15 @@ const DataTable = ({ data }) => {
                         },
                       }}
                 />
+                {/* <Button variant="contained" color="secondary" onClick={handleDeleteRows} style={{ margin: '10px' }}>
+                Usuń zaznaczone wiersze
+                </Button> */}
             </Box>
         )
     }
+    }
+
     
-}
+
 
 export default DataTable;

@@ -4,11 +4,11 @@ import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
-const FileUploader = ({ setData }) => {
+
+const FileUploader = ({ setData, onProceed }) => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  //setActiveStepFulfilled(0);
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length) {
@@ -54,6 +54,21 @@ const FileUploader = ({ setData }) => {
     const formData = new FormData();
     formData.append('file', fileToSend);
 
+    // const normalizeData = (rows) => {
+    //   return rows.map(row => {
+    //     // Jeśli istnieje jakiekolwiek pole 'id', 'Id' lub 'ID', przypisz je do nowego pola 'id'
+    //     if (row.hasOwnProperty('id')) {
+    //       return { ...row, id: row.id };
+    //     } else if (row.hasOwnProperty('Id')) {
+    //       return { ...row, id: row.Id };
+    //     } else if (row.hasOwnProperty('ID')) {
+    //       return { ...row, id: row.ID };
+    //     } else {
+    //       return rows; // Jeśli brak tych pól, po prostu zwróć oryginalny wiersz
+    //     }
+    //   });
+    // };
+    
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:5000/upload', true);
 
@@ -69,9 +84,19 @@ const FileUploader = ({ setData }) => {
       if (xhr.status === 200) {
         const responseData = JSON.parse(xhr.responseText);
         console.log(responseData);
+        
+        onProceed(true);
+        console.log("onProceed invoked");
   
         if (responseData && responseData.length > 0) {
-          const cols = Object.keys(responseData[0]).map((key) => ({
+          const keys = Object.keys(responseData[0]);
+
+          // Przenieś kolumnę `id` na początek, jeśli istnieje
+          const orderedKeys = keys.includes('id') 
+          ? ['id', ...keys.filter((key) => key !== 'id')] 
+          : keys;
+          
+          const cols = Object.orderedKeys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
             width: 150,
