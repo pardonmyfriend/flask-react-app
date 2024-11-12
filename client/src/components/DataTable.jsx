@@ -33,8 +33,7 @@ const DataTable = ({ data, onProceed }) => {
         else {
             setIsDataLoaded(true);
             onProceed(true);
-        }
-        return () => {}; 
+        } 
     }, [isDataLoaded, onProceed]);
 
     if(isDataLoaded) {

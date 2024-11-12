@@ -13,14 +13,14 @@ const FileUploader = ({ setData, onProceed }) => {
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length) {
       const file = acceptedFiles[0];
-    const fileExtension = file.name.split('.').pop().toLowerCase();
+      const fileExtension = file.name.split('.').pop().toLowerCase();
 
-    if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
-      setFile(file);
-      sendFileToBackend(file);
-    } else {
-      console.warn("Incorrect file extension.");
-    }
+      if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
+        setFile(file);
+        sendFileToBackend(file);
+      } else {
+        console.warn("Incorrect file extension.");
+      }
     }
   }, []);
 
@@ -96,7 +96,7 @@ const FileUploader = ({ setData, onProceed }) => {
           ? ['id', ...keys.filter((key) => key !== 'id')] 
           : keys;
           
-          const cols = Object.orderedKeys.map((key) => ({
+          const cols = orderedKeys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
             width: 150,
