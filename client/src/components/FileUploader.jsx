@@ -53,21 +53,6 @@ const FileUploader = ({ setData, onProceed }) => {
 
     const formData = new FormData();
     formData.append('file', fileToSend);
-
-    // const normalizeData = (rows) => {
-    //   return rows.map(row => {
-    //     // Jeśli istnieje jakiekolwiek pole 'id', 'Id' lub 'ID', przypisz je do nowego pola 'id'
-    //     if (row.hasOwnProperty('id')) {
-    //       return { ...row, id: row.id };
-    //     } else if (row.hasOwnProperty('Id')) {
-    //       return { ...row, id: row.Id };
-    //     } else if (row.hasOwnProperty('ID')) {
-    //       return { ...row, id: row.ID };
-    //     } else {
-    //       return rows; // Jeśli brak tych pól, po prostu zwróć oryginalny wiersz
-    //     }
-    //   });
-    // };
     
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:5000/upload', true);

@@ -1,29 +1,48 @@
 import React, { useEffect, useState } from 'react'
-import { DataGrid, GridToolbar, useGridApiRef } from '@mui/x-data-grid';
-import { Box, Button } from '@mui/material';  
+import { DataGrid, GridDeleteIcon, GridToolbar, GridToolbarContainer, useGridApiRef } from '@mui/x-data-grid';
+import { Box, Button, IconButton } from '@mui/material';  
 
 
 const DataTable = ({ data, onProceed }) => {
 
     const [rows, setRows] = useState([]);
+    const [cols, setCols] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
     const [selectedRows, setSelectedRows] = useState([]);
 
     useEffect(() => {
+        console.log("Loaded data:", data);
         if (data && data.rows) {
             setRows(data.rows);
         }
+        if (data && data.columns) {
+            console.log(data.columns);
+            setCols(data.columns);
+        }
+        console.log("Columns set to:", data.columns);
+        console.log("Rows set to:", data.rows);
     }, [data]);
 
     const apiRef = useGridApiRef();
+
+    const updateIds = (data) => {
+        return data.map((row, index) => ({ ...row, id: index + 1 }));
+    };
 
     const handleDeleteSelected = () => {
         setRows((prevRows) => {
              const updatedRows = prevRows.filter((row) => !selectedRows.includes(row.id));
              console.log(updatedRows);
-             return updatedRows;
+             return updateIds(updatedRows);
     });
     };
+
+    const handleDeleteColumn = (field) => {
+        const newColumns = cols.filter(column => column.field !== field);
+        console.log(newColumns);
+        setCols(newColumns); 
+        return newColumns;
+      };
 
     const handleStateChange = () => {
         const selectedIDs = apiRef.current.getSelectedRows();
@@ -41,17 +60,59 @@ const DataTable = ({ data, onProceed }) => {
         return () => {}; 
     }, [isDataLoaded, onProceed, data]);
 
+    const columnsWithDeleteButton = cols.map((column) => ({
+        ...column,
+        renderHeader: () => (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                {column.headerName}
+                {column.field !== 'id' && (
+                    <IconButton
+                    aria-label={`Delete`}
+                    size="small"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteColumn(column.field)
+                    }}
+                >
+                    <GridDeleteIcon fontSize="small" />
+                </IconButton>
+                )}
+            </div>
+        )
+    }));
+
+    const CustomToolbar = () => {
+        return (
+            <GridToolbarContainer>
+                <GridToolbar/>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSelected();
+                    }}
+                    disabled={selectedRows.length === 0}
+                    style={{ marginLeft: 8 }}
+                >
+                    Delete rows
+                </Button>
+            </GridToolbarContainer>
+        )
+    }
+
     if(isDataLoaded) {
         return (
             <Box sx={{ height: 500, width: '100%' }}>
-                <h2>Twój plik</h2>
+                <h2>Your file</h2>
                 <DataGrid
                     key={rows.length}
                     rows={rows}
-                    columns={data.columns}
+                    columns={columnsWithDeleteButton}
                     loading={!rows.length}
                     pageSize={10}
                     rowsPerPageOptions={[10, 20, 50]}
+                    //density='compact'
                     showCellVerticalBorder = {true}
                     showColumnVerticalBorder = {true}
                     checkboxSelection
@@ -117,6 +178,5 @@ const DataTable = ({ data, onProceed }) => {
     }
 
     
-
 
 export default DataTable;
