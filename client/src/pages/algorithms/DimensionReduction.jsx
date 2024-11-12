@@ -12,15 +12,9 @@ const DimensionReduction = ({ handleTileClick }) => {
       />
 
       <Tile 
-        title="LDA"
-        color="#0A6E70" 
-        onClick={() => handleTileClick('lda')} 
-      />
-
-      <Tile 
         title="t-SNE"
         color="#0D969C" 
-        onClick={() => handleTileClick('tsne')} 
+        onClick={() => handleTileClick('t-SNE')} 
       />
     </Box>
   );

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Box, AppBar, Tabs, Tab, Typography} from '@mui/material';
+import React, { useState } from 'react';
+import { Box, AppBar, Tabs, Tab } from '@mui/material';
 import TabPanel from '../../components/TabPanel';
 import DimensionReduction from './DimensionReduction';
-import Clustering from './Clustering';
+import ClusterAnalysis from './ClusterAnalysis';
 import Classification from './Classification';
 import ParamsDialog from '../../components/ParamsDialog';
 
@@ -13,6 +13,8 @@ function Algorithms() {
   const [paramInfo, setParamInfo] = useState({});
 
   const handleTileClick = (algorithm) => {
+    setAlgorithmName('')
+    setParamInfo({});
     fetch('http://localhost:5000/algorithms/set_algorithm', {
       method: 'POST',
       headers: {
@@ -22,7 +24,6 @@ function Algorithms() {
     })
     .then(response => response.json())
     .then(data => {
-      console.log(data);
       if (data.algorithm) {
         setDialogOpen(true);
         setAlgorithmName(data.algorithm.algorithm_name)
@@ -35,8 +36,8 @@ function Algorithms() {
   };
 
   const handleSaveParams = (params) => {
+    console.log(algorithmName)
     console.log('Zapisano parametry:', params);
-    // Możesz tutaj wysłać parametry do backendu lub zapisać je w sesji.
   };
 
   const handleDialogClose = () => {
@@ -53,9 +54,9 @@ function Algorithms() {
           textColor="inherit"
           variant="fullWidth"
         >
-          <Tab label='Redukcja wymiarów' />
-          <Tab label='Klasteryzacja' />
-          <Tab label='Klasyfikacja' />
+          <Tab label='Dimension reduction' />
+          <Tab label='Cluster analysis' />
+          <Tab label='Classification' />
         </Tabs>
       </AppBar>
       
@@ -64,7 +65,7 @@ function Algorithms() {
       </TabPanel>
 
       <TabPanel value={activeTab} index={1}>
-        <Clustering handleTileClick={handleTileClick} />
+        <ClusterAnalysis handleTileClick={handleTileClick} />
       </TabPanel>
 
       <TabPanel value={activeTab} index={2}>

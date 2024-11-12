@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { DataGrid, GridToolbar, useGridApiRef } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';  
 
+
 const DataTable = ({ data, onProceed }) => {
 
     const [rows, setRows] = useState([]);
@@ -30,7 +31,7 @@ const DataTable = ({ data, onProceed }) => {
     };
 
     useEffect(() => {
-        if (!data.rows || !data.columns) {
+        if (!data || !data.rows || !data.columns) {
             return <p>No data available</p>;
         }
         else {
