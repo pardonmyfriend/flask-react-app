@@ -15,10 +15,11 @@ def upload_file():
     
     if file.filename.endswith('.csv') or file.filename.endswith('.xls') or file.filename.endswith('.xlsx'):
         df = Data.read_data(file)
+        
+        df = Data.map_data_id(df)
+        data = df.to_dict(orient='records')
+        return jsonify(data), 200
     else:
         return 'Unsupported file type', 400
     
-    df = Data.map_data_id(df)
-    data = df.to_dict(orient='records')
-
-    return jsonify(data), 200
+    

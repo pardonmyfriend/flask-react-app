@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { DataGrid, GridDeleteIcon, GridToolbar, GridToolbarContainer, useGridApiRef } from '@mui/x-data-grid';
-import { Box, Button, IconButton } from '@mui/material';  
+import { Box, Button, IconButton } from '@mui/material'; 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
 
 
 const DataTable = ({ data, onProceed }) => {
@@ -17,7 +19,11 @@ const DataTable = ({ data, onProceed }) => {
         }
         if (data && data.columns) {
             console.log(data.columns);
-            setCols(data.columns);
+            const updatedColumns = data.columns.map((col) => ({
+                ...col,
+                width: Math.max(col.headerName.length * 18, 100),
+            }))
+            setCols(updatedColumns);
         }
         console.log("Columns set to:", data.columns);
         console.log("Rows set to:", data.rows);
@@ -30,11 +36,22 @@ const DataTable = ({ data, onProceed }) => {
     };
 
     const handleDeleteSelected = () => {
-        setRows((prevRows) => {
-             const updatedRows = prevRows.filter((row) => !selectedRows.includes(row.id));
-             console.log(updatedRows);
-             return updateIds(updatedRows);
-    });
+        if (rows.length - selectedRows.length >= 10) {
+            setRows((prevRows) => {
+                const updatedRows = prevRows.filter((row) => !selectedRows.includes(row.id));
+                console.log(updatedRows);
+                return updateIds(updatedRows);
+       })}
+       else {
+        //alert("Minimum number of rows: 10");
+        toast("Minimum number of rows: 10", {
+            progressStyle: { 
+                background: "#3fbdbd",
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                //backgroundColor: "#ff5733",
+            }});
+       }
+   
     };
 
     const handleDeleteColumn = (field) => {
@@ -104,7 +121,21 @@ const DataTable = ({ data, onProceed }) => {
     if(isDataLoaded) {
         return (
             <Box sx={{ height: 500, width: '100%' }}>
-                <h2>Your file</h2>
+                <ToastContainer position="top-right" autoClose={3000} />
+                <h2 style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative'}}>Your file
+                <Button
+                    variant="contained"
+                    onClick={handleDeleteSelected}
+                    disabled={selectedRows.length === 0}
+                    style={{ marginBottom: 10, position: 'absolute', right: 0}}
+                    sx={{
+                        backgroundColor: "#3fbdbd",
+                        color: 'black',
+                    }}
+                >
+                    Delete selected
+                </Button>
+                </h2>
                 <DataGrid
                     key={rows.length}
                     rows={rows}
@@ -163,15 +194,7 @@ const DataTable = ({ data, onProceed }) => {
                         },
                       }}
                 />
-                <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleDeleteSelected}
-                    disabled={selectedRows.length === 0}
-                    style={{ marginBottom: 10 }}
-                >
-                    Delete selected
-                </Button>
+                
             </Box>
         )
     }
