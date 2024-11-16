@@ -10,11 +10,11 @@ function Algorithms() {
   const [activeTab, setActiveTab] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false);
   const [algorithmName, setAlgorithmName] = useState('');
-  const [paramInfo, setParamInfo] = useState({});
+  const [paramsInfo, setParamsInfo] = useState({});
 
   const handleTileClick = (algorithm) => {
     setAlgorithmName('')
-    setParamInfo({});
+    setParamsInfo({});
     fetch('http://localhost:5000/algorithms/set_algorithm', {
       method: 'POST',
       headers: {
@@ -25,9 +25,9 @@ function Algorithms() {
     .then(response => response.json())
     .then(data => {
       if (data.algorithm) {
-        setDialogOpen(true);
         setAlgorithmName(data.algorithm.algorithm_name)
-        setParamInfo(data.algorithm.param_info)
+        setParamsInfo(data.algorithm.param_info)
+        setDialogOpen(true);
       }
     })
     .catch(error => {
@@ -77,7 +77,7 @@ function Algorithms() {
         onClose={handleDialogClose}
         onSaveParams={handleSaveParams}
         algorithmName={algorithmName}
-        paramInfo={paramInfo}
+        paramsInfo={paramsInfo}
       />
     </Box>
   )

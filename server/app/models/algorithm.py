@@ -85,6 +85,7 @@ class Algorithm:
                     'step': 0.1,
                     'precision': 1,
                     'description': 'Error tolerance for "arpack" solver',
+                    'dependency': ['svd_solver', 'arpack', 'enable']
                 }
             }
         elif self.algorithm_name == 't-SNE':
@@ -187,6 +188,8 @@ class Algorithm:
                     'max': 20,
                     'default': 2,
                     'description': 'Number of clusters to form',
+                    'nullable': True,
+                    'dependency': ['distance_threshold', 0.0, 'uncheck']
                 },
                 'affinity': {
                     'type': 'select',
@@ -208,7 +211,8 @@ class Algorithm:
                     'step': 0.1,
                     'precision': 1,
                     'description': 'Max distance between clusters to merge',
-                    'nullable': True
+                    'nullable': True,
+                    'dependency': ['n_clusters', 2, 'uncheck']
                 }
             }
         elif self.algorithm_name == 'DBSCAN':
