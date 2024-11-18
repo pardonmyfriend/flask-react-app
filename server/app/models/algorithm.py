@@ -1,22 +1,4 @@
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
-
 class Algorithm:
-    sklearn_classes = {
-        'PCA': PCA,
-        't-SNE': TSNE,
-        'K-Means': KMeans,
-        'Agglomerative Clustering': AgglomerativeClustering,
-        'DBSCAN': DBSCAN,
-        'KNN': KNeighborsClassifier,
-        'Decision Tree': DecisionTreeClassifier,
-        'Logistic Regression': LogisticRegression
-    }
-
     def __init__(self, algorithm_name, params=None):
         self.algorithm_name = algorithm_name
         self.param_info = self.get_algorithm_param_info()
@@ -28,11 +10,6 @@ class Algorithm:
             self.params = self.get_default_params()
         else:
             self.params = params
-
-        self.sklearn_class = self.sklearn_classes.get(algorithm_name)
-
-        if not self.sklearn_class:
-            raise ValueError(f"Unknown algorithm for sklearn: {algorithm_name}")
 
     def get_default_params(self):
         default_params = {}
@@ -46,15 +23,6 @@ class Algorithm:
             'params': self.params,
             'param_info': self.param_info
         }
-    
-    def run_algorithm(self, data):
-        model = self.sklearn_class(**self.params)
-        if hasattr(model, 'fit'):
-            return model.fit(data)  # .fit() dla algorytmów, które wymagają dopasowania
-        elif hasattr(model, 'transform'):
-            return model.transform(data)  # .transform() jeśli jest tylko przekształcenie
-        else:
-            raise ValueError(f"The selected algorithm '{self.algorithm_name}' is not supported.")
     
     def get_algorithm_param_info(self):
         if self.algorithm_name == 'PCA':

@@ -6,21 +6,17 @@ import ClusterAnalysis from './ClusterAnalysis';
 import Classification from './Classification';
 import ParamsDialog from '../../components/ParamsDialog';
 
-function Algorithms() {
+function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setParams }) {
   const [activeTab, setActiveTab] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [algorithmName, setAlgorithmName] = useState('');
   const [paramsInfo, setParamsInfo] = useState({});
 
   const handleTileClick = (algorithm) => {
     setAlgorithmName('')
     setParamsInfo({});
-    fetch('http://localhost:5000/algorithms/set_algorithm', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ algorithm }),
+    setParams({})
+    fetch(`http://localhost:5000/algorithms/get_algorithm_info/${algorithm}`, {
+      method: 'GET',
     })
     .then(response => response.json())
     .then(data => {
@@ -36,11 +32,14 @@ function Algorithms() {
   };
 
   const handleSaveParams = (params) => {
+    //TODO: tu jeszcze zrobić jakieś zaznaczenie wybranego kafelka i wyświetlenie zapisanych parametrów
     console.log(algorithmName)
     console.log('Zapisano parametry:', params);
+    onProceed(true)
   };
 
   const handleDialogClose = () => {
+    // setParams({})
     setDialogOpen(false);
   };
 
@@ -78,6 +77,8 @@ function Algorithms() {
         onSaveParams={handleSaveParams}
         algorithmName={algorithmName}
         paramsInfo={paramsInfo}
+        params={params}
+        setParams={setParams}
       />
     </Box>
   )

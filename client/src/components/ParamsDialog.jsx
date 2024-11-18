@@ -3,9 +3,7 @@ import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, F
 import NumericInput from './NumericInput';
 import InfoIcon from '@mui/icons-material/Info';
 
-function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo }) {
-  const [params, setParams] = useState({});
-
+function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, params, setParams }) {
   useEffect(() => {
     if (open && paramsInfo) {
       const defaultParams = {};
@@ -16,11 +14,11 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo }
     }
   }, [open, paramsInfo])
 
-  useEffect(() => {
-    if (!open) {
-      setParams({})
-    }
-  }, [open])
+  // useEffect(() => {
+  //   if (!open) {
+  //     setParams({})
+  //   }
+  // }, [open])
 
   const handleParamChange = (paramName, value) => {
     setParams(prevParams => ({
