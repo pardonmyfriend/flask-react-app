@@ -2,10 +2,6 @@ import pandas as pd
 
 class Data:
     @staticmethod
-    def validate_data(data):
-        return 1
-
-    @staticmethod
     def read_data(file):
         if file.filename.endswith('.csv'):
             df = pd.read_csv(file)
@@ -13,6 +9,15 @@ class Data:
         elif file.filename.endswith('.xls') or file.filename.endswith('.xlsx'):
             df = pd.read_excel(file)
         return df
+    
+
+    @staticmethod
+    def validate_data(df):
+        if df.dropna().shape[0] >= 10:
+            return 1
+        else:
+            return 0
+
 
     @staticmethod
     def map_data_id(df):

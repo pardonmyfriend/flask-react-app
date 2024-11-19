@@ -3,6 +3,8 @@ import { useDropzone } from 'react-dropzone';
 import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
 
 
 const FileUploader = ({ setData, onProceed }) => {
@@ -14,6 +16,7 @@ const FileUploader = ({ setData, onProceed }) => {
     if (acceptedFiles.length) {
       const file = acceptedFiles[0];
       const fileExtension = file.name.split('.').pop().toLowerCase();
+      console.log(fileExtension)
 
       if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
         setFile(file);
@@ -91,7 +94,24 @@ const FileUploader = ({ setData, onProceed }) => {
         }
         setUploadProgress(100); // Ustawia postęp na 100% po zakończeniu
       } else {
+        try {
+          const errorResponse = JSON.parse(xhr.responseText);
+          toast.error(errorResponse.error, {
+            progressStyle: { 
+                background: "#3fbdbd",
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                //backgroundColor: "#ff5733",
+            }});
+          } catch (e) {
+              console.error('Błąd parsowania odpowiedzi błędu:', e);
+          }
         console.error('Błąd podczas przesyłania pliku');
+        // toast.error('Błąd podczas przesyłania pliku', {
+        //   progressStyle: { 
+        //       background: "#3fbdbd",
+        //       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+        //       //backgroundColor: "#ff5733",
+        //   }});
         setUploadProgress(0);
       }
     };
@@ -124,6 +144,7 @@ const FileUploader = ({ setData, onProceed }) => {
           cursor: "default",
         }}
       >
+        <ToastContainer />
         <CloudUploadIcon
           sx={{ fontSize: 60, color: "#1976d2", marginBottom: "20px" }}
         />
