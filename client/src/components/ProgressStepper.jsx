@@ -12,6 +12,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [canProceedToNextStep, setCanProceedToNextStep] = useState(false);
   const [completed, setCompleted] = useState({});
   const [data, setData] = useState(null);
+  const [columnTypes, setColumnTypes] = useState(null);
 
   const totalSteps = steps.length;
   const completedSteps = Object.keys(completed).length;
@@ -92,7 +93,7 @@ function ProgressStepper({ steps, stepContent }) {
                   minHeight: '150vh'
                 }}
               >
-                {React.cloneElement(stepContent[activeStep], { data, setData, onProceed: handleProceed})}
+                {React.cloneElement(stepContent[activeStep], { data, columnTypes, setData, setColumnTypes, onProceed: handleProceed})}
               </Box>
               <Fab 
                 color="primary" 

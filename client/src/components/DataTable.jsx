@@ -11,14 +11,15 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PreprocessingDialog from "./PreprocessingDialog";
 
-const DataTable = ({ data, onProceed, onOpen }) => {
+const DataTable = ({ data, columnTypes, onProceed, onOpen }) => {
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [open, setOpen] = useState(true);
   const [selectedColumn, setSelectedColumn] = useState("");
-  const [currentView, setCurrentView] = useState(1);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   useEffect(() => {
     console.log("Loaded data:", data);
@@ -35,6 +36,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
     }
     console.log("Columns set to:", data.columns);
     console.log("Rows set to:", data.rows);
+    console.log("Loaded column types:", columnTypes);
   }, [data]);
 
   const apiRef = useGridApiRef();
@@ -125,8 +127,10 @@ const DataTable = ({ data, onProceed, onOpen }) => {
     setOpen(false); // Zamykanie dialogu
   };
 
-  const handleSelectColumnChange = (event) => {
-    setSelectedColumn(event.target.value); // Ustawiamy wybraną wartość w rozwijanej liście
+  const handleSelectColumnChange = (event, index) => {
+      const newCols = [...cols];  // Tworzymy nową kopię tablicy wierszy
+      newCols[index].type = event.target.value;  // Zmieniamy pole 'type' na wybraną opcję
+      setCols(newCols);  // Ustawiamy stan
   };
 
 
@@ -171,7 +175,13 @@ const DataTable = ({ data, onProceed, onOpen }) => {
           open={open}
           onClose={handleCloseDialog}
           selectedOption={selectedColumn}
+          setSelectedOption={setSelectedColumn}
           onSelectChange={handleSelectColumnChange}
+          anchorEl={anchorEl}
+          setAnchorEl={setAnchorEl}
+          selectedRow={selectedRow}
+          setSelectedRow={setSelectedRow}
+
           cols={cols.filter((col) => col.headerName !== "ID")}
         />
         <DataGrid

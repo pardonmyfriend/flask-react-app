@@ -7,7 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; 
 
 
-const FileUploader = ({ setData, onProceed }) => {
+const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -76,8 +76,10 @@ const FileUploader = ({ setData, onProceed }) => {
         onProceed(true);
         console.log("onProceed invoked");
   
-        if (responseData && responseData.length > 0) {
-          const keys = Object.keys(responseData[0]);
+        if (responseData.data && responseData.data.length > 0) {
+          const data = responseData.data;
+          console.log("data:", data);
+          const keys = Object.keys(data[0]);
 
           // Przenieś kolumnę `id` na początek, jeśli istnieje
           const orderedKeys = keys.includes('id') 
@@ -89,8 +91,22 @@ const FileUploader = ({ setData, onProceed }) => {
             headerName: key.toUpperCase(),
             width: 150,
           }));
-  
-          setData({ rows: responseData, columns: cols });
+
+          const columnTypes = responseData.types;
+          const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+            column: column.toUpperCase(), // Zmieniamy nazwę kolumny na wielkie litery
+            type: type,                  // Zachowujemy typ bez zmian
+          }));
+          
+          setColumnTypes(updatedColumnTypesRows);
+          console.log("column types:", columnTypes);
+
+          const updatedCols = cols.map((item, index) => ({
+            ...item,
+            type: columnTypes[index].type
+          }))
+
+          setData({ rows: data, columns: updatedCols });
         }
         setUploadProgress(100); // Ustawia postęp na 100% po zakończeniu
       } else {
