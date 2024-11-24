@@ -83,7 +83,7 @@ class Algorithm:
                     'precision': 1,
                     'description': 'Rate at which embedding is adjusted',
                 },
-                'n_iter': {
+                'max_iter': {
                     'type': 'int',
                     'min': 250,
                     'max': 5000,

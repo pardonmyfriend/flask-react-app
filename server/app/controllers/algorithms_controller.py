@@ -11,6 +11,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 
+from sklearn.metrics import pairwise_distances
+from sklearn.manifold import trustworthiness
+
 algorithms_blueprint = Blueprint('algorithms', __name__)
 
 @algorithms_blueprint.route('/get_algorithm_info/<string:algorithm_name>', methods=['GET'])
@@ -101,5 +104,57 @@ def run_PCA():
         print(pca_data)
 
         return jsonify(pca_data), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+
+@algorithms_blueprint.route('/run_t-SNE', methods=['POST'])
+def run_tSNE():
+    request_data = request.get_json()
+    params = request_data.get('params', {})
+    df = request_data.get('data', [])
+
+    try:
+        df = pd.DataFrame(df)
+
+        ids = df['id'] if 'id' in df.columns else None
+        target = df['species'] if 'species' in df.columns else None
+        
+        X = df.drop(columns=['id', 'species'])
+        X = X.select_dtypes(exclude=['object'])
+
+        tsne = TSNE(
+            n_components=params.get('n_components'),
+            perplexity=params.get('perplexity'),
+            learning_rate=params.get('learning_rate'),
+            max_iter=params.get('max_iter'),
+            init=params.get('init'),
+            metric=params.get('metric')
+        )
+        
+        X_tsne = tsne.fit_transform(X)
+
+        df_tsne = pd.DataFrame(
+            X_tsne, 
+            columns=[f'F{i+1}' for i in range(X_tsne.shape[1])]
+        )
+        if ids is not None:
+            df_tsne.insert(0, 'id', ids)
+        if target is not None:
+            df_tsne['species'] = target
+
+        original_distances = pairwise_distances(X)
+        tsne_distances = pairwise_distances(X_tsne)
+
+        trust_score = trustworthiness(X, X_tsne, n_neighbors=5)
+
+        tsne_data = {
+            "tsne_dataframe": df_tsne.to_dict(orient='records'),
+            "original_distances": original_distances.flatten().tolist(),
+            "tsne_distances": tsne_distances.flatten().tolist(),
+            "trust_score": trust_score,
+        }
+
+        return jsonify(tsne_data), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

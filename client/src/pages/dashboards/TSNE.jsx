@@ -5,7 +5,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Plot from "react-plotly.js";
 import { useResizeDetector } from 'react-resize-detector';
 
-function PCA({ pcaData }) {
+function TSNE({ tsneData }) {
     const dataGridStyle = {
         verflowY: 'auto',
         '& .MuiDataGrid-columnHeaderTitle': {
@@ -35,8 +35,10 @@ function PCA({ pcaData }) {
         },
     };
     
-    const renderPCADataframe = () => {
-        const keys = Object.keys(pcaData.pca_components[0]);
+    const renderTSNEDataframe = () => {
+        const keys = Object.keys(tsneData.tsne_dataframe[0]);
+
+        console.log(keys)
 
         const orderedKeys = keys.includes('id') 
         ? ['id', ...keys.filter((key) => key !== 'id')] 
@@ -50,9 +52,9 @@ function PCA({ pcaData }) {
 
         return (
             <DataGrid
-                rows={pcaData.pca_components}
+                rows={tsneData.tsne_dataframe}
                 columns={cols}
-                loading={!pcaData.pca_components.length}
+                loading={!tsneData.tsne_dataframe.length}
                 showCellVerticalBorder
                 showColumnVerticalBorder
                 checkboxSelection={false}
@@ -60,49 +62,6 @@ function PCA({ pcaData }) {
                     pagination: { paginationModel: { pageSize: 10 } },
                 }}
                 pageSizeOptions={[10, 25, 50]}
-                sx={dataGridStyle}
-                slots={{
-                    toolbar: GridToolbar,
-                }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
-            />
-        );
-    };
-
-    const renderEigenValuesData = () => {
-        const keys = Object.keys(pcaData.eigen_values_data[0]);
-
-        const orderedKeys = keys.includes('id') 
-        ? ['id', ...keys.filter((key) => key !== 'id')] 
-        : keys;
-        
-        const cols = orderedKeys.map((key) => ({
-            field: key,
-            headerName: key.toUpperCase(),
-            flex: 1,
-        }));
-
-        return (
-            <DataGrid
-                rows={pcaData.eigen_values_data}
-                columns={cols}
-                loading={!pcaData.eigen_values_data.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
                 sx={dataGridStyle}
                 slots={{
                     toolbar: GridToolbar,
@@ -142,7 +101,7 @@ function PCA({ pcaData }) {
     };
 
     const renderScatterPlot = () => {
-        const uniqueSpecies = [...new Set(pcaData.pca_components.map(row => row.species))];
+        const uniqueSpecies = [...new Set(tsneData.tsne_dataframe.map(row => row.species))];
         const colorMap = uniqueSpecies.reduce((map, species, index) => {
             const colors = ['#3FBDBD', '#329797', '#257171', '#194B4B'];
             map[species] = colors[index % colors.length];
@@ -150,18 +109,18 @@ function PCA({ pcaData }) {
         }, {});
     
         const data = uniqueSpecies.map(species => ({
-            x: pcaData.pca_components
+            x: tsneData.tsne_dataframe
                 .filter(row => row.species === species)
-                .map(row => row.PC1),
-            y: pcaData.pca_components
+                .map(row => row.F1),
+            y: tsneData.tsne_dataframe
                 .filter(row => row.species === species)
-                .map(row => row.PC2),
+                .map(row => row.F2),
             type: 'scatter',
             mode: 'markers',
             name: species,
             marker: {
                 color: colorMap[species],
-                size: 10,
+                size: 7,
                 symbol: 'circle',
             },
         }));
@@ -207,61 +166,43 @@ function PCA({ pcaData }) {
         );
     };
 
-    const renderExplainedVariancePlot = () => {
+    const renderBarPlot = () => {
+        const data = [
+            {
+                x: ['Trustworthiness Score'],
+                y: [tsneData.trust_score],
+                type: 'bar',
+                name: 'Trustworthiness',
+                marker: {
+                    color: '#3FBDBD',
+                },
+            },
+        ];
+    
         return (
             <ResponsivePlot
-                data={[
-                    {
-                        x: [...Array(pcaData.explained_variance.length).keys()].map(i => `PC${i + 1}`),
-                        y: pcaData.explained_variance,
-                        type: 'scatter',
-                        mode: 'lines+markers',
-                        marker: {
-                            color: '#3FBDBD',
-                            size: 8,
-                            symbol: 'circle',
-                        },
-                        line: {
-                            color: '#3FBDBD',
-                            width: 2,
-                        },
-                        name: 'Explained Variance',
-                    },
-                ]}
+                data={data}
                 layout={{
                     autosize: true,
                     title: {
-                        text: 'Wykres wyjaśnionej wariancji',
-                        font: {
-                            size: 22,
-                            color: '#2c3e50',
-                        },
+                        text: 'Ocena jakości rzutowania (Trustworthiness Score)',
                     },
                     xaxis: {
                         title: {
-                            text: 'Składowe główne',
-                            font: {
-                                size: 18,
-                            },
+                            text: 'Metryka',
                         },
                         automargin: true,
-                        showgrid: true,
-                        zeroline: false,
+                        showgrid: false,
                     },
                     yaxis: {
                         title: {
-                            text: 'Wyjaśniona wariancja (%)',
-                            font: {
-                                size: 18,
-                            },
+                            text: 'Wartość',
                         },
                         automargin: true,
                         showgrid: true,
-                        zeroline: false,
+                        zeroline: true,
                     },
                     hovermode: 'closest',
-                    plot_bgcolor: '#f9f9f9',
-                    paper_bgcolor: '#ffffff',
                 }}
                 config={{
                     responsive: true,
@@ -270,78 +211,56 @@ function PCA({ pcaData }) {
                 }}
             />
         );
-    };
+    };    
 
-    const renderCorrelationHeatmap = () => {
-        const correlationMatrix = pcaData.correlation_matrix;
-        const variables = Object.keys(correlationMatrix); // np. petallengthcm, petalwidthcm, etc.
-        const components = Object.keys(correlationMatrix[variables[0]]); // np. PC1, PC2
-
-        const zValues = variables.map(variable =>
-            components.map(component => correlationMatrix[variable][component])
-        );
-
+    const renderHistogramPlots = () => {
+        const originalDistancesFlat = tsneData.original_distances;
+        const tsneDistancesFlat = tsneData.tsne_distances;
+      
         return (
+          <div>
             <ResponsivePlot
-            data={[
+              data={[
                 {
-                    z: zValues,
-                    x: components,
-                    y: variables,
-                    type: 'heatmap',
-                    colorscale: 'Coolwarm', // Paleta typu coolwarm
-                    hoverongaps: false,
-                    showscale: true, // Wyświetlanie skali kolorów
-                    colorbar: {
-                        title: 'Korelacja',
-                        titleside: 'right',
-                    },
-                    text: zValues.map(row => row.map(value => value.toFixed(2))), // Wartości do wyświetlenia
-                    texttemplate: '%{text}', // Wyświetlanie wartości na heatmapie
-                    textfont: {
-                        size: 12, // Rozmiar czcionki wartości
-                        color: '#000000', // Kolor czcionki (np. czarny)
-                    },
+                  x: originalDistancesFlat,
+                  type: "histogram",
+                  nbinsx: 50,
+                  marker: { color: '#329797' },
                 },
-            ]}
-            layout={{
-                autosize: true,
-                title: {
-                    text: 'Macierz korelacji (Heatmapa)',
-                    font: {
-                        size: 22,
-                        color: '#2c3e50',
-                    },
-                },
-                xaxis: {
-                    title: {
-                        text: 'Główne Składowe (PC)',
-                        font: {
-                            size: 18,
-                        },
-                    },
-                    automargin: true,
-                    side: 'bottom',
-                },
-                yaxis: {
-                    title: {
-                        text: 'Zmienne',
-                        font: {
-                            size: 18,
-                        },
-                    },
-                    automargin: true,
-                },
-                hovermode: 'closest',
-                plot_bgcolor: '#f9f9f9',
-                paper_bgcolor: '#ffffff',
-            }}
-            config={{
+              ]}
+              layout={{
+                title: "Histogram odległości w przestrzeni oryginalnej",
+                xaxis: { title: "Odległość" },
+                yaxis: { title: "Liczba par" },
+              }}
+              config={{
                 responsive: true,
                 displayModeBar: true,
-                displaylogo: false,
+                displaylogo: false, 
             }}
-        />
+            />
+      
+            <ResponsivePlot
+              data={[
+                {
+                  x: tsneDistancesFlat,
+                  type: "histogram",
+                  nbinsx: 50,
+                  marker: { color: '#329797' },
+                },
+              ]}
+              layout={{
+                title: "Histogram odległości w przestrzeni t-SNE",
+                xaxis: { title: "Distance" },
+                yaxis: { title: "Pair count" },
+              }}
+              config={{
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false, 
+            }}
+            />
+          </div>
         );
     };
 
@@ -353,25 +272,7 @@ function PCA({ pcaData }) {
                 width: '100%',
                 marginBottom: '30px'
             }}>
-                {renderPCADataframe()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderEigenValuesData()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderExplainedVariancePlot()}
+                {renderTSNEDataframe()}
             </div>
 
             <div style={{ 
@@ -389,10 +290,19 @@ function PCA({ pcaData }) {
                 width: '100%',
                 marginBottom: '30px'
             }}>
-                {renderCorrelationHeatmap()}
+                {renderHistogramPlots()}
+            </div>
+
+            <div style={{ 
+                display: 'flex',
+                justifyContent: 'center',
+                width: '100%',
+                marginBottom: '30px'
+            }}>
+                {renderBarPlot()}
             </div>
         </div>
     )
 }
 
-export default PCA
+export default TSNE
