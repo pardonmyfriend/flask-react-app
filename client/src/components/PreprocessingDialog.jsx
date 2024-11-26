@@ -16,7 +16,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import React, { useState, useEffect } from 'react';
 
-function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, cols, setCols, setSelectedOption, anchorEl, setAnchorEl, selectedRow, setSelectedRow }) {
+function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, cols, setCols, setSelectedOption, anchorEl, setAnchorEl, selectedRow, setSelectedRow, handleCheckboxChange }) {
     const options = cols;
     const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
     const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -64,66 +64,55 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
       setCols(newCols);  // Ustawiamy stan
     };
 
-    const ColumnTable = ({ cols, headers, colTypes }) => {
-      return (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px' }}>
-           {headers.map((header, index) => (
-          <React.Fragment key={index}>
-          <div>{header}</div>
-          </React.Fragment>))}
-
-          {cols.map((col, index) => (
-          <React.Fragment key={index}>
-          <div>{col.headerName}</div>
-          <div>{col.type}</div>
-          <div>
-            {/* <FormControl fullWidth>
-              <InputLabel id={`select-label-${index}`}>Type</InputLabel>
-              <Select
-                labelId={`select-label-${index}`}
-                value={selectedOption}
-                onChange={(event) => onSelectChange(event, index)}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 200, // Ustawienie maksymalnej wysokości menu
-                      width: 'auto',  // Dopasowanie szerokości do zawartości
-                      overflow: 'visible', // Zapewnia, że menu jest widoczne poza granicami rodzica
-                    },
-                  },
-                }}
-              >
-                <MenuItem value={10}>Option 1</MenuItem>
-                <MenuItem value={20}>Option 2</MenuItem>
-                <MenuItem value={30}>Option 3</MenuItem>
-              </Select>
-            </FormControl> */}
-            <FormControl fullWidth sx={{ marginTop: 2, marginBottom: 2 }}>
-              {/* <InputLabel>Target</InputLabel> */}
-              <Select
-                value={selectedOption}
-                onChange={onSelectChange}
-                label="Select column"
-              >
-
-                {colTypes.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {option}
-                </MenuItem>
-                ))}
-              </Select>
-            </FormControl> 
-          </div>
-        </React.Fragment>
-      ))}
-        </div>)}
-
   return (
     <div style={{ position: 'relative' }}>
       <Dialog open={open} onClose={onClose} aria-hidden={!open}>
-        <DialogTitle>{"Align column types"}</DialogTitle>
+        <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types"}</DialogTitle>
         <DialogContent>
-          <ColumnTable cols={cols} headers={headers} colTypes={colTypes}/>
+
+        <div>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1,
+              border: '1px solid #ccc',
+              borderRadius: 2, }}>
+            <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: '5px' }}>Column name</Typography>
+            <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center', marginLeft: '10px', fontWeight: 'bold' }}>Current type</Typography>
+            <Typography variant="body1" sx={{ minWidth: '150px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>Change type</Typography>
+            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: 'auto' }}>Class</Typography>
+            </Box>
+          {cols.map((col, index) => (
+              <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 2, marginBottom: 1,
+                border: '1px solid #ccc',
+                borderRadius: 2, }}>
+              {/* Typography po lewej */}
+              <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}>{col.headerName}</Typography>
+              <Typography variant="body1" sx={{ minWidth: '100px', marginRight: '8px', marginLeft: '5px', display: 'flex', alignItems: 'center' }}>{col.type}</Typography>
+              {/* Select po prawej */}
+              <FormControl>
+                <InputLabel id="select-label">Type</InputLabel>
+                <Select
+                  labelId={`select-${index}-label`}
+                  id={`select-${index}`}
+                  value={cols[index].type}
+                  label="Opcja"
+                  onChange={(event) => onSelectChange(event, index+1)}
+                  autoWidth={true}
+                  sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}
+                >
+                  {colTypes.map((colType, colIndex) => (
+                    <MenuItem key={colIndex} value={colType}>{colType}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Checkbox
+                checked={selectedOption === index+1}  // Tylko jeden checkbox jest zaznaczony
+                onChange={(event) => handleCheckboxChange(event, index+1)}  // Obsługuje zmianę
+                color="primary"
+              />
+            </Box>
+          ))}
+        </div>
+
+          {/* <ColumnTable cols={cols} headers={headers} colTypes={colTypes}/> */}
           {/* <DialogContentText>
             Select a column
           </DialogContentText> */}

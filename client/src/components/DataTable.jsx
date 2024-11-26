@@ -128,9 +128,33 @@ const DataTable = ({ data, columnTypes, onProceed, onOpen }) => {
   };
 
   const handleSelectColumnChange = (event, index) => {
-      const newCols = [...cols];  // Tworzymy nową kopię tablicy wierszy
-      newCols[index].type = event.target.value;  // Zmieniamy pole 'type' na wybraną opcję
-      setCols(newCols);  // Ustawiamy stan
+    console.log('cols:', cols);  // Sprawdź, jaka jest zawartość cols
+    console.log('index:', index);
+    console.log('event', event);  // Sprawdź, jaki indeks jest przekazywany
+
+    if (cols[index].class) {
+      setSelectedColumn(null);
+    }
+    const newCols = [...cols];  // Tworzymy nową kopię tablicy wierszy
+    newCols[index].type = event.target.value;  // Zmieniamy pole 'type' na wybraną opcję
+    newCols[index].class = 'false';
+    setCols(newCols);  // Ustawiamy stan
+  };
+
+  const handleCheckboxChange = (event, columnId) => {
+    console.log("columnId:", columnId)
+    // Jeśli klikniesz ten sam checkbox, ustaw selectedColumn na null (odznaczenie)
+    setSelectedColumn(event.target.checked ? columnId : null);
+
+    const newCols = [...cols];  // Tworzymy nową kopię tablicy wierszy
+    newCols[columnId].type = 'categorical';  // Zmieniamy pole 'type' na wybraną opcję
+    newCols[columnId].class = 'true';
+    newCols.forEach((col, index) => {
+      if (index !== columnId) {
+        col.class = 'false';  // Ustawiamy 'false' dla każdego elementu oprócz columnId
+      }
+    });
+    setCols(newCols);  // Ustawiamy stan
   };
 
 
@@ -181,6 +205,7 @@ const DataTable = ({ data, columnTypes, onProceed, onOpen }) => {
           setAnchorEl={setAnchorEl}
           selectedRow={selectedRow}
           setSelectedRow={setSelectedRow}
+          handleCheckboxChange={handleCheckboxChange}
 
           cols={cols.filter((col) => col.headerName !== "ID")}
         />

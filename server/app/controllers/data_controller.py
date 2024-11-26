@@ -41,7 +41,8 @@ def upload_file():
             ]
             result = {
                 "data": data,
-                "types": mappedColumnTypes
+                "types": mappedColumnTypes,
+                "class": 'false'
             }
             return jsonify(result), 200
         else:
