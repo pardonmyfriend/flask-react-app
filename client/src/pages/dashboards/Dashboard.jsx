@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PCA from './PCA';
 import TSNE from './TSNE';
+import KMeans from './KMeans';
 
 function Dashboard({ data, algorithmName, params }) {
   const [algorithmData, setAlgorithmData] = useState(null)
@@ -56,6 +57,8 @@ function Dashboard({ data, algorithmName, params }) {
         return <PCA pcaData={algorithmData} />;
       case 't-SNE':
         return <TSNE tsneData={algorithmData} />;
+        case 'K-Means':
+          return <KMeans kmeansData={algorithmData} />;
       default:
         return <div>Nieznany algorytm: {algorithmName}</div>;
     }

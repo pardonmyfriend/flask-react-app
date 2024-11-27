@@ -13,6 +13,9 @@ from sklearn.linear_model import LogisticRegression
 
 from sklearn.metrics import pairwise_distances
 from sklearn.manifold import trustworthiness
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+
 
 algorithms_blueprint = Blueprint('algorithms', __name__)
 
@@ -156,5 +159,60 @@ def run_tSNE():
         }
 
         return jsonify(tsne_data), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+@algorithms_blueprint.route('/run_K-Means', methods=['POST'])
+def run_KMeans():
+    request_data = request.get_json()
+    params = request_data.get('params', {})
+    df = request_data.get('data', [])
+
+    try:
+        df = pd.DataFrame(df)
+
+        ids = df['id'] if 'id' in df.columns else None
+        target = df['species'] if 'species' in df.columns else None
+        
+        X = df.drop(columns=['id', 'species'])
+        X = X.select_dtypes(exclude=['object'])
+
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+
+        kmeans = KMeans(
+            n_clusters=params.get('n_clusters'),
+            init=params.get('init'),
+            n_init=params.get('n_init'),
+            max_iter=params.get('max_iter'),
+            tol=params.get('tol'),
+            algorithm=params.get('algorithm'),
+        )
+        
+        clusters = kmeans.fit_predict(X_scaled)
+        # df.insert(len(df.columns), 'cluster', clusters)
+        df['cluster'] = clusters
+
+        silhouette_avg = silhouette_score(X_scaled, clusters)
+
+        centroids = kmeans.cluster_centers_
+        centroids_original = scaler.inverse_transform(centroids)
+
+        centroids_df = pd.DataFrame(
+            centroids_original, columns=X.columns
+        ).reset_index().rename(columns={"index": "cluster"})
+
+        centroids_df['id'] = range(1, len(centroids_df)+1)
+
+        print(centroids_df)
+
+        kmeans_data = {
+            "clustered_dataframe": df.to_dict(orient='records'),
+            "silhouette_score": silhouette_avg,
+            "centroids": centroids_df.to_dict(orient='records'),
+        }
+
+        return jsonify(kmeans_data), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

@@ -143,8 +143,8 @@ class Algorithm:
                 },
                 'algorithm': {
                     'type': 'select',
-                    'options': ['auto', 'full', 'elkan'],
-                    'default': 'auto',
+                    'options': ['lloyd', 'elkan'],
+                    'default': 'lloyd',
                     'description': 'Algorithm used for computation',
                 }
             }
