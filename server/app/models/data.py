@@ -12,16 +12,9 @@ class Data:
 
     @staticmethod
     def map_data_id(df):
-        columnsNames = list(df.columns)
-        if "Id" in columnsNames:
-            df = df.rename(columns={'Id': 'id'})
-        elif "ID" in columnsNames:
-            df = df.rename(columns={'ID': 'id'})
-        elif "iD" in columnsNames:
-            df = df.rename(columns={'iD': 'id'})
-        elif "id" in columnsNames:
-            pass
-        else:
+        df.columns = df.columns.str.lower()
+
+        if "id" not in df.columns:
             df.insert(0, "id", range(1, len(df)+1))
         return df
     

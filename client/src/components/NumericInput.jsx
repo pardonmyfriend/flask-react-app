@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
-function NumericInput({ min, max, defaultValue, step, precision, onChange }) {
+function NumericInput({ min, max, defaultValue, step, precision, onChange, disabled }) {
   const [inputValue, setInputValue] = useState(defaultValue);
   const [isFocused, setIsFocused] = useState(false);
+
+  // useEffect(() => {
+  //   setInputValue(value);
+  // }, [value, disabled]);
 
   const roundToPrecision = (value) => {
     const factor = Math.pow(10, precision);
@@ -23,29 +27,23 @@ function NumericInput({ min, max, defaultValue, step, precision, onChange }) {
     if (onChange) onChange(newValue);
   };
 
-  // const handleChange = (e) => {
-  //   let newValue = parseFloat(e.target.value);
-  //   if (!isNaN(newValue)) {
-  //     newValue = roundToPrecision(Math.max(min, Math.min(newValue, max)));
-  //     setInputValue(newValue);
-  //     if (onChange) onChange(newValue);
-  //   }
-  // };
-
   const handleChange = (e) => {
     const value = e.target.value;
-    
-    // Pozwól na wpisanie ułamków dziesiętnych lub liczb całkowitych
-    if (/^-?\d*\.?\d*$/.test(value)) {
-      setInputValue(value);
+
+    if (!disabled) {
+      if (/^-?\d*\.?\d*$/.test(value)) {
+        setInputValue(value);
+      }
+    }
+    else {
+      setInputValue('');
     }
   };
 
   const handleBlur = () => {
-    // Konwertuj wartość na liczbę i upewnij się, że mieści się w zakresie min-max
     let newValue = parseFloat(inputValue);
     if (isNaN(newValue)) {
-      newValue = min; // Ustaw na minimalną wartość, jeśli wartość jest nieprawidłowa
+      newValue = min;
     }
     newValue = roundToPrecision(Math.max(min, Math.min(newValue, max)));
     setInputValue(newValue.toFixed(precision));
@@ -61,17 +59,18 @@ function NumericInput({ min, max, defaultValue, step, precision, onChange }) {
     <div style={styles.container}>
       <input
         type="text"
-        value={isFocused ? inputValue : parseFloat(inputValue).toFixed(precision)}
+        value={disabled ? '' : (isFocused ? inputValue : parseFloat(inputValue).toFixed(precision))}
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
+        disabled={disabled}
         style={styles.input}
       />
       <div style={styles.controls}>
-        <button onClick={handleIncrement} style={styles.button} disabled={inputValue >= max}>
+        <button onClick={handleIncrement} style={styles.button} disabled={inputValue >= max || disabled}>
           <KeyboardArrowUpIcon />
         </button>
-        <button onClick={handleDecrement} style={styles.button} disabled={inputValue <= min}>
+        <button onClick={handleDecrement} style={styles.button} disabled={inputValue <= min || disabled}>
           <KeyboardArrowDownIcon />
         </button>
       </div>
