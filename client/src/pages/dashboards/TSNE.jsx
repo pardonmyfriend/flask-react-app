@@ -103,7 +103,7 @@ function TSNE({ tsneData }) {
     const renderScatterPlot = () => {
         const uniqueSpecies = [...new Set(tsneData.tsne_dataframe.map(row => row.species))];
         const colorMap = uniqueSpecies.reduce((map, species, index) => {
-            const colors = ['#3FBDBD', '#329797', '#257171', '#194B4B'];
+            const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
             map[species] = colors[index % colors.length];
             return map;
         }, {});
@@ -185,11 +185,11 @@ function TSNE({ tsneData }) {
                 layout={{
                     autosize: true,
                     title: {
-                        text: 'Ocena jakości rzutowania (Trustworthiness Score)',
+                        text: 'Trustworthiness Score',
                     },
                     xaxis: {
                         title: {
-                            text: 'Metryka',
+                            text: 'Metric',
                         },
                         automargin: true,
                         showgrid: false,

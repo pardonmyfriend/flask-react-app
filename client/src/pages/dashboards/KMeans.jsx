@@ -105,13 +105,13 @@ function KMeans({ kmeansData }) {
     const renderScatterPlot = () => {
         const uniqueClusters = [...new Set(kmeansData.clustered_dataframe.map(row => row.cluster))];
         const colorMap = uniqueClusters.reduce((map, cluster, index) => {
-            const colors = ['#3FBDBD', '#329797', '#257171', '#194B4B'];
+            const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
             map[cluster] = colors[index % colors.length];
             return map;
         }, {});
 
         const [firstColumn, secondColumn] = Object.keys(kmeansData.clustered_dataframe[0]).filter(
-            col => col !== 'cluster' && col !== 'id' // Wyklucz kolumny 'cluster' i 'id', jeśli istnieją
+            col => col !== 'cluster' && col !== 'id'
         );
     
         const data = uniqueClusters.map(cluster => ({
@@ -175,7 +175,7 @@ function KMeans({ kmeansData }) {
     const renderScatterPlotForSpecies = () => {
         const uniqueSpecies = [...new Set(kmeansData.clustered_dataframe.map(row => row.species))];
         const colorMap = uniqueSpecies.reduce((map, species, index) => {
-            const colors = ['#3FBDBD', '#329797', '#257171', '#194B4B'];
+            const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
             map[species] = colors[index % colors.length];
             return map;
         }, {});
@@ -276,7 +276,6 @@ function KMeans({ kmeansData }) {
                 rows={kmeansData.centroids}
                 columns={cols}
                 loading={!kmeansData.centroids.length}
-                pageSize={10}
                 sx={dataGridStyle}
             />
         );
