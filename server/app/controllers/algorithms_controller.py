@@ -103,8 +103,6 @@ def run_PCA():
             "correlation_matrix": correlation_matrix.to_dict(orient='index')
         }
 
-        print(pca_data)
-
         return jsonify(pca_data), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
@@ -203,8 +201,6 @@ def run_KMeans():
         ).reset_index().rename(columns={"index": "cluster"})
 
         centroids_df['id'] = range(1, len(centroids_df)+1)
-
-        print(centroids_df)
 
         kmeans_data = {
             "clustered_dataframe": df.to_dict(orient='records'),

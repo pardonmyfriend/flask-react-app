@@ -15,6 +15,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [data, setData] = useState(null);
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
+  const [algorithmSelected, setAlgorithmSelected] = useState(false);
 
 
   const totalSteps = steps.length;
@@ -98,10 +99,15 @@ function ProgressStepper({ steps, stepContent }) {
                 }}
               >
                 {React.cloneElement(stepContent[activeStep], { 
-                  data, setData, 
-                  algorithmName, setAlgorithmName, 
-                  params, setParams, 
-                  onProceed: handleProceed
+                  data: data, 
+                  setData: setData, 
+                  algorithmName: algorithmName, 
+                  setAlgorithmName: setAlgorithmName, 
+                  params: params, 
+                  setParams: setParams,
+                  algorithmSelected: algorithmSelected,
+                  setAlgorithmSelected: setAlgorithmSelected,
+                  onProceed: handleProceed, 
                   })
                 }
               </Box>
