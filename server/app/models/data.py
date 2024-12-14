@@ -96,6 +96,73 @@ class Data:
             unique_values_count = df[column].nunique()  # Liczymy liczbę wartości NaN w kolumnie
             result[column] = unique_values_count if 2 <= unique_values_count <= 10 else 0
         return result
+    
+    @staticmethod
+    def unique_values_to_list(df):
+        result = {
+        col: df[col].unique().tolist() 
+        for col in df.columns 
+        if 2 <= len(df[col].unique()) <= 10
+        }
+        for key, values in result.items():
+            result[key] = [value for value in values if not pd.isna(value)]
+        return result
+    
+    @staticmethod
+    def change_single_column_type(col, old_type, new_type):
+        colName = col['field']
+        if old_type == 'numerical':
+            if new_type == 'nominal' | new_type == 'categorical':
+                print("Podprzypadek 1 dla Case 1")
+                #jako string
+                df = Data.get_data().copy()
+                df[colName] = df[colName].astype(str)
+                Data.set_data(df)
+            else:
+                print("Nieznany podprzypadek dla Case 1")
+    
+        elif old_type == 'nominal':
+            if new_type == 'numerical':
+                print("Podprzypadek 1 dla Case 2")
+                #One-Hot
+            elif new_type == 'categorical':
+                print("Podprzypadek 2 dla Case 2")
+                #tylko nazwa typu się zmienia
+            else:
+                print("Nieznany podprzypadek dla Case 2")
+        
+        elif old_type == 'categorical':
+            if new_type == 'numerical':
+                print("Podprzypadek 1 dla Case 3")
+                #One-Hot
+            elif new_type == 'nominal':
+                print("Podprzypadek 2 dla Case 3")
+                #tylko nazwa typu się zmienia
+            else:
+                print("Nieznany podprzypadek dla Case 3")
+        else:
+            print("Nieznany przypadek")
+    
+    @staticmethod
+    def change_types(df):
+        df_cols = pd.DataFrame(df['cols'])
+        df_defaultTypes = pd.DataFrame(df['defaultTypes'])
+
+        # Wyświetlenie obu DataFrame
+        print("df_cols:")
+        print(df_cols)
+
+        print("\ndf_defaultTypes:")
+        print(df_defaultTypes)
+
+        for col in df_cols:
+            if col in df_defaultTypes:
+                if df_cols[col]['type'] != df_defaultTypes[col]['type']:
+                    return 1
+
+
+
+
 
 
     

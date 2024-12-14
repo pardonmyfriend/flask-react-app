@@ -1,25 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  DataGrid,
-  GridDeleteIcon,
-  GridToolbar,
-  useGridApiRef,
-} from "@mui/x-data-grid";
-import {
-  Box,
-  Button,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  AppBar,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import { DataGrid, GridDeleteIcon, GridToolbar, useGridApiRef } from "@mui/x-data-grid";
+import { Box, Button, IconButton, AppBar, Tabs, Tab } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PreprocessingDialog from "./PreprocessingDialog";
@@ -36,8 +17,6 @@ const DataTable = ({ data, onProceed, onOpen }) => {
   const [open, setOpen] = useState(true);
   const [selectedColumn, setSelectedColumn] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
-  const [encoding, setEncoding] = useState("");
-  const [isEncodingDialogOpen, setIsEncodingDialogOpen] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState(null);
 
@@ -159,18 +138,10 @@ const DataTable = ({ data, onProceed, onOpen }) => {
     ),
   }));
 
-  const handleOpenDialog = () => {
-    setOpen(true); // Otwieramy dialog
-  };
-
-  const closeEncodingDialog = () => {
-    console.log("Encoding algorithm selected:", encoding);
-    setIsEncodingDialogOpen(false); // Zamknięcie dialogu
-  };
-
   const handleCloseDialog = () => {
     console.log("default: ", defaultCols.current);
     console.log("after changes: ", cols);
+    const defaultTypes = defaultCols.current;
     const hasChangedFromNumerical = defaultCols.current.some((col, index) => {
       const currentType = cols[index]?.type; // Typ w aktualnej kolumnie
       const defaultType = col.type; // Typ w kolumnie domyślnej
@@ -190,16 +161,14 @@ const DataTable = ({ data, onProceed, onOpen }) => {
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
           //backgroundColor: "#ff5733",
         },
-      });
-      //console.log("openEncoding: ", isEncodingDialogOpen);
-    }
+      })}
 
     fetch("http://127.0.0.1:5000/update", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ cols, encoding }),
+      body: JSON.stringify({ cols, defaultTypes }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -235,6 +204,26 @@ const DataTable = ({ data, onProceed, onOpen }) => {
     console.log("newCols: ", newCols);
   };
 
+  const onHandleNullValuesChange = (event, index) => {
+    console.log("index:", index);
+    const newCols = [...cols]; // Tworzymy nową kopię tablicy wierszy
+    console.log("old handle null value: ", newCols[index+1].handleNullValues);
+    newCols[index+1].handleNullValues = event.target.value; // Zmieniamy pole 'type' na wybraną opcję
+    console.log("new handle null value: ", event.target.value);
+    setCols(newCols); // Ustawiamy stan
+    console.log("newCols: ", newCols);
+  };
+
+  const onValueToFillWithChange = (value, index) => {
+    console.log("index:", index);
+    const newCols = [...cols]; // Tworzymy nową kopię tablicy wierszy
+    console.log("old value to fill with: ", newCols[index+1].valueToFillWith);
+    newCols[index+1].valueToFillWith = value; // Zmieniamy pole 'type' na wybraną opcję
+    console.log("new value to fill with: ", value);
+    setCols(newCols); // Ustawiamy stan
+    console.log("newCols: ", newCols);
+  };
+
   const handleCheckboxChange = (event, columnId) => {
     console.log("columnId:", columnId);
 
@@ -259,10 +248,6 @@ const DataTable = ({ data, onProceed, onOpen }) => {
       newCols[columnId].class = "false"; // Odznaczamy checkbox dla columnId
     }
     setCols(newCols); // Ustawiamy stan
-  };
-
-  const handleRadioChange = (event) => {
-    setEncoding(event.target.value);
   };
 
   const setColsTypesDefaultValues = () => {
@@ -322,34 +307,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
             </Button>
           </h2>
 
-          <div>
-            <Dialog
-              open={isEncodingDialogOpen}
-              onClose={closeEncodingDialog}
-              ref={dialogRef}
-            >
-              <DialogTitle>How do you want to handle null values?</DialogTitle>
-              <DialogContent>
-                <RadioGroup value={encoding} onChange={handleRadioChange}>
-                  <FormControlLabel
-                    value="One-Hot Encoding"
-                    control={<Radio />}
-                    label="One-Hot Encoding"
-                  />
-                  <FormControlLabel
-                    value="Label Encoding"
-                    control={<Radio />}
-                    label="Label Encoding"
-                  />
-                </RadioGroup>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={closeEncodingDialog} color="secondary">
-                  Confirm
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </div>
+
           <DataGrid
             key={rows.length}
             rows={rows}
@@ -366,6 +324,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
             apiRef={apiRef}
             onStateChange={handleStateChange}
             sx={{
+              height: 400,
               "& .MuiDataGrid-columnHeaderTitle": {
                 fontWeight: "bold",
                 fontSize: "17px",
@@ -422,6 +381,8 @@ const DataTable = ({ data, onProceed, onOpen }) => {
           selectedOption={selectedColumn}
           setSelectedOption={setSelectedColumn}
           onSelectChange={handleSelectColumnChange}
+          onHandleNullValuesChange={onHandleNullValuesChange}
+          onValueToFillWithChange={onValueToFillWithChange}
           selectedRow={selectedRow}
           setSelectedRow={setSelectedRow}
           handleCheckboxChange={handleCheckboxChange}

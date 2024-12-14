@@ -63,6 +63,7 @@ const Preview = ({ data, columnTypes, onProceed }) => {
           showColumnVerticalBorder={true}
           disableColumnResize
           sx={{
+            height: '450px',
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: "bold",
               fontSize: "17px",

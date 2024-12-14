@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import pandas as pd
 from app.models.data import Data
+import json
 
 data_blueprint = Blueprint('data', __name__)
 
@@ -33,6 +34,7 @@ def upload_file():
             Data.set_data(df)
             nullValuesAnalysis = Data.analyze_null_values(df)
             uniqueValuesAnalysis = Data.analyze_unique_values(df)
+            uniqueValuesList = Data.unique_values_to_list(df)
             columnTypesList = [{"column": col, "type": str(dtype)} for col, dtype in df.dtypes.items()]
             mappedColumnTypes = [
                 {
@@ -40,7 +42,10 @@ def upload_file():
                     "type": types_dict.get(item["type"], "nominal"),
                     "class": 'false',
                     "nullCount": int(nullValuesAnalysis.get(item["column"], 0)),
-                    "uniqueValues": int(uniqueValuesAnalysis.get(item["column"], 0))
+                    "handleNullValues": 'Ignore',
+                    "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
+                    "uniqueValues": uniqueValuesList.get(item["column"], []),
+                    "valueToFillWith": None
                 }
                 for item in columnTypesList
             ]
@@ -59,16 +64,44 @@ def upload_file():
     else:
         return jsonify({"error":"Unsupported file type"}), 400
     
-@data_blueprint.route('/set_types', methods=['POST'])
+@data_blueprint.route('/update', methods=['POST'])
 def set_types():
-    columnTypes = request.get_json()
+    res = request.get_json()
 
-    if not columnTypes:
+    if not res:
         return jsonify({"error": "No JSON received"}), 400
-    
-    print("Received data:", columnTypes)
-    Data.set_columnTypes(columnTypes)
+    else:
+        try:
+            data = res  # Parsowanie JSON
+            print("Received JSON:", data)
+            # df = pd.DataFrame(data)
+            # print(df)
+            # Przekształcanie podsłowników na DataFrame
+            df_cols = pd.DataFrame(data['cols'])
+            df_defaultTypes = pd.DataFrame(data['defaultTypes'])
 
-    return jsonify({"message": "Data received", "received_data": columnTypes}), 200
+            # Wyświetlenie obu DataFrame
+            print("df_cols:")
+            print(df_cols)
+
+            print("\ndf_defaultTypes:")
+            print(df_defaultTypes)
+
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+        return jsonify({"message": "Data received", "received_data": ""}), 200
+    
+
+# @data_blueprint.route('/set_types', methods=['POST'])
+# def set_types():
+#     columnTypes = request.get_json()
+
+#     if not columnTypes:
+#         return jsonify({"error": "No JSON received"}), 400
+    
+#     print("Received data:", columnTypes)
+#     Data.set_columnTypes(columnTypes)
+
+#     return jsonify({"message": "Data received", "received_data": columnTypes}), 200
     
     
