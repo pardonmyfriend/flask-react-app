@@ -1,91 +1,110 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Select, MenuItem, FormControl, InputLabel, DialogContentText, Checkbox, TextField, Autocomplete,
-  List, ListItem, ListItemText,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Popover,
-  Box, Typography,
-  Menu, IconButton
+import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Select, MenuItem, FormControl, InputLabel, Checkbox,
+  Box, Typography, Tooltip, IconButton
  } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import TextField from '@mui/material/TextField';
 
-function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, cols, setCols, setSelectedOption, anchorEl, setAnchorEl, selectedRow, setSelectedRow, handleCheckboxChange }) {
-    const options = cols;
-    const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-    const checkedIcon = <CheckBoxIcon fontSize="small" />;
-    const headers = ['Column name', 'Current type', 'Change type'];
+function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, cols, handleCheckboxChange, setColsTypesDefaultValues, defaultCols }) {
     const colTypes = ['numerical', 'nominal', 'categorical'];
-
-
-    const handleOpenPopover = (event, row) => {
-      event.stopPropagation(); // Zatrzymanie propagacji kliknięcia
-      console.log("Open Popover Triggered");
-      setAnchorEl(event.currentTarget);
-      setSelectedRow(row);
-    };
-
-    const handleClosePopover = () => {
-      setAnchorEl(null);
-      setSelectedRow(null);
-    };
-
-    const handleOptionClick = (event, option) => {
-      event.stopPropagation(); // Zatrzymuje propagację kliknięcia
-      alert(`Wybrano opcję: ${option}`);
-      setAnchorEl(null); // Zamknij Popover po wybraniu opcji
-    };
-
-    const ColumnList = ({ cols }) => {
-      return (
-        <List>
-          {cols.map((col, index) => (
-            <ListItem key={index}>
-              <ListItemText primary={col.headerName} 
-              sx={{
-                color: "black",
-              }}
-              />
-            </ListItem>
-          ))}
-        </List>
-      );
-    };
-
-    const handleSelectChange = (event, index) => {
-      const newCols = [...cols];  // Tworzymy nową kopię tablicy wierszy
-      newCols[index].type = event.target.value;  // Zmieniamy pole 'type' na wybraną opcję
-      setCols(newCols);  // Ustawiamy stan
-    };
 
   return (
     <div style={{ position: 'relative' }}>
-      <Dialog open={open} onClose={onClose} aria-hidden={!open}>
-        <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types"}</DialogTitle>
+      <Dialog open={open} onClose={onClose} aria-hidden={!open} maxWidth="lg" // Możesz dostosować maksymalną szerokość
+        fullWidth>
+        <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types"}
+        </DialogTitle>
         <DialogContent>
 
         <div>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1,
-              border: '1px solid #ccc',
-              borderRadius: 2, }}>
-            <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: '5px' }}>Column name</Typography>
-            <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center', marginLeft: '10px', fontWeight: 'bold' }}>Current type</Typography>
-            <Typography variant="body1" sx={{ minWidth: '150px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>Change type</Typography>
-            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: 'auto' }}>Class</Typography>
+        <Box sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              '@media (max-width: 600px)': {
+                flexDirection: 'column',  // Ustawienie kolumnowego układu dla małych ekranów
+              }
+            }}>
+            <Box sx={{
+                    flex: '1 1 45%',
+                    border: '1px solid #ccc',
+                    padding: 2,
+                    borderRadius: 2,
+                    display: 'flex', // Ustawienie układu w poziomie
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap', // Zapobiega zawijaniu w przypadku braku miejsca
+            }}>
+            <Typography variant="body1" sx={{ minWidth: '100px', marginRight: '8px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: '5px' }}>Column name</Typography>
+            <Typography variant="body1" sx={{ minWidth: '100px', marginRight: '8px', display: 'flex', alignItems: 'center', marginLeft: '10px', fontWeight: 'bold' }}>Default type</Typography>
+            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>Current type</Typography>
+            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>Target
+            <Tooltip title={<>The column in your dataset <br /> that you want to predict.<br />Target must be categorical.</>} arrow>
+            <IconButton size="small" sx={{ padding: 0 }}>
+            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            </Tooltip>
+            </Typography>
             </Box>
+
+            <Box 
+            sx={{
+              flex: '1 1 40%',
+              border: '1px solid #ccc',
+              padding: 2,
+              borderRadius: 2,
+              display: 'flex', // Ustawienie układu w poziomie
+              justifyContent: 'space-between',
+              flexWrap: 'wrap', // Zapobiega zawijaniu w przypadku braku miejsca
+            }}
+            >
+            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>Null values
+            <Tooltip title={<>The number of null values <br />in the column.</>} arrow>
+            <IconButton size="small" sx={{ padding: 0 }}>
+            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            </Tooltip>
+            </Typography>
+            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: 'auto' }}>Handle null values
+            <Tooltip title={<>Choose a way <br/>to handle null values.</>} arrow>
+            <IconButton size="small" sx={{ padding: 0 }}>
+            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            </Tooltip>
+            </Typography>
+            <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: 'auto' }}>Fill with value
+            <Tooltip title={<>Enter the value <br /> to fill null values</>} arrow>
+            <IconButton size="small" sx={{ padding: 0 }}>
+            <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            </Tooltip>
+            </Typography>
+            </Box>
+        </Box>
+
           {cols.map((col, index) => (
-              <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 2, marginBottom: 1,
+            <Box sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 2,
+              '@media (max-width: 600px)': {
+                flexDirection: 'column',  // Ustawienie kolumnowego układu dla małych ekranów
+              }
+            }}>
+
+              <Box key={index} 
+              sx={{
+                flex: '1 1 45%',
                 border: '1px solid #ccc',
-                borderRadius: 2, }}>
+                padding: 2,
+                borderRadius: 2,
+                display: 'flex', // Ustawienie układu w poziomie
+                justifyContent: 'space-between',
+                flexWrap: 'wrap', // Zapobiega zawijaniu w przypadku braku miejsca
+              }}
+              >
               {/* Typography po lewej */}
               <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}>{col.headerName}</Typography>
-              <Typography variant="body1" sx={{ minWidth: '100px', marginRight: '8px', marginLeft: '5px', display: 'flex', alignItems: 'center' }}>{col.type}</Typography>
+              <Typography variant="body1" sx={{ minWidth: '100px', marginRight: '8px', marginLeft: '5px', display: 'flex', alignItems: 'center' }}>{defaultCols[index+1]?.type}</Typography>
               {/* Select po prawej */}
               <FormControl>
                 <InputLabel id="select-label">Type</InputLabel>
@@ -96,170 +115,103 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                   label="Opcja"
                   onChange={(event) => onSelectChange(event, index+1)}
                   autoWidth={true}
-                  sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}
+                  sx={{ minWidth: '130px', marginRight: '8px', display: 'flex', alignItems: 'center' }}
                 >
-                  {colTypes.map((colType, colIndex) => (
-                    <MenuItem key={colIndex} value={colType}>{colType}</MenuItem>
+                  {colTypes
+                  .filter((colType) => !(colType === 'categorical' && cols[index].uniqueValues === 0)) // Filtr warunku
+                  .map((colType, colIndex) => (
+                    <MenuItem key={colIndex} value={colType}>
+                      {colType}
+                    </MenuItem>
                   ))}
-                </Select>
+              </Select>
               </FormControl>
-              <Checkbox
-                checked={selectedOption === index+1}  // Tylko jeden checkbox jest zaznaczony
-                onChange={(event) => handleCheckboxChange(event, index+1)}  // Obsługuje zmianę
-                color="primary"
-              />
+              {cols[index].uniqueValues !== 0 ? (
+                <Checkbox
+                  checked={selectedOption === index + 1}
+                  onChange={(event) => handleCheckboxChange(event, index + 1)}
+                  color="primary"
+                  sx={{ width: '80px' }}
+                />
+              ) : (
+                <Box sx={{ width: '80px', height: '40px' }} /> // Rozmiar odpowiadający checkboxowi
+              )}
+            </Box>
+
+            <Box key={index} 
+              sx={{
+                flex: '1 1 40%',
+                border: '1px solid #ccc',
+                padding: 2,
+                borderRadius: 2,
+                display: 'flex', // Ustawienie układu w poziomie
+                justifyContent: 'space-between',
+                flexWrap: 'wrap', // Zapobiega zawijaniu w przypadku braku miejsca
+              }}
+              >
+              {/* Typography po lewej */}
+              <Typography variant="body1" sx={{ minWidth: '100px',  display: 'flex', alignItems: 'center', marginLeft: '10px' }}>{col.nullCount}</Typography>
+              {/* Select po prawej */}
+              {col.nullCount !== 0 && (
+                <>
+              <FormControl>
+              <InputLabel id="additional-select-label">Handle Null</InputLabel>
+              <Select
+                labelId={`additional-select-${index}-label`}
+                id={`additional-select-${index}`}
+                value={cols[index].handleNull || ''}
+                label="Handle Null"
+                //onChange={(event) => onHandleNullChange(event, index)}
+                autoWidth={true}
+                sx={{
+                  minWidth: '150px',
+                  marginRight: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {/* Opcje radzenia sobie z nullami */}
+                <MenuItem value="ignore">Ignore</MenuItem>
+                <MenuItem value="drop">Drop rows</MenuItem>
+                <MenuItem value="drop">Drop column</MenuItem>
+                <MenuItem value="fill">Fill with average value</MenuItem>
+                <MenuItem value="fill">Fill with median</MenuItem>
+                <MenuItem value="fill">Fill with specific value</MenuItem>
+              </Select>
+            </FormControl>
+                <TextField 
+                  label="Your Label" 
+                  variant="outlined" 
+                  sx={{ minWidth: '80px', marginRight: '8px', display: 'flex', alignItems: 'center', maxWidth: '150px', }}
+                />
+
+              </>)}
+            </Box>
+
             </Box>
           ))}
         </div>
-
-          {/* <ColumnTable cols={cols} headers={headers} colTypes={colTypes}/> */}
-          {/* <DialogContentText>
-            Select a column
-          </DialogContentText> */}
-          
-            {/* <FormControl fullWidth sx={{ marginTop: 2, marginBottom: 2 }}>
-            <Autocomplete
-              multiple
-              id="checkboxes-tags-demo"
-              options={options}
-              disableCloseOnSelect
-              getOptionLabel={(option) => option.title}
-              renderOption={(props, option, { selected }) => {
-                const { key, ...optionProps } = props;
-                return (
-                  <li key={key} {...optionProps}>
-                    <Checkbox
-                      icon={icon}
-                      checkedIcon={checkedIcon}
-                      style={{ marginRight: 8 }}
-                      checked={selected}
-                    />
-                    {option.headerName}
-                  </li>
-                );
-              }}
-              style={{ width: 500 }}
-              renderInput={(params) => (
-                <TextField {...params} label="Nominal" placeholder="Columns" />
-              )}
-            />
-            </FormControl>
-
-            <FormControl fullWidth sx={{ marginTop: 2, marginBottom: 2 }}>
-            <Autocomplete
-              multiple
-              id="checkboxes-tags-demo"
-              options={options}
-              disableCloseOnSelect
-              getOptionLabel={(option) => option.title}
-              renderOption={(props, option, { selected }) => {
-                const { key, ...optionProps } = props;
-                return (
-                  <li key={key} {...optionProps}>
-                    <Checkbox
-                      icon={icon}
-                      checkedIcon={checkedIcon}
-                      style={{ marginRight: 8 }}
-                      checked={selected}
-                    />
-                    {option.headerName}
-                  </li>
-                );
-              }}
-              style={{ width: 500 }}
-              renderInput={(params) => (
-                <TextField {...params} label="Categorical" placeholder="Columns" />
-              )}
-            />
-            </FormControl>
-
-            <FormControl fullWidth sx={{ marginTop: 2, marginBottom: 2 }}>
-            <Autocomplete
-              multiple
-              id="checkboxes-tags-demo"
-              options={options}
-              disableCloseOnSelect
-              getOptionLabel={(option) => option.title}
-              renderOption={(props, option, { selected }) => {
-                const { key, ...optionProps } = props;
-                return (
-                  <li key={key} {...optionProps}>
-                    <Checkbox
-                      icon={icon}
-                      checkedIcon={checkedIcon}
-                      style={{ marginRight: 8 }}
-                      checked={selected}
-                    />
-                    {option.headerName}
-                  </li>
-                );
-              }}
-              style={{ width: 500 }}
-              renderInput={(params) => (
-                <TextField {...params} label="Numerical" placeholder="Columns" />
-              )}
-            />
-            </FormControl>
-
-            <FormControl fullWidth sx={{ marginTop: 2, marginBottom: 2 }}>
-              <InputLabel>Target</InputLabel>
-              <Select
-                value={selectedOption}
-                onChange={onSelectChange}
-                label="Select column"
-              >
-
-                {options.map((option) => (
-                <MenuItem key={option.field} value={option.field}>
-                    {option.headerName}
-                </MenuItem>
-                ))}
-              </Select>
-                {/* <FormControlLabel
-                control={<Checkbox checked={check1} onChange={(e) => handleChange(e, setCheck1)} />}
-                label="CheckBox 1"
-                /> 
-            </FormControl> 
-             <FormControl fullWidth>
-                    <InputLabel id="select-label">Type</InputLabel>
-                    <InputLabel id={`select-label-${index}`}>Type</InputLabel>
-                    <Select
-                      labelId="select-label"
-                      value={selectedOption}
-                      onChange={onSelectChange}
-                      // style={{ width: '100%' }}
-                      // MenuProps={{
-                      //   style: { zIndex: 1300 }
-                      // }}
-                      fullWidth
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 200, // Maksymalna wysokość rozwijanej listy
-                            zIndex: 1300,   // Priorytet warstwowy
-                          },
-                        },
-                        disableScrollLock: true, // Odblokowuje przewijanie dla portalu
-                        anchorOrigin: {
-                          vertical: 'bottom',
-                          horizontal: 'left',
-                        },
-                        transformOrigin: {
-                          vertical: 'top',
-                          horizontal: 'left',
-                        },
-                      }}
-                    >
-                      <MenuItem value="option1">Option 1</MenuItem>
-                      <MenuItem value="option2">Option 2</MenuItem>
-                      <MenuItem value="option3">Option 3</MenuItem>
-                    </Select>
-                  </FormControl>   
-            */}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button onClick={onClose}>Apply</Button>
+        <DialogActions sx={{
+          justifyContent: "space-between", // Rozstaw przyciski
+          padding: "16px", // Opcjonalne dostosowanie odstępów
+        }}>
+          <Button 
+          variant="contained"
+          onClick={setColsTypesDefaultValues}
+          sx={{
+            backgroundColor: "#3fbdbd",
+            color: "black",
+            minWidth: "180px"
+          }}>Set default types</Button>
+          <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#3fbdbd",
+            color: "black",
+            minWidth: "180px"
+          }}
+          onClick={onClose}>Apply</Button>
         </DialogActions>
       </Dialog>
     </div>

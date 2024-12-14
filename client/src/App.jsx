@@ -6,10 +6,11 @@ import ProgressStepper from './components/ProgressStepper';
 import DataTable from './components/DataTable';
 import TabPanel from './pages/algorithms/Algorithms';
 import Dashboard from './pages/Dashboard'
+import Preview from './components/Preview';
 
 function App() {
-  const pages = ['File upload', 'Data', 'Analysis', 'Results']
-  const pageContent = [<FileUploader />, <DataTable />, <TabPanel />, <Dashboard />]
+  const pages = ['File upload', 'Preview', 'Data', 'Analysis', 'Results']
+  const pageContent = [<FileUploader />, <Preview/>, <DataTable />, <TabPanel />, <Dashboard />]
 
   return (
     <div className="App">

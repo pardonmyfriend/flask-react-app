@@ -70,6 +70,7 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
 
     xhr.onload = () => {
       if (xhr.status === 200) {
+        console.log(xhr.responseText);
         const responseData = JSON.parse(xhr.responseText);
         console.log(responseData);
         
@@ -99,12 +100,16 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
           }));
           
           setColumnTypes(updatedColumnTypesRows);
-          console.log("column types:", columnTypes);
+          //console.log("column types:", columnTypes);
 
           const updatedCols = cols.map((item, index) => ({
             ...item,
-            type: columnTypes[index].type
+            type: columnTypes[index].type,
+            class: columnTypes[index].class,
+            nullCount: columnTypes[index].nullCount,
+            uniqueValues: columnTypes[index].uniqueValues
           }))
+          console.log("columns with types:", updatedCols);
 
           setData({ rows: data, columns: updatedCols });
         }
