@@ -3,9 +3,11 @@ import { useDropzone } from 'react-dropzone';
 import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; 
 
 
-const FileUploader = ({ setData, onProceed }) => {
+const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -14,6 +16,7 @@ const FileUploader = ({ setData, onProceed }) => {
     if (acceptedFiles.length) {
       const file = acceptedFiles[0];
       const fileExtension = file.name.split('.').pop().toLowerCase();
+      console.log(fileExtension)
 
       if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
         setFile(file);
@@ -53,21 +56,6 @@ const FileUploader = ({ setData, onProceed }) => {
 
     const formData = new FormData();
     formData.append('file', fileToSend);
-
-    // const normalizeData = (rows) => {
-    //   return rows.map(row => {
-    //     // Jeśli istnieje jakiekolwiek pole 'id', 'Id' lub 'ID', przypisz je do nowego pola 'id'
-    //     if (row.hasOwnProperty('id')) {
-    //       return { ...row, id: row.id };
-    //     } else if (row.hasOwnProperty('Id')) {
-    //       return { ...row, id: row.Id };
-    //     } else if (row.hasOwnProperty('ID')) {
-    //       return { ...row, id: row.ID };
-    //     } else {
-    //       return rows; // Jeśli brak tych pól, po prostu zwróć oryginalny wiersz
-    //     }
-    //   });
-    // };
     
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:5000/upload', true);
@@ -82,14 +70,17 @@ const FileUploader = ({ setData, onProceed }) => {
 
     xhr.onload = () => {
       if (xhr.status === 200) {
+        console.log(xhr.responseText);
         const responseData = JSON.parse(xhr.responseText);
         console.log(responseData);
         
         onProceed(true);
         console.log("onProceed invoked");
   
-        if (responseData && responseData.length > 0) {
-          const keys = Object.keys(responseData[0]);
+        if (responseData.data && responseData.data.length > 0) {
+          const data = responseData.data;
+          console.log("data:", data);
+          const keys = Object.keys(data[0]);
 
           // Przenieś kolumnę `id` na początek, jeśli istnieje
           const orderedKeys = keys.includes('id') 
@@ -101,12 +92,47 @@ const FileUploader = ({ setData, onProceed }) => {
             headerName: key.toUpperCase(),
             width: 150,
           }));
-  
-          setData({ rows: responseData, columns: cols });
+
+          const columnTypes = responseData.types;
+          const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+            column: column.toUpperCase(), // Zmieniamy nazwę kolumny na wielkie litery
+            type: type,                  // Zachowujemy typ bez zmian
+          }));
+          
+          setColumnTypes(updatedColumnTypesRows);
+          //console.log("column types:", columnTypes);
+
+          const updatedCols = cols.map((item, index) => ({
+            ...item,
+            type: columnTypes[index].type,
+            class: columnTypes[index].class,
+            nullCount: columnTypes[index].nullCount,
+            uniqueValues: columnTypes[index].uniqueValues
+          }))
+          console.log("columns with types:", updatedCols);
+
+          setData({ rows: data, columns: updatedCols });
         }
         setUploadProgress(100); // Ustawia postęp na 100% po zakończeniu
       } else {
+        try {
+          const errorResponse = JSON.parse(xhr.responseText);
+          toast.error(errorResponse.error, {
+            progressStyle: { 
+                background: "#3fbdbd",
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                //backgroundColor: "#ff5733",
+            }});
+          } catch (e) {
+              console.error('Błąd parsowania odpowiedzi błędu:', e);
+          }
         console.error('Błąd podczas przesyłania pliku');
+        // toast.error('Błąd podczas przesyłania pliku', {
+        //   progressStyle: { 
+        //       background: "#3fbdbd",
+        //       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+        //       //backgroundColor: "#ff5733",
+        //   }});
         setUploadProgress(0);
       }
     };
@@ -139,6 +165,7 @@ const FileUploader = ({ setData, onProceed }) => {
           cursor: "default",
         }}
       >
+        <ToastContainer />
         <CloudUploadIcon
           sx={{ fontSize: 60, color: "#1976d2", marginBottom: "20px" }}
         />
