@@ -11,8 +11,12 @@ function ProgressStepper({ steps, stepContent }) {
   const [activeStep, setActiveStep] = useState(0);
   const [canProceedToNextStep, setCanProceedToNextStep] = useState(false);
   const [completed, setCompleted] = useState({});
+
   const [data, setData] = useState(null);
   const [columnTypes, setColumnTypes] = useState(null);
+  const [algorithmName, setAlgorithmName] = useState('');
+  const [params, setParams] = useState({});
+
 
   const totalSteps = steps.length;
   const completedSteps = Object.keys(completed).length;
@@ -47,6 +51,7 @@ function ProgressStepper({ steps, stepContent }) {
     <Box sx={{ width: '100%' }}>
         <Stepper 
           activeStep={activeStep}
+          sx={{ marginBottom: '30px' }}
         >
             {steps.map((step, index) => (
                 <Step 
@@ -86,14 +91,20 @@ function ProgressStepper({ steps, stepContent }) {
                   padding: '40px',
                   textAlign: 'center',
                   backgroundColor: '#fff',
-                  boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1), 0px 8px 30px rgba(0, 0, 0, 0.15)', // Efekt 3D cienia
-                  width: '70%',
-                  margin: '30px auto',
+                  boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1), 0px 8px 30px rgba(0, 0, 0, 0.15)',
+                  width: '80%',
+                  margin: '0 auto',
                   maxWidth: '1200px',
-                  minHeight: '150vh'
+                  minHeight: 'calc(100vh - 204px)'
                 }}
               >
-                {React.cloneElement(stepContent[activeStep], { data, columnTypes, setData, setColumnTypes, onProceed: handleProceed})}
+                {React.cloneElement(stepContent[activeStep], { 
+                  data, setData, columnTypes, setColumnTypes,
+                  algorithmName, setAlgorithmName, 
+                  params, setParams, 
+                  onProceed: handleProceed
+                  })
+                }
               </Box>
               <Fab 
                 color="primary" 
@@ -101,6 +112,7 @@ function ProgressStepper({ steps, stepContent }) {
                 disabled={activeStep === 0}
                 sx={{
                   position: 'fixed',
+                  left: '20px',
                   top: '50%',
                   transform: 'translateY(-50%)',
                 }}

@@ -1,22 +1,4 @@
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
-
 class Algorithm:
-    sklearn_classes = {
-        'PCA': PCA,
-        't-SNE': TSNE,
-        'K-Means': KMeans,
-        'Agglomerative Clustering': AgglomerativeClustering,
-        'DBSCAN': DBSCAN,
-        'KNN': KNeighborsClassifier,
-        'Decision Tree': DecisionTreeClassifier,
-        'Logistic Regression': LogisticRegression
-    }
-
     def __init__(self, algorithm_name, params=None):
         self.algorithm_name = algorithm_name
         self.param_info = self.get_algorithm_param_info()
@@ -28,11 +10,6 @@ class Algorithm:
             self.params = self.get_default_params()
         else:
             self.params = params
-
-        self.sklearn_class = self.sklearn_classes.get(algorithm_name)
-
-        if not self.sklearn_class:
-            raise ValueError(f"Unknown algorithm for sklearn: {algorithm_name}")
 
     def get_default_params(self):
         default_params = {}
@@ -46,15 +23,6 @@ class Algorithm:
             'params': self.params,
             'param_info': self.param_info
         }
-    
-    def run_algorithm(self, data):
-        model = self.sklearn_class(**self.params)
-        if hasattr(model, 'fit'):
-            return model.fit(data)  # .fit() dla algorytmów, które wymagają dopasowania
-        elif hasattr(model, 'transform'):
-            return model.transform(data)  # .transform() jeśli jest tylko przekształcenie
-        else:
-            raise ValueError(f"The selected algorithm '{self.algorithm_name}' is not supported.")
     
     def get_algorithm_param_info(self):
         if self.algorithm_name == 'PCA':
@@ -85,6 +53,7 @@ class Algorithm:
                     'step': 0.1,
                     'precision': 1,
                     'description': 'Error tolerance for "arpack" solver',
+                    'dependency': ['svd_solver', 'arpack', 'enable']
                 }
             }
         elif self.algorithm_name == 't-SNE':
@@ -114,7 +83,7 @@ class Algorithm:
                     'precision': 1,
                     'description': 'Rate at which embedding is adjusted',
                 },
-                'n_iter': {
+                'max_iter': {
                     'type': 'int',
                     'min': 250,
                     'max': 5000,
@@ -174,8 +143,8 @@ class Algorithm:
                 },
                 'algorithm': {
                     'type': 'select',
-                    'options': ['auto', 'full', 'elkan'],
-                    'default': 'auto',
+                    'options': ['lloyd', 'elkan'],
+                    'default': 'lloyd',
                     'description': 'Algorithm used for computation',
                 }
             }
@@ -187,6 +156,8 @@ class Algorithm:
                     'max': 20,
                     'default': 2,
                     'description': 'Number of clusters to form',
+                    'nullable': True,
+                    'dependency': ['distance_threshold', 0.0, 'uncheck']
                 },
                 'affinity': {
                     'type': 'select',
@@ -208,7 +179,8 @@ class Algorithm:
                     'step': 0.1,
                     'precision': 1,
                     'description': 'Max distance between clusters to merge',
-                    'nullable': True
+                    'nullable': True,
+                    'dependency': ['n_clusters', 2, 'uncheck']
                 }
             }
         elif self.algorithm_name == 'DBSCAN':
