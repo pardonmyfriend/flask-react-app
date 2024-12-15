@@ -13,6 +13,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [completed, setCompleted] = useState({});
 
   const [data, setData] = useState(null);
+  const [columnTypes, setColumnTypes] = useState(null);
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
   const [algorithmSelected, setAlgorithmSelected] = useState(false);
@@ -108,6 +109,8 @@ function ProgressStepper({ steps, stepContent }) {
                   algorithmSelected: algorithmSelected,
                   setAlgorithmSelected: setAlgorithmSelected,
                   onProceed: handleProceed, 
+                  columnTypes: columnTypes, 
+                  setColumnTypes: setColumnTypes
                   })
                 }
               </Box>
