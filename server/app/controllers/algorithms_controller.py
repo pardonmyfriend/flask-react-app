@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from app.models.algorithm import Algorithm
-from sklearn.datasets import load_iris
 import pandas as pd
 import numpy as np
 
@@ -11,10 +10,11 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 
-from sklearn.metrics import pairwise_distances
+from sklearn.metrics import pairwise_distances, silhouette_score, silhouette_samples
 from sklearn.manifold import trustworthiness
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import silhouette_score
+
+from scipy.cluster.hierarchy import dendrogram, linkage
 
 
 algorithms_blueprint = Blueprint('algorithms', __name__)
@@ -103,8 +103,6 @@ def run_PCA():
             "loadings": loadings.to_dict(orient='index'),
             "correlation_matrix": correlation_matrix.to_dict(orient='index')
         }
-
-        print(pca_data)
 
         return jsonify(pca_data), 200
     except ValueError as e:
@@ -205,8 +203,6 @@ def run_KMeans():
 
         centroids_df['id'] = range(1, len(centroids_df)+1)
 
-        print(centroids_df)
-
         kmeans_data = {
             "clustered_dataframe": df.to_dict(orient='records'),
             "silhouette_score": silhouette_avg,
@@ -214,5 +210,217 @@ def run_KMeans():
         }
 
         return jsonify(kmeans_data), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+@algorithms_blueprint.route('/run_DBSCAN', methods=['POST'])
+def run_dbscan():
+    request_data = request.get_json()
+    params = request_data.get('params', {})
+    df = request_data.get('data', [])
+
+    try:
+        df = pd.DataFrame(df)
+
+        ids = df['id'] if 'id' in df.columns else None
+        
+        X = df.drop(columns=['id', 'species'])
+        X = X.select_dtypes(exclude=['object'])
+
+        dbscan = DBSCAN(
+            eps=params.get('eps'),
+            min_samples=params.get('min_samples'),
+            metric=params.get('metric'),
+            algorithm=params.get('algorithm')
+        )
+        
+        clusters = dbscan.fit_predict(X)
+
+        df_cluster = pd.DataFrame(X)
+        df_cluster['cluster'] = clusters
+        df_cluster['cluster'] = df_cluster['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+        df_cluster['id'] = ids
+        
+        cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
+
+        if 'Noise' not in cluster_sizes:
+            cluster_sizes['Noise'] = 0
+
+        cluster_sizes = {str(key): value for key, value in cluster_sizes.items()}
+
+        feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
+        
+        intra_cluster_distances = df_cluster[df_cluster['cluster'] != 'Noise'].groupby('cluster').apply(
+            lambda cluster: pairwise_distances(cluster[feature_columns]).mean() if len(cluster) > 1 else 0
+        ).reset_index(name='intra-cluster distance')
+
+        centroids = df_cluster[df_cluster['cluster'] != 'Noise'].groupby('cluster')[feature_columns].mean(numeric_only=True).reset_index()
+        centroids['id'] = range(1, len(centroids)+1)
+
+        centroid_matrix = centroids[feature_columns].values
+        inter_cluster_distances = pairwise_distances(centroid_matrix)
+
+        inter_cluster_df = pd.DataFrame(
+            inter_cluster_distances,
+            index=centroids['cluster'],
+            columns=centroids['cluster']
+        )
+
+        if len(set(clusters)) > 1 and len(set(clusters)) != 0:
+            silhouette = silhouette_score(X[clusters != -1], clusters[clusters != -1])
+        else:
+            silhouette = "Not Applicable"
+        
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(X)
+        df_pca = pd.DataFrame(
+            X_pca, 
+            columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+        )
+        df_pca['cluster'] = clusters
+        df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+
+        if len(set(clusters)) > 1:
+            silhouette_scores = silhouette_samples(X, clusters)
+            df_pca['silhouette_score'] = silhouette_scores
+        else:
+            silhouette_scores = None
+
+        df_pca['id'] = range(1, len(df_pca)+1)
+
+        dbscan_data = {
+            "cluster_dataframe": df_cluster.to_dict(orient='records'),
+            "pca_dataframe": df_pca.to_dict(orient='records'),
+            "cluster_sizes": cluster_sizes,
+            "silhouette_score": silhouette,
+            "centroids": centroids.to_dict(orient='records'),
+            "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
+            "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
+        }
+
+        return jsonify(dbscan_data), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+@algorithms_blueprint.route('/run_Agglomerative Clustering', methods=['POST'])
+def run_agg_clus():
+    request_data = request.get_json()
+    params = request_data.get('params', {})
+    df = request_data.get('data', [])
+
+    try:
+        df = pd.DataFrame(df)
+
+        ids = df['id'] if 'id' in df.columns else None
+        
+        X = df.drop(columns=['id', 'species'])
+        X = X.select_dtypes(exclude=['object'])
+
+        agg = AgglomerativeClustering(
+            n_clusters=params.get('n_clusters'),
+            linkage=params.get('linkage'),
+            distance_threshold=params.get('distance_threshold')
+        )
+        
+        clusters = agg.fit_predict(X)
+
+        silhouette = silhouette_score(X, clusters)
+
+        df_cluster = pd.DataFrame(X)
+        df_cluster['cluster'] = clusters
+        df_cluster['id'] = ids
+        
+        cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
+
+        linkage_matrix = linkage(X, optimal_ordering=True, method=params.get('linkage'))
+        dendro = dendrogram(linkage_matrix, no_plot=True)
+        dendrogram_data = {
+            'color_list': dendro['color_list'],
+            'icoord': dendro['icoord'],
+            'dcoord': dendro['dcoord'],
+            'ivl': dendro['ivl'],
+            'leaves': dendro['leaves'],
+            'leaves_color_list': dendro['leaves_color_list']
+        }
+
+        print(linkage_matrix)
+
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(X)
+        df_pca = pd.DataFrame(
+            X_pca, 
+            columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+        )
+        df_pca['cluster'] = clusters
+        df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+
+        agg_data = {
+            "cluster_dataframe": df_cluster.to_dict(orient='records'),
+            "pca_dataframe": df_pca.to_dict(orient='records'),
+            "cluster_sizes": cluster_sizes,
+            "silhouette_score": silhouette,
+            # "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
+            # "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
+            "dendrogram_data": dendrogram_data
+        }
+
+        return jsonify(agg_data), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+@algorithms_blueprint.route('/run_KNN', methods=['POST'])
+def run_knn():
+    request_data = request.get_json()
+    params = request_data.get('params', {})
+    df = request_data.get('data', [])
+
+    try:
+        df = pd.DataFrame(df)
+
+        ids = df['id'] if 'id' in df.columns else None
+        
+        X = df.drop(columns=['id', 'species'])
+        X = X.select_dtypes(exclude=['object'])
+        y = df['species']
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+        agg = AgglomerativeClustering(
+            n_clusters=params.get('n_clusters'),
+            linkage=params.get('linkage'),
+            distance_threshold=params.get('distance_threshold')
+        )
+        
+        clusters = agg.fit_predict(X)
+
+        silhouette = silhouette_score(X, clusters)
+
+        df_cluster = pd.DataFrame(X)
+        df_cluster['cluster'] = clusters
+        df_cluster['id'] = ids
+        
+        cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
+
+        linkage_matrix = linkage(X, method='ward')
+
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(X)
+        df_pca = pd.DataFrame(
+            X_pca, 
+            columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+        )
+        df_pca['cluster'] = clusters
+        df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+
+        agg_data = {
+            "cluster_dataframe": df_cluster.to_dict(orient='records'),
+            "pca_dataframe": df_pca.to_dict(orient='records'),
+            "cluster_sizes": cluster_sizes,
+            "silhouette_score": silhouette,
+            # "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
+            # "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
+        }
+
+        return jsonify(agg_data), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

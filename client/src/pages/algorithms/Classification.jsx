@@ -2,23 +2,38 @@ import React from 'react';
 import Tile from '../../components/Tile';
 import { Box } from '@mui/material';
 
-const Classification = ({ handleTileClick }) => {
+const Classification = ({ handleTileClick, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected }) => {
   return (
     <Box display="flex" flexWrap="wrap" justifyContent="center">
       <Tile 
-        title="KNN" 
-        color="#072E33" 
+        title="KNN"
         onClick={() => handleTileClick('KNN')} 
+        algorithmName={algorithmName}
+        setAlgorithmName={setAlgorithmName}
+        params={params}
+        setParams={setParams}
+        algorithmSelected={algorithmSelected}
+        setAlgorithmSelected={setAlgorithmSelected}
       />
       <Tile 
-        title="Decision Tree" 
-        color="#0A6E70" 
+        title="Decision Tree"
         onClick={() => handleTileClick('Decision Tree')} 
+        algorithmName={algorithmName}
+        setAlgorithmName={setAlgorithmName}
+        params={params}
+        setParams={setParams}
+        algorithmSelected={algorithmSelected}
+        setAlgorithmSelected={setAlgorithmSelected}
       />
       <Tile 
-        title="Logistic Regression" 
-        color="#0D969C" 
+        title="Logistic Regression"
         onClick={() => handleTileClick('Logistic Regression')} 
+        algorithmName={algorithmName}
+        setAlgorithmName={setAlgorithmName}
+        params={params}
+        setParams={setParams}
+        algorithmSelected={algorithmSelected}
+        setAlgorithmSelected={setAlgorithmSelected}
       />
     </Box>
   );

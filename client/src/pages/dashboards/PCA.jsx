@@ -144,7 +144,7 @@ function PCA({ pcaData }) {
     const renderScatterPlot = () => {
         const uniqueSpecies = [...new Set(pcaData.pca_components.map(row => row.species))];
         const colorMap = uniqueSpecies.reduce((map, species, index) => {
-            const colors = ['#3FBDBD', '#329797', '#257171', '#194B4B'];
+            const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
             map[species] = colors[index % colors.length];
             return map;
         }, {});
@@ -289,9 +289,9 @@ function PCA({ pcaData }) {
                     x: components,
                     y: variables,
                     type: 'heatmap',
-                    colorscale: 'Coolwarm', // Paleta typu coolwarm
+                    colorscale: 'RdBu',
                     hoverongaps: false,
-                    showscale: true, // Wyświetlanie skali kolorów
+                    showscale: true,
                     colorbar: {
                         title: 'Korelacja',
                         titleside: 'right',
