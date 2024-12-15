@@ -3,6 +3,7 @@ import PCA from './PCA';
 import TSNE from './TSNE';
 import KMeans from './KMeans';
 import DBSCAN from './DBSCAN';
+import AgglomerativeClustering from './AgglomerativeClustering';
 
 function Dashboard({ data, algorithmName, params }) {
   const [algorithmData, setAlgorithmData] = useState(null)
@@ -60,8 +61,10 @@ function Dashboard({ data, algorithmName, params }) {
         return <TSNE tsneData={algorithmData} />;
       case 'K-Means':
         return <KMeans kmeansData={algorithmData} />;
-        case 'DBSCAN':
+      case 'DBSCAN':
           return <DBSCAN dbscanData={algorithmData} />;
+      case 'Agglomerative Clustering':
+        return <AgglomerativeClustering aggData={algorithmData} />;
       default:
         return <div>Nieznany algorytm: {algorithmName}</div>;
     }

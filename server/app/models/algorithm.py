@@ -159,12 +159,6 @@ class Algorithm:
                     'nullable': True,
                     'dependency': ['distance_threshold', 0.0, 'uncheck']
                 },
-                'affinity': {
-                    'type': 'select',
-                    'options': ['euclidean', 'manhattan', 'cosine'],
-                    'default': 'euclidean',
-                    'description': 'Distance metric for clustering',
-                },
                 'linkage': {
                     'type': 'select',
                     'options': ['ward', 'complete', 'average', 'single'],
