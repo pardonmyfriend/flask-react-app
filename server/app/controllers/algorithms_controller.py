@@ -14,8 +14,7 @@ from sklearn.metrics import pairwise_distances, silhouette_score, silhouette_sam
 from sklearn.manifold import trustworthiness
 from sklearn.preprocessing import StandardScaler
 
-from scipy.cluster.hierarchy import dendrogram, linkage
-
+from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 
 algorithms_blueprint = Blueprint('algorithms', __name__)
 
@@ -67,7 +66,7 @@ def run_PCA():
             svd_solver=params.get('svd_solver'), 
             whiten=params.get('whiten'), 
             tol=params.get('tol')
-            )
+        )
         
         pca_for_variance.fit(df)
         
@@ -333,7 +332,13 @@ def run_agg_clus():
         cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
 
         linkage_matrix = linkage(X, optimal_ordering=True, method=params.get('linkage'))
-        dendro = dendrogram(linkage_matrix, no_plot=True)
+        if params.get('n_clusters'):
+            cluster_labels = fcluster(linkage_matrix, params.get('n_clusters'), criterion='maxclust')
+            dendro = dendrogram(linkage_matrix, color_threshold=linkage_matrix[-(params.get('n_clusters')-1), 2], no_plot=True)
+        else:
+            cluster_labels = fcluster(linkage_matrix, t=params.get('distance_threshold'), criterion='distance')
+            dendro = dendrogram(linkage_matrix, color_threshold=params.get('distance_threshold'), no_plot=True)
+
         dendrogram_data = {
             'color_list': dendro['color_list'],
             'icoord': dendro['icoord'],
@@ -342,8 +347,6 @@ def run_agg_clus():
             'leaves': dendro['leaves'],
             'leaves_color_list': dendro['leaves_color_list']
         }
-
-        print(linkage_matrix)
 
         pca = PCA(n_components=2)
         X_pca = pca.fit_transform(X)
@@ -361,7 +364,8 @@ def run_agg_clus():
             "silhouette_score": silhouette,
             # "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
             # "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
-            "dendrogram_data": dendrogram_data
+            "dendrogram_data": dendrogram_data,
+            "threshold": params.get('distance_threshold')
         }
 
         return jsonify(agg_data), 200

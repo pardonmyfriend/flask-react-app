@@ -344,6 +344,8 @@ function AgglomerativeClustering({ aggData }) {
     const renderDendrogram = () => {
         const dendro = aggData.dendrogram_data;
 
+        const threshold = aggData.threshold || 0;
+
         const filteredIcoord = dendro.icoord.filter((icoord, idx) => {
             const dcoord = dendro.dcoord[idx];
             return !(dcoord.every((y) => y === 0));
@@ -363,7 +365,11 @@ function AgglomerativeClustering({ aggData }) {
         const uniqueColors = Array.from(new Set(filtredColors));
         const colorMapping = {};
         uniqueColors.forEach((color, index) => {
-            colorMapping[color] = colors[index % colors.length];
+            if (color === 'C0') {
+                colorMapping[color] = '#808080'; // Szary dla C0
+            } else {
+                colorMapping[color] = colors[index % colors.length]; // Kolory z tablicy dla reszty
+            }
         });
 
         const leafPositions = [];
@@ -394,8 +400,20 @@ function AgglomerativeClustering({ aggData }) {
         const tickvals = sortedLeafPositions;
         const ticktext = dendro.ivl;
 
-        const numLeaves = dendro.ivl.length;
-        const plotWidth = Math.max(600, numLeaves * 20);
+        const shapes = threshold > 0 ? [
+            {
+                type: "line",
+                x0: Math.min(...sortedLeafPositions), // Początek linii na osi X
+                x1: Math.max(...sortedLeafPositions), // Koniec linii na osi X
+                y0: threshold, // Poziom na osi Y
+                y1: threshold, // Poziom na osi Y
+                line: {
+                    color: "black",
+                    width: 1,
+                    dash: "dashdot", // Styl linii: kropkowana
+                },
+            },
+        ] : [];
     
         return (
             <ResponsivePlot
@@ -403,7 +421,6 @@ function AgglomerativeClustering({ aggData }) {
                 layout={{
                     title: "Dendrogram",
                     autosize: false,
-                    width: plotWidth,
                     xaxis: {
                         title: "Leaf Index",
                         tickvals: tickvals,
@@ -414,6 +431,7 @@ function AgglomerativeClustering({ aggData }) {
                     yaxis: {
                         title: "Distance",
                     },
+                    shapes: shapes,
                     showlegend: false,
                 }}
                 config={{
