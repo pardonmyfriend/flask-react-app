@@ -1,40 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import React from "react";
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Plot from "react-plotly.js";
-import { useResizeDetector } from 'react-resize-detector';
+import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import DataTable from "../../components/plots/DataTable";
+import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function TSNE({ tsneData }) {
-    const dataGridStyle = {
-        verflowY: 'auto',
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',
-            fontSize: '17px',
-        },
-        '& .MuiDataGrid-row:nth-of-type(2n)': {
-            backgroundColor: '#f6f6f6',
-        },
-        '& .MuiDataGrid-toolbar': {
-            color: 'white',
-        },
-        '& .MuiButton-textPrimary': {
-            color: 'white !important',
-        },
-        '& .MuiTypography-root': {
-            color: 'white !important',
-        },
-        '& .MuiButtonBase-root': {
-            color: 'white !important',
-        },
-        '& .MuiSvgIcon-root': {
-            color: '#3fbdbd !important',
-        },
-        '& .MuiDataGrid-columnsManagement': {
-            backgroundColor: '#3fbdbd !important',
-        },
-    };
-    
     const renderTSNEDataframe = () => {
         const keys = Object.keys(tsneData.tsne_dataframe[0]);
 
@@ -50,53 +21,13 @@ function TSNE({ tsneData }) {
             flex: 1,
         }));
 
+        const rows = tsneData.tsne_dataframe;
+
         return (
-            <DataGrid
-                rows={tsneData.tsne_dataframe}
-                columns={cols}
-                loading={!tsneData.tsne_dataframe.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
-                pageSizeOptions={[10, 25, 50]}
-                sx={dataGridStyle}
-                slots={{
-                    toolbar: GridToolbar,
-                }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
-        );
-    };
-
-    const ResponsivePlot = ({ data, layout, config }) => {
-        const { width, height, ref } = useResizeDetector();
-
-        return (
-            <div ref={ref} style={{ width: '100%', height: '500px' }}>
-                {width && height && (
-                    <Plot
-                        data={data}
-                        layout={{ ...layout, width, height }}
-                        config={config}
-                    />
-                )}
-            </div>
         );
     };
 
@@ -124,44 +55,13 @@ function TSNE({ tsneData }) {
                 symbol: 'circle',
             },
         }));
-    
+
         return (
-            <ResponsivePlot
+            <ScatterPlot
                 data={data}
-                layout={{
-                    autosize: true,
-                    title: {
-                        text: 'Scatter plot: PC1 vs PC2',
-                    },
-                    xaxis: {
-                        title: {
-                            text: 'PC1',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'PC2',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    legend: {
-                        orientation: 'h',
-                        x: 0.5,
-                        xanchor: 'center',
-                        y: -0.2,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false, 
-                }}
+                title={'Scatter plot: F1 vs F2'}
+                xTitle={'F1'}
+                yTitle={'F2'}
             />
         );
     };
@@ -266,41 +166,10 @@ function TSNE({ tsneData }) {
 
     return (
         <div>
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderTSNEDataframe()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderScatterPlot()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderHistogramPlots()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderBarPlot()}
-            </div>
+            {renderTSNEDataframe()}
+            {renderScatterPlot()}
+            {renderHistogramPlots()}
+            {renderBarPlot()}
         </div>
     )
 }

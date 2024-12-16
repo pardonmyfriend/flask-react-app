@@ -1,38 +1,9 @@
 import React from "react";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import Plot from "react-plotly.js";
-import { useResizeDetector } from 'react-resize-detector';
+import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import DataTable from "../../components/plots/DataTable";
+import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function DBSCAN({ dbscanData }) {
-    const dataGridStyle = {
-        verflowY: 'auto',
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',
-            fontSize: '17px',
-        },
-        '& .MuiDataGrid-row:nth-of-type(2n)': {
-            backgroundColor: '#f6f6f6',
-        },
-        '& .MuiDataGrid-toolbar': {
-            color: 'white',
-        },
-        '& .MuiButton-textPrimary': {
-            color: 'white !important',
-        },
-        '& .MuiTypography-root': {
-            color: 'white !important',
-        },
-        '& .MuiButtonBase-root': {
-            color: 'white !important',
-        },
-        '& .MuiSvgIcon-root': {
-            color: '#3fbdbd !important',
-        },
-        '& .MuiDataGrid-columnsManagement': {
-            backgroundColor: '#3fbdbd !important',
-        },
-    };
-
     const renderDBSCANDataframe = () => {
         const keys = Object.keys(dbscanData.cluster_dataframe[0]);
         
@@ -46,51 +17,13 @@ function DBSCAN({ dbscanData }) {
             flex: 1,
         }));
 
+        const rows = dbscanData.cluster_dataframe;
+
         return (
-            <DataGrid
-                rows={dbscanData.cluster_dataframe}
-                columns={cols}
-                loading={!dbscanData.cluster_dataframe.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
-                pageSizeOptions={[10, 25, 50]}
-                sx={dataGridStyle}
-                slots={{ toolbar: GridToolbar }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
-        );
-    };
-
-    const ResponsivePlot = ({ data, layout, config }) => {
-        const { width, height, ref } = useResizeDetector();
-
-        return (
-            <div ref={ref} style={{ width: '100%', height: '500px' }}>
-                {width && height && (
-                    <Plot
-                        data={data}
-                        layout={{ ...layout, width, height }}
-                        config={config}
-                    />
-                )}
-            </div>
         );
     };
 
@@ -120,40 +53,11 @@ function DBSCAN({ dbscanData }) {
         }));
 
         return (
-            <ResponsivePlot
+            <ScatterPlot
                 data={data}
-                layout={{
-                    autosize: true,
-                    title: "Clusters Visualized with PCA",
-                    xaxis: {
-                        title: {
-                            text: 'PC1',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'PC2',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    legend: {
-                        orientation: 'h',
-                        x: 0.5,
-                        xanchor: 'center',
-                        y: -0.2,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false, 
-                }}
+                title={'Clusters Visualized with PCA'}
+                xTitle={'PC1'}
+                yTitle={'PC2'}
             />
         );
     };
@@ -204,14 +108,7 @@ function DBSCAN({ dbscanData }) {
                 }}
             />
         );
-    };       
-
-    // const renderSilhouetteScore = () => (
-    //     <div>
-    //         <h3>Silhouette Score:</h3>
-    //         <p>{dbscanData.silhouette_score}</p>
-    //     </div>
-    // );
+    };
 
     const renderHeatmap = () => {
         const clusterLabels = dbscanData.inter_cluster_distances.index.map(
@@ -303,24 +200,19 @@ function DBSCAN({ dbscanData }) {
             ? ['id', 'cluster', ...keys.filter((key) => key !== 'id' && key !== 'cluster')] 
             : ['cluster', ...keys.filter((key) => key !== 'cluster')];
 
-        const columns = orderedKeys.map(key => ({
+        const cols = orderedKeys.map(key => ({
             field: key,
             headerName: key.toUpperCase(),
             flex: 1,
         }));
+
+        const rows = dbscanData.centroids;
     
         return (
-            <div>
-                <h3>Centroids</h3>
-                <DataGrid
-                    rows={dbscanData.centroids}
-                    columns={columns}
-                    loading={!dbscanData.centroids.length}
-                    sx={dataGridStyle}
-                    showColumnVerticalBorder
-                    showCellVerticalBorder
-                />
-            </div>
+            <DataTable
+                rows={rows}
+                cols={cols}
+            />
         );
     };
 
