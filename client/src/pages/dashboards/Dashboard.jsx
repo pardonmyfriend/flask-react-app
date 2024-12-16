@@ -5,7 +5,7 @@ import KMeans from './KMeans';
 import DBSCAN from './DBSCAN';
 import AgglomerativeClustering from './AgglomerativeClustering';
 
-function Dashboard({ data, algorithmName, params }) {
+function Dashboard({ data, algorithmName, params, target }) {
   const [algorithmData, setAlgorithmData] = useState(null)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,7 +19,8 @@ function Dashboard({ data, algorithmName, params }) {
 
       const payload = {
           params: params,
-          data: data.rows
+          data: data.rows,
+          target: target
       };
 
       try {

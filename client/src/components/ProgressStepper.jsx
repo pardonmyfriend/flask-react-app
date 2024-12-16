@@ -17,6 +17,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
   const [algorithmSelected, setAlgorithmSelected] = useState(false);
+  const [target, setTarget] = useState('species') //do zmiany
 
 
   const totalSteps = steps.length;
@@ -110,7 +111,9 @@ function ProgressStepper({ steps, stepContent }) {
                   setAlgorithmSelected: setAlgorithmSelected,
                   onProceed: handleProceed, 
                   columnTypes: columnTypes, 
-                  setColumnTypes: setColumnTypes
+                  setColumnTypes: setColumnTypes,
+                  target: target,
+                  setTarget: setTarget
                   })
                 }
               </Box>
