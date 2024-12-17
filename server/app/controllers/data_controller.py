@@ -32,6 +32,9 @@ def upload_file():
         if Data.validate_data(df):
             df = Data.map_data_id(df)
             Data.set_data(df)
+            dat = Data.get_data()
+            print("\ndata:")
+            print(dat)
             nullValuesAnalysis = Data.analyze_null_values(df)
             uniqueValuesAnalysis = Data.analyze_unique_values(df)
             uniqueValuesList = Data.unique_values_to_list(df)
@@ -77,8 +80,12 @@ def set_types():
             # df = pd.DataFrame(data)
             # print(df)
             # Przekształcanie podsłowników na DataFrame
-            df_cols = pd.DataFrame(data['cols'])
-            df_defaultTypes = pd.DataFrame(data['defaultTypes'])
+            #df_cols = pd.DataFrame(data['cols'])
+            df_cols = pd.DataFrame(data['cols']).drop(columns=['headerName', 'width'])
+            df_cols = df_cols.rename(columns={'field': 'column'})
+            #df_defaultTypes = pd.DataFrame(data['defaultTypes'])
+            df_defaultTypes = Data.get_columnTypes()
+            datas = Data.get_data()
 
             # Wyświetlenie obu DataFrame
             print("df_cols:")
@@ -87,9 +94,20 @@ def set_types():
             print("\ndf_defaultTypes:")
             print(df_defaultTypes)
 
+            print("\ndata:")
+            print(datas)
+
+            Data.change_types(data)
+            resultData = Data.get_data().copy()
+            resultColumnTypes = Data.get_columnTypes().copy()
+            result = {
+                "data": resultData,
+                "types": resultColumnTypes,
+            }
+
         except json.JSONDecodeError:
             print("Invalid JSON data received.")
-        return jsonify({"message": "Data received", "received_data": ""}), 200
+        return jsonify(result), 200
     
 
 # @data_blueprint.route('/set_types', methods=['POST'])
