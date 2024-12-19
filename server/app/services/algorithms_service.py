@@ -7,7 +7,7 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans, AgglomerativeClustering, DBSCAN
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 
 from sklearn.metrics import pairwise_distances, silhouette_score, silhouette_samples
 from sklearn.manifold import trustworthiness
@@ -385,25 +385,6 @@ def run_knn_service(df, params, target):
         "unique_classes": unique_classes
     }
 
-# def export_tree_to_json(tree, feature_names):
-#     def recurse(node_id):
-#         if tree.feature[node_id] != _tree.TREE_UNDEFINED:  # Jeśli nie jest liściem
-#             feature_name = feature_names[tree.feature[node_id]]
-#             threshold = tree.threshold[node_id]
-#             return {
-#                 "name": f"{feature_name} ≤ {threshold:.2f}",
-#                 "children": [
-#                     recurse(tree.children_left[node_id]),
-#                     recurse(tree.children_right[node_id])
-#                 ]
-#             }
-#         else:  # Liść
-#             value = tree.value[node_id]
-#             class_label = value.argmax()
-#             return {"name": f"Class {class_label} (samples: {value.sum()})"}
-
-#     return recurse(0)
-
 def build_tree(clf, tree_structure, node, parent=None):
     if node == -1:
         return
@@ -421,11 +402,9 @@ def build_tree(clf, tree_structure, node, parent=None):
     if parent is not None:
         tree_structure["edges"].append({"source": parent, "target": node})
 
-    # Lewe dziecko
     left_child = clf.tree_.children_left[node]
     build_tree(clf, tree_structure, left_child, node)
 
-    # Prawe dziecko
     right_child = clf.tree_.children_right[node]
     build_tree(clf, tree_structure, right_child, node)
 
@@ -507,8 +486,6 @@ def run_decision_tree_service(df, params, target):
 
     build_tree(clf=decision_tree, tree_structure=tree_structure, node=0)
 
-    # tree_structure = export_tree_to_json(decision_tree.tree_, feature_names=X.columns)
-
     return {
         "confusion_matrix": conf_matrix.tolist(),
         "classification_report": class_report,
@@ -537,4 +514,68 @@ def run_decision_tree_service(df, params, target):
                 for edge in tree_structure["edges"]
             ]
         }
+    }
+
+def run_svm_service(df, params, target):
+    df = pd.DataFrame(df)
+    X, y = preprocess_data(df, target)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+
+    svm = SVC(
+        C=params.get('C'),
+        degree=params.get('degree'),
+        kernel=params.get('kernel'),
+        gamma=params.get('gamma'),
+        probability=params.get('probability')
+    )
+
+    start_time = time.time()
+    svm.fit(X_train, y_train)
+    train_time = time.time() - start_time
+
+    y_pred = svm.predict(X_test)
+    y_prob = svm.predict_proba(X_test) if len(np.unique(y)) == 2 else None
+
+    accuracy = accuracy_score(y_test, y_pred)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred, output_dict=True)
+
+    support_vectors = svm.support_vectors_
+    y_train_reset = y_train.reset_index(drop=True)
+
+    support_vector_counts = dict(zip(*np.unique(y_train_reset[svm.support_], return_counts=True)))
+    support_vector_counts = {key: int(value) for key, value in support_vector_counts.items()}
+
+    df_pred = pd.DataFrame(X_test).reset_index(drop=True)
+    y_test = pd.Series(y_test).reset_index(drop=True)
+    y_pred = pd.Series(y_pred).reset_index(drop=True)
+
+    df_pred['original class'] = y_test
+    df_pred['predicted class'] = y_pred
+    df_pred['id'] = range(1, len(df_pred)+1)
+
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X_test)
+    df_pca = pd.DataFrame(
+        X_pca, 
+        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+    )
+    df_pca['true'] = y_test
+    df_pca['pred'] = y_pred
+
+    print(df_pca)
+
+    prediction_histogram = pd.Series(y_pred).value_counts()
+
+    return {
+        "confusion_matrix": conf_matrix.tolist(),
+        "classification_report": class_report,
+        "support_vectors": support_vectors.tolist(),
+        "support_vector_counts": support_vector_counts,
+        "dataframe": df_pred.to_dict(orient='records'),
+        "pca_dataframe": df_pca.to_dict(orient='records'),
+        "accuracy": accuracy,
+        "training_time": train_time,
+        "prediction_histogram": prediction_histogram.to_dict()
     }

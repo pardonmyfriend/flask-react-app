@@ -26,8 +26,8 @@ const Classification = ({ handleTileClick, algorithmName, setAlgorithmName, para
         setAlgorithmSelected={setAlgorithmSelected}
       />
       <Tile 
-        title="Logistic Regression"
-        onClick={() => handleTileClick('Logistic Regression')} 
+        title="SVM"
+        onClick={() => handleTileClick('SVM')} 
         algorithmName={algorithmName}
         setAlgorithmName={setAlgorithmName}
         params={params}

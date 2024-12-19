@@ -8,7 +8,8 @@ from app.services.algorithms_service import (
     run_dbscan_service,
     run_agglomerative_clustering_service,
     run_knn_service,
-    run_decision_tree_service
+    run_decision_tree_service,
+    run_svm_service
 )
 
 algorithms_blueprint = Blueprint('algorithms', __name__)
@@ -114,3 +115,17 @@ def run_decision_tree():
         return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+    
+@algorithms_blueprint.route('/run_SVM', methods=['POST'])
+def run_svm():
+    request_data = request.get_json()
+    df = request_data.get('data', [])
+    params = request_data.get('params', {})
+    target = request_data.get('target', '')
+
+    try:
+        response = run_svm_service(df, params, target)
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+

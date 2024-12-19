@@ -6,6 +6,7 @@ import DBSCAN from './DBSCAN';
 import AgglomerativeClustering from './AgglomerativeClustering';
 import KNN from './KNN';
 import DecisionTree from './DecisionTree';
+import SVM from './SVM';
 
 function Dashboard({ data, algorithmName, params, target }) {
   const [algorithmData, setAlgorithmData] = useState(null)
@@ -72,6 +73,8 @@ function Dashboard({ data, algorithmName, params, target }) {
         return <KNN knnData={algorithmData} />;
       case 'Decision Tree':
         return <DecisionTree treeData={algorithmData} />
+      case 'SVM':
+        return <SVM svmData={algorithmData} />
       default:
         return <div>Nieznany algorytm: {algorithmName}</div>;
     }

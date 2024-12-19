@@ -287,24 +287,43 @@ class Algorithm:
                     'nullable': True
                 }
             }
-        elif self.algorithm_name == 'Logistic Regression':
+        elif self.algorithm_name == 'SVM':
             return {
-                'fit_intercept': {
-                    'type': 'boolean',
-                    'default': True,
-                    'description': 'Calculates the intercept in the model',
+                'C': {
+                    'type': 'float',
+                    'min': 0.01,
+                    'max': 100.0,
+                    'default': 1.0,
+                    'step': 0.01,
+                    'precision': 2,
+                    'description': 'Regularization parameter. Smaller values increase regularization.',
                 },
-                'normalize': {
+                'kernel': {
+                    'type': 'select',
+                    'options': ['linear', 'poly', 'rbf', 'sigmoid'],
+                    'default': 'rbf',
+                    'description': 'Specifies the kernel type to be used in the algorithm.',
+                },
+                'gamma': {
+                    'type': 'select',
+                    'options': ['scale', 'auto'],
+                    'default': 'scale',
+                    'description': 'Kernel coefficient for rbf, poly, and sigmoid kernels.',
+                },
+                'degree': {
+                    'type': 'int',
+                    'min': 2,
+                    'max': 10,
+                    'default': 3,
+                    'description': 'Degree of the polynomial kernel function (only used for poly kernel).',
+                    'dependency': ['kernel', 'poly', 'enable']
+                },
+                'probability': {
                     'type': 'boolean',
                     'default': False,
-                    'description': 'Normalizes features before regression',
-                },
-                'n_jobs': {
-                    'type': 'int',
-                    'default': None,
-                    'description': 'Number of jobs to run in parallel',
-                    'nullable': True
+                    'description': 'Enable probability estimates. This must be enabled before calling fit.',
                 }
             }
+
         else:
             return {}

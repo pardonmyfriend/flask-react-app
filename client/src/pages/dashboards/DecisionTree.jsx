@@ -99,21 +99,21 @@ function DecisionTree({ treeData }) {
 
         const incorrectPoints = {
             x: treeData.pca_dataframe
-                .filter(row => row.pred !== row.true) // Tylko błędne predykcje
+                .filter(row => row.pred !== row.true)
                 .map(row => row.PC1),
             y: treeData.pca_dataframe
-                .filter(row => row.pred !== row.true) // Tylko błędne predykcje
+                .filter(row => row.pred !== row.true)
                 .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
             name: 'Incorrect Predictions',
             marker: {
-                color: 'rgba(0,0,0,0)', // Przezroczysty środek
+                color: 'rgba(0,0,0,0)',
                 size: 10,
-                symbol: 'circle', // Symbol: okrąg
+                symbol: 'circle',
                 line: {
-                    color: '#FF0000', // Czerwone obramowanie
-                    width: 2, // Szerokość obramowania
+                    color: '#FF0000',
+                    width: 2,
                 },
             },
         };
@@ -129,16 +129,16 @@ function DecisionTree({ treeData }) {
     };
 
     const renderConfusionMatrixHeatmap = () => {
-        const matrix = treeData.confusion_matrix; // Macierz konfuzji
-        const classNames = treeData.unique_classes; // Oryginalne nazwy klas
+        const matrix = treeData.confusion_matrix;
+        const classNames = treeData.unique_classes;
     
         return (
             <ResponsivePlot
                 data={[
                     {
                         z: matrix,
-                        x: classNames, // Etykiety klas na osi X
-                        y: classNames, // Etykiety klas na osi Y
+                        x: classNames,
+                        y: classNames,
                         type: 'heatmap',
                         colorscale: 'RdBu',
                         hoverongaps: false,
@@ -160,7 +160,7 @@ function DecisionTree({ treeData }) {
                     yaxis: {
                         title: 'True Labels',
                         automargin: true,
-                        autorange: 'reversed', // Odwrócenie osi Y
+                        autorange: 'reversed',
                     },
                 }}
                 config={{
@@ -282,9 +282,8 @@ function DecisionTree({ treeData }) {
             { field: 'Value', headerName: 'Value', flex: 1 },
         ];
 
-        // Convert rows from treeData.summary_dataframe
         const rows = treeData.summary_df.map((item, index) => ({
-            id: index, // Add a unique id for DataGrid
+            id: index,
             Metric: item.Metric,
             Value: item.Value,
         }));
@@ -297,105 +296,53 @@ function DecisionTree({ treeData }) {
         );
     };
 
-    // const renderTree = () => {
-    //     const nodes = treeData.tree_structure.nodes.map((node) => ({
-    //         x: [node.id],
-    //         y: [node.samples],
-    //         text: node.feature !== null 
-    //           ? `<b>${treeData.feature_names[node.feature]}</b><br>≥ ${node.threshold.toFixed(2)}` 
-    //           : `<b>${treeData.unique_classes[node.value.indexOf(Math.max(...node.value))]}</b>`,
-    //         mode: "markers+text",
-    //         textposition: "right",
-    //         hoverinfo: "text",
-    //       }));
-        
-    //       const edges = treeData.tree_structure.edges.map((edge) => ({
-    //         x: [edge.source, edge.target],
-    //         y: [treeData.tree_structure.nodes[edge.source].samples, treeData.tree_structure.nodes[edge.target].samples],
-    //         mode: "lines",
-    //         line: { color: "gray" },
-    //       }));
-
-    //       return (
-    //         <ResponsivePlot
-    //           data={[...nodes, ...edges]}
-    //           layout={{
-    //             title: "Decision Tree Visualization",
-    //             xaxis: { showgrid: false, zeroline: false, visible: false },
-    //             yaxis: { showgrid: false, zeroline: false, visible: false },
-    //             showlegend: false,
-    //           }}
-    //           bigger={true}
-    //         />
-    //       );
-    // };
-
     const renderTree = () => {
-        // const calculateNodePositions = () => {
-        //     const positions = {};
-        //     const levelWidths = {};
-    
-        //     const traverse = (nodeId, depth, xOffset) => {
-        //         if (!levelWidths[depth]) levelWidths[depth] = 0;
-    
-        //         let xPos = xOffset;
-        //         const children = treeData.tree_structure.edges
-        //             .filter(edge => edge.source === nodeId)
-        //             .map(edge => edge.target);
-    
-        //         if (children.length > 0) {
-        //             const childPositions = children.map((childId, index) =>
-        //                 traverse(childId, depth + 1, xOffset + index)
-        //             );
-    
-        //             xPos = (childPositions[0] + childPositions[childPositions.length - 1]) / 2;
-        //         }
-    
-        //         positions[nodeId] = { x: xPos, y: -depth };
-        //         return xPos;
-        //     };
-    
-        //     traverse(0, 0, 0);
-        //     return positions;
-        // };
-
         const calculateNodePositions = () => {
             const positions = {};
-            const levelWidths = {}; // Przechowuje szerokości poziomów
+            const levelWidths = {};
         
             const traverse = (nodeId, depth) => {
                 if (!levelWidths[depth]) levelWidths[depth] = 0;
         
-                // Pobierz dzieci węzła
                 const children = treeData.tree_structure.edges
                     .filter(edge => edge.source === nodeId)
                     .map(edge => edge.target);
         
                 let xPos;
                 if (children.length > 0) {
-                    // Rekurencyjnie przejdź do dzieci
                     const childPositions = children.map(childId => traverse(childId, depth + 1));
         
-                    // Wyśrodkuj rodzica względem dzieci
                     xPos = (childPositions[0] + childPositions[childPositions.length - 1]) / 2;
                 } else {
-                    // Jeśli to liść, ustaw pozycję na podstawie szerokości poziomu
                     xPos = levelWidths[depth];
-                    levelWidths[depth] += 1; // Zwiększ szerokość poziomu
+                    levelWidths[depth] += 1;
                 }
         
-                // Zapisz pozycję węzła
-                positions[nodeId] = { x: xPos, y: -depth }; // Ustaw pozycję
+                positions[nodeId] = { x: xPos, y: -depth };
                 return xPos;
             };
         
-            // Zacznij od korzenia
             traverse(0, 0);
             return positions;
         };
         
     
         const positions = calculateNodePositions();
+
+        const allX = Object.values(positions).map(pos => pos.x);
+        const xMin = Math.min(...allX);
+        const xMax = Math.max(...allX);
+        const margin = 1; // Dodaj margines na tekst
+
+        const getTextPosition = (nodeId) => {
+            const parentEdge = treeData.tree_structure.edges.find(edge => edge.target === nodeId);
+            if (!parentEdge) return "top"; // Korzeń drzewa
+            
+            const parentX = positions[parentEdge.source].x;
+            const currentX = positions[nodeId].x;
+    
+            return currentX < parentX ? "top left" : "top right"; // Jeśli na lewo od rodzica, tekst z lewej
+        };
     
         const nodes = treeData.tree_structure.nodes.map(node => ({
             x: [positions[node.id].x],
@@ -404,7 +351,7 @@ function DecisionTree({ treeData }) {
                 ? `<b>${treeData.feature_names[node.feature]}</b>≥ ${node.threshold.toFixed(2)}`
                 : `<b>${treeData.unique_classes[node.value.indexOf(Math.max(...node.value))]}</b>`,
             mode: "markers+text",
-            textposition: node.feature !== null ? "right" : "bottom",
+            textposition: node.feature !== null ? getTextPosition(node.id) : "bottom",
             hoverinfo: "text",
             marker: { size: 10 },
         }));
@@ -422,7 +369,7 @@ function DecisionTree({ treeData }) {
                 data={[...nodes, ...edges]}
                 layout={{
                     title: "Decision Tree Visualization",
-                    xaxis: { showgrid: false, zeroline: false, visible: false },
+                    xaxis: { showgrid: false, zeroline: false, visible: false, range: [xMin - margin, xMax + margin] },
                     yaxis: { showgrid: false, zeroline: false, visible: false },
                     showlegend: false,
                 }}
