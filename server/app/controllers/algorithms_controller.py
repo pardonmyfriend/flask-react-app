@@ -7,6 +7,8 @@ from app.services.algorithms_service import (
     run_kmeans_service,
     run_dbscan_service,
     run_agglomerative_clustering_service,
+    run_knn_service,
+    run_decision_tree_service
 )
 
 algorithms_blueprint = Blueprint('algorithms', __name__)
@@ -95,7 +97,20 @@ def run_knn():
     target = request_data.get('target', '')
 
     try:
-        response = run_knn(df, params, target)
+        response = run_knn_service(df, params, target)
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+@algorithms_blueprint.route('/run_Decision Tree', methods=['POST'])
+def run_decision_tree():
+    request_data = request.get_json()
+    df = request_data.get('data', [])
+    params = request_data.get('params', {})
+    target = request_data.get('target', '')
+
+    try:
+        response = run_decision_tree_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

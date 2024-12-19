@@ -5,7 +5,7 @@ import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataTable from "../../components/plots/DataTable";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
-function TSNE({ tsneData }) {
+function TSNE({ tsneData, target }) {
     const renderTSNEDataframe = () => {
         const keys = Object.keys(tsneData.tsne_dataframe[0]);
 
@@ -32,25 +32,25 @@ function TSNE({ tsneData }) {
     };
 
     const renderScatterPlot = () => {
-        const uniqueSpecies = [...new Set(tsneData.tsne_dataframe.map(row => row.species))];
-        const colorMap = uniqueSpecies.reduce((map, species, index) => {
+        const uniqueGroups = [...new Set(tsneData.tsne_dataframe.map(row => row[target]))];
+        const colorMap = uniqueGroups.reduce((map, group, index) => {
             const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
-            map[species] = colors[index % colors.length];
+            map[group] = colors[index % colors.length];
             return map;
         }, {});
     
-        const data = uniqueSpecies.map(species => ({
+        const data = uniqueGroups.map(group => ({
             x: tsneData.tsne_dataframe
-                .filter(row => row.species === species)
+                .filter(row => row[target] === group)
                 .map(row => row.F1),
             y: tsneData.tsne_dataframe
-                .filter(row => row.species === species)
+                .filter(row => row[target] === group)
                 .map(row => row.F2),
             type: 'scatter',
             mode: 'markers',
-            name: species,
+            name: group,
             marker: {
-                color: colorMap[species],
+                color: colorMap[group],
                 size: 7,
                 symbol: 'circle',
             },

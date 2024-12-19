@@ -1,12 +1,11 @@
 import React from "react";
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { useResizeDetector } from 'react-resize-detector';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataTable from "../../components/plots/DataTable";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
-function KMeans({ kmeansData }) {
+function KMeans({ kmeansData, target }) {
     const renderClusteredDataframe = () => {
         const keys = Object.keys(kmeansData.clustered_dataframe[0]);
 
@@ -31,24 +30,20 @@ function KMeans({ kmeansData }) {
     };
 
     const renderScatterPlot = () => {
-        const uniqueClusters = [...new Set(kmeansData.clustered_dataframe.map(row => row.cluster))];
+        const uniqueClusters = [...new Set(kmeansData.pca_dataframe.map(row => row.cluster))];
         const colorMap = uniqueClusters.reduce((map, cluster, index) => {
             const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
             map[cluster] = colors[index % colors.length];
             return map;
         }, {});
 
-        const [firstColumn, secondColumn] = Object.keys(kmeansData.clustered_dataframe[0]).filter(
-            col => col !== 'cluster' && col !== 'id'
-        );
-    
         const data = uniqueClusters.map(cluster => ({
-            x: kmeansData.clustered_dataframe
+            x: kmeansData.pca_dataframe
                 .filter(row => row.cluster === cluster)
-                .map(row => row[firstColumn]),
-            y: kmeansData.clustered_dataframe
+                .map(row => row.PC1),
+            y: kmeansData.pca_dataframe
                 .filter(row => row.cluster === cluster)
-                .map(row => row[secondColumn]),
+                .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
             name: cluster,
@@ -62,37 +57,33 @@ function KMeans({ kmeansData }) {
         return (
             <ScatterPlot
                 data={data}
-                title={'Clusters scatter plot'}
-                xTitle={'x'}
-                yTitle={'y'}
+                title={'Clusters Visualized with PCA'}
+                xTitle={'PC1'}
+                yTitle={'PC2'}
             />
         );
     };
 
-    const renderScatterPlotForSpecies = () => {
-        const uniqueSpecies = [...new Set(kmeansData.clustered_dataframe.map(row => row.species))];
-        const colorMap = uniqueSpecies.reduce((map, species, index) => {
+    const renderScatterPlotForTarget = () => {
+        const uniqueGroups = [...new Set(kmeansData.pca_dataframe.map(row => row[target]))];
+        const colorMap = uniqueGroups.reduce((map, group, index) => {
             const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
-            map[species] = colors[index % colors.length];
+            map[group] = colors[index % colors.length];
             return map;
         }, {});
-
-        const [firstColumn, secondColumn] = Object.keys(kmeansData.clustered_dataframe[0]).filter(
-            col => col !== 'cluster' && col !== 'id'
-        );
     
-        const data = uniqueSpecies.map(species => ({
-            x: kmeansData.clustered_dataframe
-                .filter(row => row.species === species)
-                .map(row => row[firstColumn]),
-            y: kmeansData.clustered_dataframe
-                .filter(row => row.species === species)
-                .map(row => row[secondColumn]),
+        const data = uniqueGroups.map(group => ({
+            x: kmeansData.pca_dataframe
+                .filter(row => row[target] === group)
+                .map(row => row.PC1),
+            y: kmeansData.pca_dataframe
+                .filter(row => row[target] === group)
+                .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
-            name: species,
+            name: group,
             marker: {
-                color: colorMap[species],
+                color: colorMap[group],
                 size: 7,
                 symbol: 'circle',
             },
@@ -149,7 +140,7 @@ function KMeans({ kmeansData }) {
         <div>
             {renderClusteredDataframe()}
             {renderScatterPlot()}
-            {renderScatterPlotForSpecies()}
+            {renderScatterPlotForTarget()}
             {renderBarPlot()}
             {renderCentroids()}
         </div>

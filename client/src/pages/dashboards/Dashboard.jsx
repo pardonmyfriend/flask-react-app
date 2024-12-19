@@ -4,6 +4,8 @@ import TSNE from './TSNE';
 import KMeans from './KMeans';
 import DBSCAN from './DBSCAN';
 import AgglomerativeClustering from './AgglomerativeClustering';
+import KNN from './KNN';
+import DecisionTree from './DecisionTree';
 
 function Dashboard({ data, algorithmName, params, target }) {
   const [algorithmData, setAlgorithmData] = useState(null)
@@ -57,15 +59,19 @@ function Dashboard({ data, algorithmName, params, target }) {
 
     switch (algorithmName) {
       case 'PCA':
-        return <PCA pcaData={algorithmData} />;
+        return <PCA pcaData={algorithmData} target={target} />;
       case 't-SNE':
-        return <TSNE tsneData={algorithmData} />;
+        return <TSNE tsneData={algorithmData} target={target} />;
       case 'K-Means':
-        return <KMeans kmeansData={algorithmData} />;
+        return <KMeans kmeansData={algorithmData} target={target} />;
       case 'DBSCAN':
-          return <DBSCAN dbscanData={algorithmData} />;
+          return <DBSCAN dbscanData={algorithmData} target={target} />;
       case 'Agglomerative Clustering':
-        return <AgglomerativeClustering aggData={algorithmData} />;
+        return <AgglomerativeClustering aggData={algorithmData} target={target} />;
+      case 'KNN':
+        return <KNN knnData={algorithmData} />;
+      case 'Decision Tree':
+        return <DecisionTree treeData={algorithmData} />
       default:
         return <div>Nieznany algorytm: {algorithmName}</div>;
     }

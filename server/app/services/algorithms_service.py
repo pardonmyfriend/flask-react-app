@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import time
 
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -11,9 +12,18 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import pairwise_distances, silhouette_score, silhouette_samples
 from sklearn.manifold import trustworthiness
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import _tree
 
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
-
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    accuracy_score,
+    roc_curve,
+    precision_recall_curve,
+    auc
+)
 def preprocess_data(df, target):
     y = df[target] if target in df.columns else None
     X = df.drop(columns=['id', target], errors='ignore')
@@ -150,10 +160,30 @@ def run_kmeans_service(df, params, target):
 
     centroids_df['id'] = range(1, len(centroids_df)+1)
 
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
+    df_pca = pd.DataFrame(
+        X_pca, 
+        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+    )
+    df_pca['cluster'] = clusters
+    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+
+    df_pca[target] = y
+
+    if len(set(clusters)) > 1:
+        silhouette_scores = silhouette_samples(X, clusters)
+        df_pca['silhouette_score'] = silhouette_scores
+    else:
+        silhouette_scores = None
+
+    df_pca['id'] = range(1, len(df_pca)+1)
+
     return {
         "clustered_dataframe": df.to_dict(orient='records'),
         "silhouette_score": silhouette_avg,
         "centroids": centroids_df.to_dict(orient='records'),
+        "pca_dataframe": df_pca.to_dict(orient='records'),
     }
 
 def run_dbscan_service(df, params, target):
@@ -286,4 +316,225 @@ def run_agglomerative_clustering_service(df, params, target):
         # "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
         "dendrogram_data": dendrogram_data,
         "threshold": params.get('distance_threshold')
+    }
+
+def run_knn_service(df, params, target):
+    df = pd.DataFrame(df)
+    X, y = preprocess_data(df, target)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+
+    knn = KNeighborsClassifier(
+        n_neighbors=params.get('n_neighbors'),
+        algorithm=params.get('algorithm'),
+        metric=params.get('metric'),
+        p=params.get('p'),
+        weights=params.get('weights')
+    )
+
+    knn.fit(X_train, y_train) 
+
+    y_pred = knn.predict(X_test)
+    y_prob = knn.predict_proba(X_test) if len(np.unique(y)) == 2 else None
+
+    accuracy = accuracy_score(y_test, y_pred)
+
+    unique_classes = sorted(np.unique(y_test))
+    conf_matrix = confusion_matrix(y_test, y_pred)
+
+    class_report = classification_report(y_test, y_pred, output_dict=True)
+
+    print(conf_matrix)
+
+    roc_data, pr_data = None, None
+    if len(np.unique(y)) == 2:
+        fpr, tpr, _ = roc_curve(y_test, y_prob[:, 1])
+        roc_auc = auc(fpr, tpr)
+        roc_data = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": roc_auc}
+        
+        precision, recall, _ = precision_recall_curve(y_test, y_prob[:, 1])
+        pr_data = {"precision": precision.tolist(), "recall": recall.tolist()}
+
+    df_pred = pd.DataFrame(X_test).reset_index(drop=True)
+
+    y_test = pd.Series(y_test).reset_index(drop=True)
+    y_pred = pd.Series(y_pred).reset_index(drop=True)
+
+    df_pred['original class'] = y_test
+    df_pred['predicted class'] = y_pred
+    df_pred['id'] = range(1, len(df_pred)+1)
+
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X_test)
+    df_pca = pd.DataFrame(
+        X_pca, 
+        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+    )
+
+    df_pca['true'] = y_test
+    df_pca['pred'] = y_pred
+
+    return {
+        "accuracy": accuracy,
+        "confusion_matrix": conf_matrix.tolist(),
+        "classification_report": class_report,
+        "roc_data": roc_data,
+        "pr_data": pr_data,
+        "pca_dataframe": df_pca.to_dict(orient='records'),
+        "dataframe": df_pred.to_dict(orient='records'),
+        "unique_classes": unique_classes
+    }
+
+# def export_tree_to_json(tree, feature_names):
+#     def recurse(node_id):
+#         if tree.feature[node_id] != _tree.TREE_UNDEFINED:  # Jeśli nie jest liściem
+#             feature_name = feature_names[tree.feature[node_id]]
+#             threshold = tree.threshold[node_id]
+#             return {
+#                 "name": f"{feature_name} ≤ {threshold:.2f}",
+#                 "children": [
+#                     recurse(tree.children_left[node_id]),
+#                     recurse(tree.children_right[node_id])
+#                 ]
+#             }
+#         else:  # Liść
+#             value = tree.value[node_id]
+#             class_label = value.argmax()
+#             return {"name": f"Class {class_label} (samples: {value.sum()})"}
+
+#     return recurse(0)
+
+def build_tree(clf, tree_structure, node, parent=None):
+    if node == -1:
+        return
+    
+    feature = clf.tree_.feature[node]
+    threshold = clf.tree_.threshold[node]
+    tree_structure["nodes"].append({
+        "id": node,
+        "feature": feature if feature != -2 else None,
+        "threshold": threshold if feature != -2 else None,
+        "samples": clf.tree_.n_node_samples[node],
+        "value": clf.tree_.value[node].tolist()
+    })
+
+    if parent is not None:
+        tree_structure["edges"].append({"source": parent, "target": node})
+
+    # Lewe dziecko
+    left_child = clf.tree_.children_left[node]
+    build_tree(clf, tree_structure, left_child, node)
+
+    # Prawe dziecko
+    right_child = clf.tree_.children_right[node]
+    build_tree(clf, tree_structure, right_child, node)
+
+def run_decision_tree_service(df, params, target):
+    df = pd.DataFrame(df)
+    X, y = preprocess_data(df, target)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+
+    decision_tree = DecisionTreeClassifier(
+        criterion=params.get('criterion'),
+        max_depth=params.get('max_depth'),
+        min_samples_split=params.get('min_samples_split'),
+        min_samples_leaf=params.get('min_samples_leaf'),
+        max_features=params.get('max_features')
+    )
+
+    start_time = time.time()
+    decision_tree.fit(X_train, y_train)
+    train_time = time.time() - start_time
+
+    y_pred = decision_tree.predict(X_test)
+    y_prob = decision_tree.predict_proba(X_test) if len(np.unique(y)) == 2 else None
+
+    accuracy = accuracy_score(y_test, y_pred)
+
+    unique_classes = sorted(np.unique(y_test))
+    conf_matrix = confusion_matrix(y_test, y_pred)
+
+    class_report = classification_report(y_test, y_pred, output_dict=True)
+
+    feature_importances = decision_tree.feature_importances_
+
+    n_nodes = decision_tree.tree_.node_count
+    leaf_depths = [decision_tree.tree_.max_depth]
+    avg_leaf_depth = sum(leaf_depths) / len(leaf_depths)
+
+    summary_df = pd.DataFrame([
+        {"Metric": "Accuracy", "Value": accuracy},
+        {"Metric": "Training Time (s)", "Value": train_time},
+        {"Metric": "Number of Nodes", "Value": n_nodes},
+        {"Metric": "Average Leaf Depth", "Value": avg_leaf_depth}
+    ])
+
+    roc_data, pr_data = None, None
+    if len(np.unique(y)) == 2:
+        fpr, tpr, _ = roc_curve(y_test, y_prob[:, 1])
+        roc_auc = auc(fpr, tpr)
+        roc_data = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": roc_auc}
+
+        precision, recall, _ = precision_recall_curve(y_test, y_prob[:, 1])
+        pr_data = {"precision": precision.tolist(), "recall": recall.tolist()}
+
+    df_pred = pd.DataFrame(X_test).reset_index(drop=True)
+
+    y_test = pd.Series(y_test).reset_index(drop=True)
+    y_pred = pd.Series(y_pred).reset_index(drop=True)
+
+    prediction_histogram = pd.Series(y_pred).value_counts()
+
+    df_pred['original class'] = y_test
+    df_pred['predicted class'] = y_pred
+    df_pred['id'] = range(1, len(df_pred)+1)
+
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X_test)
+    df_pca = pd.DataFrame(
+        X_pca, 
+        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+    )
+
+    df_pca['true'] = y_test
+    df_pca['pred'] = y_pred
+
+    tree_structure = {
+        "nodes": [],
+        "edges": []
+    }
+
+    build_tree(clf=decision_tree, tree_structure=tree_structure, node=0)
+
+    # tree_structure = export_tree_to_json(decision_tree.tree_, feature_names=X.columns)
+
+    return {
+        "confusion_matrix": conf_matrix.tolist(),
+        "classification_report": class_report,
+        "roc_data": roc_data,
+        "pr_data": pr_data,
+        "pca_dataframe": df_pca.to_dict(orient='records'),
+        "dataframe": df_pred.to_dict(orient='records'),
+        "unique_classes": unique_classes,
+        "feature_importances": feature_importances.tolist(),
+        "prediction_histogram": prediction_histogram.to_dict(),
+        "feature_names": X.columns.tolist(),
+        "summary_df": summary_df.to_dict(orient='records'),
+        "tree_structure": {
+            "nodes": [
+                {
+                    "id": int(node["id"]),
+                    "feature": int(node["feature"]) if node["feature"] is not None else None,
+                    "threshold": float(node["threshold"]) if node["threshold"] is not None else None,
+                    "samples": int(node["samples"]),
+                    "value": [float(v) for v in node["value"][0]]  # Serializacja wartości w liściach
+                }
+                for node in tree_structure["nodes"]
+            ],
+            "edges": [
+                {"source": int(edge["source"]), "target": int(edge["target"])}
+                for edge in tree_structure["edges"]
+            ]
+        }
     }

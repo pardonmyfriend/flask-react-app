@@ -5,7 +5,7 @@ import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataTable from "../../components/plots/DataTable";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
-function PCA({ pcaData }) {
+function PCA({ pcaData, target }) {
     const renderPCADataframe = () => {
         const keys = Object.keys(pcaData.pca_components[0]);
 
@@ -53,25 +53,25 @@ function PCA({ pcaData }) {
     };
 
     const renderScatterPlot = () => {
-        const uniqueSpecies = [...new Set(pcaData.pca_components.map(row => row.species))];
-        const colorMap = uniqueSpecies.reduce((map, species, index) => {
+        const uniqueGroups = [...new Set(pcaData.pca_components.map(row => row[target]))];
+        const colorMap = uniqueGroups.reduce((map, group, index) => {
             const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
-            map[species] = colors[index % colors.length];
+            map[group] = colors[index % colors.length];
             return map;
         }, {});
     
-        const data = uniqueSpecies.map(species => ({
+        const data = uniqueGroups.map(group => ({
             x: pcaData.pca_components
-                .filter(row => row.species === species)
+                .filter(row => row[target] === group)
                 .map(row => row.PC1),
             y: pcaData.pca_components
-                .filter(row => row.species === species)
+                .filter(row => row[target] === group)
                 .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
-            name: species,
+            name: group,
             marker: {
-                color: colorMap[species],
+                color: colorMap[group],
                 size: 10,
                 symbol: 'circle',
             },
@@ -111,7 +111,7 @@ function PCA({ pcaData }) {
                 layout={{
                     autosize: true,
                     title: {
-                        text: 'Wykres wyjaśnionej wariancji',
+                        text: 'Explained varance plot',
                         font: {
                             size: 22,
                             color: '#2c3e50',
@@ -119,7 +119,7 @@ function PCA({ pcaData }) {
                     },
                     xaxis: {
                         title: {
-                            text: 'Składowe główne',
+                            text: 'Principal components',
                             font: {
                                 size: 18,
                             },
@@ -130,7 +130,7 @@ function PCA({ pcaData }) {
                     },
                     yaxis: {
                         title: {
-                            text: 'Wyjaśniona wariancja (%)',
+                            text: 'Explained variance (%)',
                             font: {
                                 size: 18,
                             },
@@ -187,7 +187,7 @@ function PCA({ pcaData }) {
             layout={{
                 autosize: true,
                 title: {
-                    text: 'Macierz korelacji (Heatmapa)',
+                    text: 'Correlation matrix',
                     font: {
                         size: 22,
                         color: '#2c3e50',
@@ -195,7 +195,7 @@ function PCA({ pcaData }) {
                 },
                 xaxis: {
                     title: {
-                        text: 'Główne Składowe (PC)',
+                        text: 'Principal Components',
                         font: {
                             size: 18,
                         },
@@ -205,7 +205,7 @@ function PCA({ pcaData }) {
                 },
                 yaxis: {
                     title: {
-                        text: 'Zmienne',
+                        text: 'Origianl variables',
                         font: {
                             size: 18,
                         },
