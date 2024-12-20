@@ -77,7 +77,7 @@ function ProgressStepper({ steps, stepContent }) {
               margin: '0 auto',
               maxWidth: '1200px',
               minHeight: 'calc(100vh - 204px)',
-              display: 'flex', // Flexbox dla wewnętrznych elementów
+              display: 'flex',
               flexDirection: 'column'
             }}
           >
