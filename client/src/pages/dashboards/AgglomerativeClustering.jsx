@@ -1,38 +1,11 @@
 import React from "react";
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import Plot from "react-plotly.js";
-import { useResizeDetector } from 'react-resize-detector';
+
+import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import DataTable from "../../components/plots/DataTable";
+import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function AgglomerativeClustering({ aggData }) {
-    const dataGridStyle = {
-        verflowY: 'auto',
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',
-            fontSize: '17px',
-        },
-        '& .MuiDataGrid-row:nth-of-type(2n)': {
-            backgroundColor: '#f6f6f6',
-        },
-        '& .MuiDataGrid-toolbar': {
-            color: 'white',
-        },
-        '& .MuiButton-textPrimary': {
-            color: 'white !important',
-        },
-        '& .MuiTypography-root': {
-            color: 'white !important',
-        },
-        '& .MuiButtonBase-root': {
-            color: 'white !important',
-        },
-        '& .MuiSvgIcon-root': {
-            color: '#3fbdbd !important',
-        },
-        '& .MuiDataGrid-columnsManagement': {
-            backgroundColor: '#3fbdbd !important',
-        },
-    };
-
     const renderAggDataframe = () => {
         const keys = Object.keys(aggData.cluster_dataframe[0]);
         
@@ -46,67 +19,13 @@ function AgglomerativeClustering({ aggData }) {
             flex: 1,
         }));
 
+        const rows = aggData.cluster_dataframe;
+
         return (
-            <DataGrid
-                rows={aggData.cluster_dataframe}
-                columns={cols}
-                loading={!aggData.cluster_dataframe.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
-                pageSizeOptions={[10, 25, 50]}
-                sx={dataGridStyle}
-                slots={{ toolbar: GridToolbar }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
-        );
-    };
-
-    const ResponsivePlot = ({ data, layout, config }) => {
-        const { width, height, ref } = useResizeDetector();
-
-        return (
-            <div ref={ref} style={{ width: '100%', height: '500px' }}>
-                {width && height && (
-                    <Plot
-                        data={data}
-                        layout={{ ...layout, width, height }}
-                        config={config}
-                    />
-                )}
-            </div>
-        );
-    };
-
-    const ScrollablePlot = ({ data, layout, config }) => {
-        const { width, height, ref } = useResizeDetector();
-
-        return (
-            <div ref={ref} style={{ width: '100%', height: '500px', overflowX: "auto" }}>
-                {width && height && (
-                    <Plot
-                        data={data}
-                        layout={{ ...layout, height }}
-                        config={config}
-                    />
-                )}
-            </div>
         );
     };
 
@@ -136,40 +55,11 @@ function AgglomerativeClustering({ aggData }) {
         }));
 
         return (
-            <ResponsivePlot
+            <ScatterPlot
                 data={data}
-                layout={{
-                    autosize: true,
-                    title: "Clusters Visualized with PCA",
-                    xaxis: {
-                        title: {
-                            text: 'PC1',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'PC2',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    legend: {
-                        orientation: 'h',
-                        x: 0.5,
-                        xanchor: 'center',
-                        y: -0.2,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false, 
-                }}
+                title={'Clusters Visualized with PCA'}
+                xTitle={'PC1'}
+                yTitle={'PC2'}
             />
         );
     };
@@ -221,13 +111,6 @@ function AgglomerativeClustering({ aggData }) {
             />
         );
     };       
-
-    // const renderSilhouetteScore = () => (
-    //     <div>
-    //         <h3>Silhouette Score:</h3>
-    //         <p>{aggData.silhouette_score}</p>
-    //     </div>
-    // );
 
     const renderHeatmap = () => {
         const clusterLabels = aggData.inter_cluster_distances.index.map(
@@ -320,29 +203,26 @@ function AgglomerativeClustering({ aggData }) {
             ? ['id', 'cluster', ...keys.filter((key) => key !== 'id' && key !== 'cluster')] 
             : ['cluster', ...keys.filter((key) => key !== 'cluster')];
 
-        const columns = orderedKeys.map(key => ({
+        const cols = orderedKeys.map(key => ({
             field: key,
             headerName: key.toUpperCase(),
             flex: 1,
         }));
+
+        const rows = aggData.centroids;
     
         return (
-            <div>
-                <h3>Centroids</h3>
-                <DataGrid
-                    rows={aggData.centroids}
-                    columns={columns}
-                    loading={!aggData.centroids.length}
-                    sx={dataGridStyle}
-                    showColumnVerticalBorder
-                    showCellVerticalBorder
-                />
-            </div>
+            <DataTable
+                rows={rows}
+                cols={cols}
+            />
         );
     };
 
     const renderDendrogram = () => {
         const dendro = aggData.dendrogram_data;
+
+        const threshold = aggData.threshold || 0;
 
         const filteredIcoord = dendro.icoord.filter((icoord, idx) => {
             const dcoord = dendro.dcoord[idx];
@@ -363,7 +243,11 @@ function AgglomerativeClustering({ aggData }) {
         const uniqueColors = Array.from(new Set(filtredColors));
         const colorMapping = {};
         uniqueColors.forEach((color, index) => {
-            colorMapping[color] = colors[index % colors.length];
+            if (color === 'C0') {
+                colorMapping[color] = '#808080';
+            } else {
+                colorMapping[color] = colors[index % colors.length];
+            }
         });
 
         const leafPositions = [];
@@ -394,8 +278,20 @@ function AgglomerativeClustering({ aggData }) {
         const tickvals = sortedLeafPositions;
         const ticktext = dendro.ivl;
 
-        const numLeaves = dendro.ivl.length;
-        const plotWidth = Math.max(600, numLeaves * 20);
+        const shapes = threshold > 0 ? [
+            {
+                type: "line",
+                x0: Math.min(...sortedLeafPositions),
+                x1: Math.max(...sortedLeafPositions),
+                y0: threshold,
+                y1: threshold,
+                line: {
+                    color: "black",
+                    width: 1,
+                    dash: "dashdot",
+                },
+            },
+        ] : [];
     
         return (
             <ResponsivePlot
@@ -403,7 +299,6 @@ function AgglomerativeClustering({ aggData }) {
                 layout={{
                     title: "Dendrogram",
                     autosize: false,
-                    width: plotWidth,
                     xaxis: {
                         title: "Leaf Index",
                         tickvals: tickvals,
@@ -414,6 +309,7 @@ function AgglomerativeClustering({ aggData }) {
                     yaxis: {
                         title: "Distance",
                     },
+                    shapes: shapes,
                     showlegend: false,
                 }}
                 config={{

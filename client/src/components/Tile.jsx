@@ -92,8 +92,8 @@ const Tile = ({ title, onClick, algorithmName, setAlgorithmName, params, setPara
                 <span key={paramName}>
                   {paramName}: { 
                     typeof params[paramName] === 'boolean' 
-                      ? (params[paramName] ? 'true' : 'false')  // Specjalna obsługa dla boolean
-                      : params[paramName]  // Wyświetlanie innych typów
+                      ? (params[paramName] ? 'true' : 'false')
+                      : params[paramName]
                   }
                   <br />
                 </span>

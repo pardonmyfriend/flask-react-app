@@ -1,46 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import React from "react";
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Plot from "react-plotly.js";
-import { useResizeDetector } from 'react-resize-detector';
+import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import DataTable from "../../components/plots/DataTable";
+import ScatterPlot from "../../components/plots/ScatterPlot";
 
-function KMeans({ kmeansData }) {
-    const dataGridStyle = {
-        verflowY: 'auto',
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',
-            fontSize: '17px',
-        },
-        '& .MuiDataGrid-row:nth-of-type(2n)': {
-            backgroundColor: '#f6f6f6',
-        },
-        '& .MuiDataGrid-toolbar': {
-            color: 'white',
-        },
-        '& .MuiButton-textPrimary': {
-            color: 'white !important',
-        },
-        '& .MuiTypography-root': {
-            color: 'white !important',
-        },
-        '& .MuiButtonBase-root': {
-            color: 'white !important',
-        },
-        '& .MuiSvgIcon-root': {
-            color: '#3fbdbd !important',
-        },
-        '& .MuiDataGrid-columnsManagement': {
-            backgroundColor: '#3fbdbd !important',
-        },
-    };
-
+function KMeans({ kmeansData, target }) {
     const renderClusteredDataframe = () => {
         const keys = Object.keys(kmeansData.clustered_dataframe[0]);
-
-        // const orderedKeys = keys.includes('id') 
-        //   ? ['id', ...keys.filter((key) => key !== 'id')] 
-        //   : keys;
 
         const orderedKeys = keys.includes('id') 
             ? ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'] 
@@ -52,75 +19,31 @@ function KMeans({ kmeansData }) {
             flex: 1,
         }));
 
+        const rows = kmeansData.clustered_dataframe;
+
         return (
-            <DataGrid
-                rows={kmeansData.clustered_dataframe}
-                columns={cols}
-                loading={!kmeansData.clustered_dataframe.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
-                pageSizeOptions={[10, 25, 50]}
-                sx={dataGridStyle}
-                slots={{
-                    toolbar: GridToolbar,
-                }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
         );
     };
 
-    const ResponsivePlot = ({ data, layout, config }) => {
-        const { width, height, ref } = useResizeDetector();
-
-        return (
-            <div ref={ref} style={{ width: '100%', height: '500px' }}>
-                {width && height && (
-                    <Plot
-                        data={data}
-                        layout={{ ...layout, width, height }}
-                        config={config}
-                    />
-                )}
-            </div>
-        );
-    };
-
     const renderScatterPlot = () => {
-        const uniqueClusters = [...new Set(kmeansData.clustered_dataframe.map(row => row.cluster))];
+        const uniqueClusters = [...new Set(kmeansData.pca_dataframe.map(row => row.cluster))];
         const colorMap = uniqueClusters.reduce((map, cluster, index) => {
             const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
             map[cluster] = colors[index % colors.length];
             return map;
         }, {});
 
-        const [firstColumn, secondColumn] = Object.keys(kmeansData.clustered_dataframe[0]).filter(
-            col => col !== 'cluster' && col !== 'id'
-        );
-    
         const data = uniqueClusters.map(cluster => ({
-            x: kmeansData.clustered_dataframe
+            x: kmeansData.pca_dataframe
                 .filter(row => row.cluster === cluster)
-                .map(row => row[firstColumn]),
-            y: kmeansData.clustered_dataframe
+                .map(row => row.PC1),
+            y: kmeansData.pca_dataframe
                 .filter(row => row.cluster === cluster)
-                .map(row => row[secondColumn]),
+                .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
             name: cluster,
@@ -132,114 +55,46 @@ function KMeans({ kmeansData }) {
         }));
 
         return (
-            <ResponsivePlot
+            <ScatterPlot
                 data={data}
-                layout={{
-                    autosize: true,
-                    title: {
-                        text: 'Clusters scatter plot',
-                    },
-                    xaxis: {
-                        title: {
-                            text: 'x',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'y',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    legend: {
-                        orientation: 'h',
-                        x: 0.5,
-                        xanchor: 'center',
-                        y: -0.2,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false, 
-                }}
+                title={'Clusters Visualized with PCA'}
+                xTitle={'PC1'}
+                yTitle={'PC2'}
             />
         );
     };
 
-    const renderScatterPlotForSpecies = () => {
-        const uniqueSpecies = [...new Set(kmeansData.clustered_dataframe.map(row => row.species))];
-        const colorMap = uniqueSpecies.reduce((map, species, index) => {
+    const renderScatterPlotForTarget = () => {
+        const uniqueGroups = [...new Set(kmeansData.pca_dataframe.map(row => row[target]))];
+        const colorMap = uniqueGroups.reduce((map, group, index) => {
             const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
-            map[species] = colors[index % colors.length];
+            map[group] = colors[index % colors.length];
             return map;
         }, {});
-
-        const [firstColumn, secondColumn] = Object.keys(kmeansData.clustered_dataframe[0]).filter(
-            col => col !== 'cluster' && col !== 'id'
-        );
     
-        const data = uniqueSpecies.map(species => ({
-            x: kmeansData.clustered_dataframe
-                .filter(row => row.species === species)
-                .map(row => row[firstColumn]),
-            y: kmeansData.clustered_dataframe
-                .filter(row => row.species === species)
-                .map(row => row[secondColumn]),
+        const data = uniqueGroups.map(group => ({
+            x: kmeansData.pca_dataframe
+                .filter(row => row[target] === group)
+                .map(row => row.PC1),
+            y: kmeansData.pca_dataframe
+                .filter(row => row[target] === group)
+                .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
-            name: species,
+            name: group,
             marker: {
-                color: colorMap[species],
+                color: colorMap[group],
                 size: 7,
                 symbol: 'circle',
             },
         }));
 
-        console.log(data)
-
         return (
-            <ResponsivePlot
+            <ScatterPlot
                 data={data}
-                layout={{
-                    autosize: true,
-                    title: {
-                        text: 'Clusters scatter plot',
-                    },
-                    xaxis: {
-                        title: {
-                            text: 'x',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'y',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    legend: {
-                        orientation: 'h',
-                        x: 0.5,
-                        xanchor: 'center',
-                        y: -0.2,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false, 
-                }}
+                title={'Scatter plot for classes'}
+                xTitle={'x'}
+                yTitle={'y'}
             />
         );
     };
@@ -271,62 +126,23 @@ function KMeans({ kmeansData }) {
             flex: 1,
         }));
 
+        const rows = kmeansData.centroids;
+
         return (
-            <DataGrid
-                rows={kmeansData.centroids}
-                columns={cols}
-                loading={!kmeansData.centroids.length}
-                sx={dataGridStyle}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
         );
     };
 
     return (
         <div>
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderClusteredDataframe()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderScatterPlot()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderScatterPlotForSpecies()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderBarPlot()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderCentroids()}
-            </div>
+            {renderClusteredDataframe()}
+            {renderScatterPlot()}
+            {renderScatterPlotForTarget()}
+            {renderBarPlot()}
+            {renderCentroids()}
         </div>
     )
 }

@@ -15,6 +15,7 @@
     "plotly.js": "^2.35.2",
     "rc-input-number": "^9.3.0",
     "react": "^18.3.1",
+    "react-d3-tree": "^3.6.2",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.9",
     "react-number-format": "^5.4.2",

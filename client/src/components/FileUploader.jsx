@@ -1,44 +1,78 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Box, Button, Typography, IconButton, LinearProgress, Stack } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; 
+import 'react-toastify/dist/ReactToastify.css';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import Fade from '@mui/material/Fade';
 
 
-const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
-  const [file, setFile] = useState(null);
+const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showSuccessBox, setShowSuccessBox] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(true);
 
+  useEffect(() => {
+    if (file) {
+      console.log('New file detected:', file);
+      sendFileToBackend(file);
+    }
+  }, [file]);
+
+  const resetState = () => {
+    setData(null);
+    setFile(null);
+    setUploadProgress(0);
+    setShowSuccessBox(false);
+    onProceed(false);
+  };
+
+  const validateFileType = (file) => {
+    const allowedExtensions = ['csv', 'xlsx', 'xls'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    if (!allowedExtensions.includes(fileExtension)) {
+      toast.error("Invalid file type. Please upload a CSV or Excel file.");
+      return false;
+    }
+    return true;
+  };
 
   const onDrop = useCallback((acceptedFiles) => {
+    if (file) return;
+
+    resetState();
+
     if (acceptedFiles.length) {
       const file = acceptedFiles[0];
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-      console.log(fileExtension)
 
-      if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
+      if (validateFileType(file)) {
         setFile(file);
-        sendFileToBackend(file);
-      } else {
-        console.warn("Incorrect file extension.");
       }
     }
   }, []);
 
   const handleButtonClick = (event) => {
+    if (file) return;
+
+    resetState();
+
     const files = event.target.files;
+
     if (files.length) {
-      setFile(files[0]);
-      sendFileToBackend(files[0]);
+      const file = files[0];
+      if (validateFileType(file)) {
+        setFile(file);
+      }
     }
+
+    event.target.value = null;
   };
 
   const removeFile = () => {
-    setFile(null);
-    setUploadProgress(0);
-    console.log("removed")
+    resetState();
+    console.log("File removed")
   };
 
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
@@ -46,6 +80,7 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
     maxFiles: 1,
     maxSize: 5242880,
     noClick: true,
+    noDrag: !!file
   });
 
   const sendFileToBackend = (fileToSend) => {
@@ -60,29 +95,22 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:5000/upload', true);
 
-    // Ustawienie zdarzenia `onprogress`, aby śledzić postęp przesyłania
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         const percentComplete = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress(percentComplete); // Aktualizuje pasek postępu
+        setUploadProgress(percentComplete);
       }
     };
 
     xhr.onload = () => {
       if (xhr.status === 200) {
-        console.log(xhr.responseText);
         const responseData = JSON.parse(xhr.responseText);
-        console.log(responseData);
-        
-        onProceed(true);
-        console.log("onProceed invoked");
   
         if (responseData.data && responseData.data.length > 0) {
           const data = responseData.data;
           console.log("data:", data);
           const keys = Object.keys(data[0]);
 
-          // Przenieś kolumnę `id` na początek, jeśli istnieje
           const orderedKeys = keys.includes('id') 
           ? ['id', ...keys.filter((key) => key !== 'id')] 
           : keys;
@@ -95,12 +123,11 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
 
           const columnTypes = responseData.types;
           const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
-            column: column.toUpperCase(), // Zmieniamy nazwę kolumny na wielkie litery
-            type: type,                  // Zachowujemy typ bez zmian
+            column: column.toUpperCase(),
+            type: type,
           }));
           
           setColumnTypes(updatedColumnTypesRows);
-          //console.log("column types:", columnTypes);
 
           const updatedCols = cols.map((item, index) => ({
             ...item,
@@ -113,7 +140,12 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
 
           setData({ rows: data, columns: updatedCols });
         }
-        setUploadProgress(100); // Ustawia postęp na 100% po zakończeniu
+        setUploadProgress(100);
+
+        setTimeout(() => {
+          setShowSuccessBox(true);
+          onProceed(true);
+        }, 1000);
       } else {
         try {
           const errorResponse = JSON.parse(xhr.responseText);
@@ -121,38 +153,25 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
             progressStyle: { 
                 background: "#3fbdbd",
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                //backgroundColor: "#ff5733",
             }});
           } catch (e) {
               console.error('Błąd parsowania odpowiedzi błędu:', e);
           }
         console.error('Błąd podczas przesyłania pliku');
-        // toast.error('Błąd podczas przesyłania pliku', {
-        //   progressStyle: { 
-        //       background: "#3fbdbd",
-        //       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-        //       //backgroundColor: "#ff5733",
-        //   }});
         setUploadProgress(0);
       }
     };
   
-    // Obsługa błędów
     xhr.onerror = () => {
-      console.error('Wystąpił błąd podczas połączenia z serwerem');
+      toast.error("Error connecting to the server. Please try again later.");
       setUploadProgress(0);
     };
   
-    // Wysłanie pliku
     xhr.send(formData);
   };
 
   return (
     <>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-        File upload
-      </Typography>
-
       <Box
         {...getRootProps()}
         sx={{
@@ -167,15 +186,19 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
       >
         <ToastContainer />
         <CloudUploadIcon
-          sx={{ fontSize: 60, color: "#1976d2", marginBottom: "20px" }}
+          sx={{ fontSize: 60, color: "#474747", marginBottom: "20px" }}
         />
 
         {/* <input {...getInputProps()} /> */}
         {isDragActive ? (
-          <Typography variant="body1">Drop the file here...</Typography>
+          <Typography variant="body1" sx={{ marginBottom: "16px" }}>Drop the file here...</Typography>
+        ) : file ? (
+          <Typography variant="body1" color="text.secondary" sx={{ marginBottom: "16px" }}>
+            File already uploaded. Remove it to upload a new one.
+          </Typography>
         ) : (
           <>
-            <Typography variant="body1">
+            <Typography variant="body1" sx={{ marginBottom: "12px" }}>
               Drag & Drop a CSV or Excel file here, or click to select one.
             </Typography>
 
@@ -187,36 +210,56 @@ const FileUploader = ({ setData, setColumnTypes, onProceed }) => {
 
         <input
           type="file"
-          accept=".csv, .xlsx"
+          accept=".csv, .xlsx, .xls"
           onChange={handleButtonClick}
           style={{ display: "none" }}
           id="fileInput"
+          disabled={!!file}
         />
 
         <label htmlFor="fileInput">
-          <Button variant="contained" component="span">
-            Browse files
+          <Button color="primary" variant="contained" component="span" disabled={!!file}>
+            Browse file
           </Button>
         </label>
       </Box>
 
       {file && (
-        <Box mt={2} sx={{ width: "100%" }}>
-          <Stack direction="row" spacing={2} alignItems="center">
+        showSuccessBox || data ? (
+          <Fade in={showSuccessBox} timeout={1000}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                backgroundColor: "rgba(63, 189, 189, 0.3)",
+                border: "1px solid #3FBDBD",
+                borderRadius: "8px",
+                padding: "10px 15px",
+                marginBottom: "10px",
+              }}
+            >
+              <CheckCircleIcon sx={{ color: "#3FBDBD", marginRight: "10px" }} />
+              <Stack direction="row" alignItems="center" flexGrow={1}>
+                <Typography variant="body1">{file.name}</Typography>
+                <Typography variant="body2" sx={{ marginLeft: "auto" }}>
+                  {(file.size / 1024).toFixed(2)} KB
+                </Typography>
+              </Stack>
+              <IconButton onClick={removeFile} sx={{ marginLeft: "10px", color: '#474747' }}>
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </Fade>
+        ) : (
+          <Box mt={2} sx={{ width: "100%" }}>
             <Typography variant="body2">{file.name}</Typography>
-            <Typography variant="body2">
-              {(file.size / 1024).toFixed(2)} KB
-            </Typography>
-            <IconButton onClick={removeFile}>
-              <DeleteIcon />
-            </IconButton>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={uploadProgress}
-            sx={{ mt: 2 }}
-          />
-        </Box>
+            <LinearProgress
+              variant="determinate"
+              value={uploadProgress}
+              sx={{ mt: 2 }}
+            />
+          </Box>
+        )
       )}
     </>
   );
