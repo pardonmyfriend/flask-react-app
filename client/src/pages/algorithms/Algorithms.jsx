@@ -54,12 +54,10 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
 
   return (
     <Box>
-      <AppBar position='static' sx={{ borderRadius: 2 }}>
+      <AppBar position='static'>
         <Tabs
           value={activeTab}
           onChange={(event, newValue) => setActiveTab(newValue)}
-          indicatorColor="inherit"
-          textColor="inherit"
           variant="fullWidth"
         >
           <Tab label='Dimension reduction' />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import PCA from './PCA';
 import TSNE from './TSNE';
 import KMeans from './KMeans';
@@ -81,7 +82,19 @@ function Dashboard({ data, algorithmName, params, target }) {
   };
 
   if (loading) {
-    return <div>Ładowanie danych...</div>;
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexGrow: 1 // Ustaw wysokość na cały ekran
+          // width: '100%',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   if (error) {
