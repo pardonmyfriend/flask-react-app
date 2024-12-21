@@ -1,40 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import React from "react";
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import Plot from "react-plotly.js";
-import { useResizeDetector } from 'react-resize-detector';
+import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import DataTable from "../../components/plots/DataTable";
+import ScatterPlot from "../../components/plots/ScatterPlot";
 
-function PCA({ pcaData }) {
-    const dataGridStyle = {
-        verflowY: 'auto',
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',
-            fontSize: '17px',
-        },
-        '& .MuiDataGrid-row:nth-of-type(2n)': {
-            backgroundColor: '#f6f6f6',
-        },
-        '& .MuiDataGrid-toolbar': {
-            color: 'white',
-        },
-        '& .MuiButton-textPrimary': {
-            color: 'white !important',
-        },
-        '& .MuiTypography-root': {
-            color: 'white !important',
-        },
-        '& .MuiButtonBase-root': {
-            color: 'white !important',
-        },
-        '& .MuiSvgIcon-root': {
-            color: '#3fbdbd !important',
-        },
-        '& .MuiDataGrid-columnsManagement': {
-            backgroundColor: '#3fbdbd !important',
-        },
-    };
-    
+function PCA({ pcaData, target }) {
     const renderPCADataframe = () => {
         const keys = Object.keys(pcaData.pca_components[0]);
 
@@ -48,36 +19,12 @@ function PCA({ pcaData }) {
             flex: 1,
         }));
 
+        const rows = pcaData.pca_components;
+
         return (
-            <DataGrid
-                rows={pcaData.pca_components}
-                columns={cols}
-                loading={!pcaData.pca_components.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
-                pageSizeOptions={[10, 25, 50]}
-                sx={dataGridStyle}
-                slots={{
-                    toolbar: GridToolbar,
-                }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
         );
     };
@@ -95,114 +42,47 @@ function PCA({ pcaData }) {
             flex: 1,
         }));
 
+        const rows = pcaData.eigen_values_data;
+
         return (
-            <DataGrid
-                rows={pcaData.eigen_values_data}
-                columns={cols}
-                loading={!pcaData.eigen_values_data.length}
-                showCellVerticalBorder
-                showColumnVerticalBorder
-                checkboxSelection={false}
-                sx={dataGridStyle}
-                slots={{
-                    toolbar: GridToolbar,
-                }}
-                slotProps={{
-                    toolbar: {
-                        sx: {
-                            backgroundColor: '#474747',
-                            fontWeight: 'bold',
-                            padding: '10px',
-                            fontSize: '30px',
-                            color: '#ffffff',
-                            '& .MuiButtonBase-root': {
-                                color: 'white',
-                            },
-                        },
-                    },
-                }}
+            <DataTable
+                rows={rows}
+                cols={cols}
             />
         );
     };
 
-    const ResponsivePlot = ({ data, layout, config }) => {
-        const { width, height, ref } = useResizeDetector();
-
-        return (
-            <div ref={ref} style={{ width: '100%', height: '500px' }}>
-                {width && height && (
-                    <Plot
-                        data={data}
-                        layout={{ ...layout, width, height }}
-                        config={config}
-                    />
-                )}
-            </div>
-        );
-    };
-
     const renderScatterPlot = () => {
-        const uniqueSpecies = [...new Set(pcaData.pca_components.map(row => row.species))];
-        const colorMap = uniqueSpecies.reduce((map, species, index) => {
-            const colors = ['#3FBDBD', '#329797', '#257171', '#194B4B'];
-            map[species] = colors[index % colors.length];
+        const uniqueGroups = [...new Set(pcaData.pca_components.map(row => row[target]))];
+        const colorMap = uniqueGroups.reduce((map, group, index) => {
+            const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
+            map[group] = colors[index % colors.length];
             return map;
         }, {});
     
-        const data = uniqueSpecies.map(species => ({
+        const data = uniqueGroups.map(group => ({
             x: pcaData.pca_components
-                .filter(row => row.species === species)
+                .filter(row => row[target] === group)
                 .map(row => row.PC1),
             y: pcaData.pca_components
-                .filter(row => row.species === species)
+                .filter(row => row[target] === group)
                 .map(row => row.PC2),
             type: 'scatter',
             mode: 'markers',
-            name: species,
+            name: group,
             marker: {
-                color: colorMap[species],
+                color: colorMap[group],
                 size: 10,
                 symbol: 'circle',
             },
         }));
-    
+
         return (
-            <ResponsivePlot
+            <ScatterPlot
                 data={data}
-                layout={{
-                    autosize: true,
-                    title: {
-                        text: 'Scatter plot: PC1 vs PC2',
-                    },
-                    xaxis: {
-                        title: {
-                            text: 'PC1',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'PC2',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: false,
-                    },
-                    legend: {
-                        orientation: 'h',
-                        x: 0.5,
-                        xanchor: 'center',
-                        y: -0.2,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false, 
-                }}
+                title={'Scatter plot: PC1 vs PC2'}
+                xTitle={'PC1'}
+                yTitle={'PC2'}
             />
         );
     };
@@ -231,7 +111,7 @@ function PCA({ pcaData }) {
                 layout={{
                     autosize: true,
                     title: {
-                        text: 'Wykres wyjaśnionej wariancji',
+                        text: 'Explained varance plot',
                         font: {
                             size: 22,
                             color: '#2c3e50',
@@ -239,7 +119,7 @@ function PCA({ pcaData }) {
                     },
                     xaxis: {
                         title: {
-                            text: 'Składowe główne',
+                            text: 'Principal components',
                             font: {
                                 size: 18,
                             },
@@ -250,7 +130,7 @@ function PCA({ pcaData }) {
                     },
                     yaxis: {
                         title: {
-                            text: 'Wyjaśniona wariancja (%)',
+                            text: 'Explained variance (%)',
                             font: {
                                 size: 18,
                             },
@@ -274,8 +154,8 @@ function PCA({ pcaData }) {
 
     const renderCorrelationHeatmap = () => {
         const correlationMatrix = pcaData.correlation_matrix;
-        const variables = Object.keys(correlationMatrix); // np. petallengthcm, petalwidthcm, etc.
-        const components = Object.keys(correlationMatrix[variables[0]]); // np. PC1, PC2
+        const variables = Object.keys(correlationMatrix);
+        const components = Object.keys(correlationMatrix[variables[0]]);
 
         const zValues = variables.map(variable =>
             components.map(component => correlationMatrix[variable][component])
@@ -289,25 +169,25 @@ function PCA({ pcaData }) {
                     x: components,
                     y: variables,
                     type: 'heatmap',
-                    colorscale: 'Coolwarm', // Paleta typu coolwarm
+                    colorscale: 'RdBu',
                     hoverongaps: false,
-                    showscale: true, // Wyświetlanie skali kolorów
+                    showscale: true,
                     colorbar: {
                         title: 'Korelacja',
                         titleside: 'right',
                     },
-                    text: zValues.map(row => row.map(value => value.toFixed(2))), // Wartości do wyświetlenia
-                    texttemplate: '%{text}', // Wyświetlanie wartości na heatmapie
+                    text: zValues.map(row => row.map(value => value.toFixed(2))),
+                    texttemplate: '%{text}',
                     textfont: {
-                        size: 12, // Rozmiar czcionki wartości
-                        color: '#000000', // Kolor czcionki (np. czarny)
+                        size: 12,
+                        color: '#000000',
                     },
                 },
             ]}
             layout={{
                 autosize: true,
                 title: {
-                    text: 'Macierz korelacji (Heatmapa)',
+                    text: 'Correlation matrix',
                     font: {
                         size: 22,
                         color: '#2c3e50',
@@ -315,7 +195,7 @@ function PCA({ pcaData }) {
                 },
                 xaxis: {
                     title: {
-                        text: 'Główne Składowe (PC)',
+                        text: 'Principal Components',
                         font: {
                             size: 18,
                         },
@@ -325,7 +205,7 @@ function PCA({ pcaData }) {
                 },
                 yaxis: {
                     title: {
-                        text: 'Zmienne',
+                        text: 'Origianl variables',
                         font: {
                             size: 18,
                         },
@@ -347,50 +227,11 @@ function PCA({ pcaData }) {
 
     return (
         <div>
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderPCADataframe()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderEigenValuesData()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderExplainedVariancePlot()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderScatterPlot()}
-            </div>
-
-            <div style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                width: '100%',
-                marginBottom: '30px'
-            }}>
-                {renderCorrelationHeatmap()}
-            </div>
+            {renderPCADataframe()}
+            {renderEigenValuesData()}
+            {renderExplainedVariancePlot()}
+            {renderScatterPlot()}
+            {renderCorrelationHeatmap()}
         </div>
     )
 }

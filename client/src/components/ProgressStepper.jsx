@@ -12,10 +12,13 @@ function ProgressStepper({ steps, stepContent }) {
   const [canProceedToNextStep, setCanProceedToNextStep] = useState(false);
   const [completed, setCompleted] = useState({});
 
+  const [file, setFile] = useState(null);
   const [data, setData] = useState(null);
   const [columnTypes, setColumnTypes] = useState(null);
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
+  const [algorithmSelected, setAlgorithmSelected] = useState(false);
+  const [target, setTarget] = useState('species') //do zmiany
 
 
   const totalSteps = steps.length;
@@ -63,82 +66,69 @@ function ProgressStepper({ steps, stepContent }) {
             ))}
         </Stepper>
         <div>
-          {allStepsCompleted ?
-          (
-            <>
-              <Typography 
-                sx={{ mt: 2, mb: 1}}
-              >
-                All steps completed
-              </Typography>
-              <Box
-                sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}
-              >
-                <Box sx={{ flex: '1 1 auto' }} />
-                <Button
-                  variant='contained'
-                  onClick={handleReset}
-                >
-                  Reset
-                </Button>
-              </Box>
-            </>
-          ) : (
-            <>
-              <Box
-                sx={{
-                  borderRadius: '20px',
-                  padding: '40px',
-                  textAlign: 'center',
-                  backgroundColor: '#fff',
-                  boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1), 0px 8px 30px rgba(0, 0, 0, 0.15)',
-                  width: '80%',
-                  margin: '0 auto',
-                  maxWidth: '1200px',
-                  minHeight: 'calc(100vh - 204px)'
-                }}
-              >
-                {React.cloneElement(stepContent[activeStep], { 
-                  data, setData, columnTypes, setColumnTypes,
-                  algorithmName, setAlgorithmName, 
-                  params, setParams, 
-                  onProceed: handleProceed
-                  })
-                }
-              </Box>
-              <Fab 
-                color="primary" 
-                onClick={handleBack}
-                disabled={activeStep === 0}
-                sx={{
-                  position: 'fixed',
-                  left: '20px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                <ArrowBackIcon />
-              </Fab>
+          <Box
+            sx={{
+              borderRadius: '20px',
+              padding: '40px',
+              textAlign: 'center',
+              backgroundColor: '#fff',
+              boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1), 0px 8px 30px rgba(0, 0, 0, 0.15)',
+              width: '80%',
+              margin: '0 auto',
+              maxWidth: '1200px',
+              minHeight: 'calc(100vh - 204px)',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {React.cloneElement(stepContent[activeStep], { 
+              file: file,
+              setFile: setFile,
+              data: data, 
+              setData: setData, 
+              algorithmName: algorithmName, 
+              setAlgorithmName: setAlgorithmName, 
+              params: params, 
+              setParams: setParams,
+              algorithmSelected: algorithmSelected,
+              setAlgorithmSelected: setAlgorithmSelected,
+              onProceed: handleProceed, 
+              columnTypes: columnTypes, 
+              setColumnTypes: setColumnTypes,
+              target: target,
+              setTarget: setTarget})
+            }
+          </Box>
+          <Fab 
+            color="primary" 
+            onClick={handleBack}
+            disabled={activeStep === 0}
+            sx={{
+              position: 'fixed',
+              left: '20px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          >
+            <ArrowBackIcon />
+          </Fab>
 
-              <Fab 
-                color="primary" 
-                onClick={handleNext}
-                //disabled={activeStep === totalSteps - 1}
-                disabled={!canProceedToNextStep}
-                sx={{
-                  position: 'fixed',
-                  right: '20px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                }}
-              >
-                <ArrowForwardIcon />
-              </Fab>
-            </>
-          )
-          }
+          <Fab 
+            color="primary" 
+            onClick={handleNext}
+            //disabled={activeStep === totalSteps - 1}
+            disabled={!canProceedToNextStep}
+            sx={{
+              position: 'fixed',
+              right: '20px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          >
+            <ArrowForwardIcon />
+          </Fab>
         </div>
-    </Box>
+      </Box>
   )
 }
 
