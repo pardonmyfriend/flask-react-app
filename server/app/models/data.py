@@ -127,9 +127,12 @@ class Data:
 
     @staticmethod
     def handleNullValues(col):
+        print("jestem w handleNullValues")
         colName = col['column']
         data = Data.get_data().copy()
         handleNullValues = col['handleNullValues']
+        print("handleNullValues: ", handleNullValues)
+        print("data: ", data)
         if handleNullValues == 'Drop rows':
             data = data.dropna(subset=[colName])
         elif handleNullValues == 'Drop column':
@@ -141,9 +144,11 @@ class Data:
             median = data[colName].median()
             data[colName] = data[colName].fillna(median)
         elif handleNullValues == 'Fill with specific value':
+            print("valueToFillWith", col['valueToFillWith'])
+            print("data[colName]", data[colName])
             valueToFillWith = col['valueToFillWith']
             data[colName] = data[colName].fillna(valueToFillWith)
-        return data[colName]
+        Data.set_data(data)
     
     @staticmethod
     def change_single_column_type(col, old_type, new_type):
@@ -223,9 +228,10 @@ class Data:
     
     @staticmethod
     def change_types(df):
+        print("jestem w metodzie change_types")
         df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
         df_cols = df_cols.rename(columns={'field': 'column'})
-        df_defaultTypes = Data.get_columnTypes()
+        df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
         data = Data.get_data()
 
         # Wyświetlenie obu DataFrame
@@ -241,10 +247,38 @@ class Data:
         #df_cols = pd.DataFrame(df['cols'])
         #df_defaultTypes = pd.DataFrame(df['defaultTypes'])
 
-        for col in df_cols:
-            if col in df_defaultTypes:
-                if df_cols[col]['type'] != df_defaultTypes[col]['type']:
-                    Data.change_single_column_type(col, df_defaultTypes[col]['type'], df_cols[col]['type'])
+        # for col in df_cols:
+        #     print("jestem w forze przy kolumnie ", col)
+        #     if col in df_defaultTypes:
+        #         if df_cols[col]['type'] != df_defaultTypes[col]['type']:
+        #             print("będę zmieniać typ i wypełniać nulle w kolumnie ", col['column'])
+        #             Data.change_single_column_type(col, df_defaultTypes[col]['type'], df_cols[col]['type'])
+        #         else:
+        #             print("będę wypełniać nulle w kolumnie ", col['column'])
+        #             df_cols[col] = Data.handleNullValues(col)
+        #             Data.set_data(df_cols)
+
+        for index, row in df_cols.iterrows():
+            if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
+                continue  # Pomiń dalszą część iteracji dla tego wiersza
+            print(f"index: {index}, row: {row}")
+            print("jestem w forze przy kolumnie ", row['column'])
+            #match = any(d['column'] == row['column'] for d in df_defaultTypes)
+            print("row[column]:", row['column'])
+            print("df_defaultColumnTypes toList:", df_defaultTypes['column'].unique().tolist())
+            if row['column'] in df_defaultTypes['column'].unique().tolist():
+                print("kolumna jest w defaultColumns")
+                print("row['type']", row['type'])
+                matching_row = df_defaultTypes[df_defaultTypes['column'] == row['column']]
+                print("matching row", df_defaultTypes[df_defaultTypes['column'] == row['column']])
+                if row['type'] != matching_row.iloc[0]['type']:
+                    print("będę zmieniać typ i wypełniać nulle w kolumnie ", row['column'])
+                    Data.change_single_column_type(row, df_defaultTypes[row]['type'], row['type'])
+                else:
+                    print("będę wypełniać nulle w kolumnie ", row['column'])
+                    Data.handleNullValues(row)
+                    #Data.set_data(df_cols)
+            
 
 
 

@@ -48,7 +48,7 @@ def upload_file():
                     "handleNullValues": 'Ignore',
                     "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
                     "uniqueValues": uniqueValuesList.get(item["column"], []),
-                    "valueToFillWith": None
+                    "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else None
                 }
                 for item in columnTypesList
             ]
@@ -97,16 +97,21 @@ def set_types():
             print("\ndata:")
             print(datas)
 
+            print("jestem przed change_types w kontrolerze")
             Data.change_types(data)
+            print("jestem po change_types w kontrolerze")
             resultData = Data.get_data().copy()
+            print("\nresultData:")
+            print(resultData)
             resultColumnTypes = Data.get_columnTypes().copy()
             result = {
-                "data": resultData,
-                "types": resultColumnTypes,
+                "data": resultData.to_dict(orient="records"),
+                "types": resultColumnTypes   
             }
 
         except json.JSONDecodeError:
             print("Invalid JSON data received.")
+        print("result", jsonify(result).get_data(as_text=True))
         return jsonify(result), 200
     
 

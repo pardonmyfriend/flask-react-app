@@ -214,7 +214,12 @@ const DataTable = ({ data, onProceed, onOpen }) => {
     console.log("newCols: ", newCols);
   };
 
-  const onValueToFillWithChange = (value, index) => {
+  const onValueToFillWithChange = (eventOrValue, index) => {
+    const value =
+    typeof eventOrValue === "object" && eventOrValue.target
+      ? eventOrValue.target.value // Dla inputów i select
+      : eventOrValue; // Dla numeric input, gdzie wartość jest przekazywana bezpośrednio
+
     console.log("index:", index);
     const newCols = [...cols]; // Tworzymy nową kopię tablicy wierszy
     console.log("old value to fill with: ", newCols[index+1].valueToFillWith);

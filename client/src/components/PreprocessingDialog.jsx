@@ -20,7 +20,6 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
       }}
       aria-hidden={!open} maxWidth="lg" // Możesz dostosować maksymalną szerokość
         fullWidth
-        disableBackdropClick
         disableEscapeKeyDown
         >
         <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types and handle null values"}
@@ -217,6 +216,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                     alignItems: 'center',
                     maxWidth: '120px',
                   }}
+                  onChange={(value) => onValueToFillWithChange(value, index)}
                 />
               ) : col.type === "categorical" ? (
                 // Select (dla typu "c")
@@ -225,7 +225,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                 <Select
                   labelId={`select-${index}-label`}
                   id={`select-${index}`}
-                  value={cols[index].uniqueValues[0]} // Możesz dostosować domyślną wartość
+                  value={cols[index].valueToFillWith} // Możesz dostosować domyślną wartość
                   label="Opcja"
                   autoWidth={true}
                   sx={{
@@ -234,6 +234,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                     display: 'flex',
                     alignItems: 'center',
                   }}
+                  onChange={(value) => onValueToFillWithChange(value, index)}
                   //onChange={(event) => onSelectChange(event, index)} // Dostosuj funkcję zmiany
                 >
                   {/* Iterowanie po uniqueValues dla konkretnej kolumny */}
