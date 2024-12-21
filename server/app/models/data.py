@@ -110,8 +110,11 @@ class Data:
     
     @staticmethod
     def updateColumnTypes():
+        print("jestem w updateColumnTypes")
         data = Data.get_data().copy()
-        columnTypes = Data.get_columnTypes.copy()
+        print("data", data)
+        columnTypes = Data.get_columnTypes().copy()
+        print("columnTypes", columnTypes)
         columns = set(data.columns)
         #kolumny listy słowników
         columnTypesColumns = {colType['column'] for colType in columnTypes}
@@ -148,28 +151,50 @@ class Data:
             print("data[colName]", data[colName])
             valueToFillWith = col['valueToFillWith']
             data[colName] = data[colName].fillna(valueToFillWith)
+        elif handleNullValues == 'Ignore':
+            pass
+        print("data bez nulli: ", data)
         Data.set_data(data)
+        print("data bez nulli po zapisie: ", Data.get_data())
     
     @staticmethod
     def change_single_column_type(col, old_type, new_type):
-        df_defaultTypes = Data.get_columnTypes().copy()
+        print("1")
+        df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        print("2")
+        matching_row = df_defaultTypes[df_defaultTypes['column'] == col['column']]
+        matching_row_index = df_defaultTypes[df_defaultTypes['column'] == col['column']].index
+        print("3")
         data = Data.get_data().copy()
+        print("4")
         colName = col['column']
+        print("5")
 
         #zmieniam class kolumny, jeśli class jest true
-        df_defaultTypes[colName]['class'] = col['class']
+        #matching_row['class'] = col['class']
+        df_defaultTypes.loc[matching_row_index, 'class'] = col['class']
+        print("6")
         #zmieniam handleNullValues
-        df_defaultTypes[colName]['handleNullValues'] = col['handleNullValues']
+        #matching_row['handleNullValues'] = col['handleNullValues']
+        df_defaultTypes.loc[matching_row_index, 'handleNullValues'] = col['handleNullValues']
+        print("7")
         #zmieniam valueToFill
-        df_defaultTypes[colName]['valueToFill'] = col['valueToFill']
-
+        print("matching_row['valueToFillWith']", matching_row['valueToFillWith'])
+        print("8")
+        print("col", col)
+        print("col['valueToFill']", col['valueToFillWith'])
+        #matching_row['valueToFill'] = col['valueToFill']
+        df_defaultTypes.loc[matching_row_index, 'valueToFillWith'] = col['valueToFillWith']
+        print("9")
         if old_type == 'numerical':
+            print("A")
             if new_type == 'nominal' | new_type == 'categorical':
+                print("A1")
                 #ZMIANA TYPU
                 #zmieniam typ kolumny w kopii data na string
                 data[colName] = data[colName].astype(str)
                 #zmieniam typ kolumny w kopii columnTypes na nominal lub categorical
-                df_defaultTypes[colName]['type'] = new_type
+                matching_row['type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 Data.set_columnTypes(df_defaultTypes)
@@ -178,32 +203,47 @@ class Data:
                 #ZAPIS DANYCH II
                 Data.set_data(data)
             else:
-                print("Nieznany podprzypadek dla Case 1")
+                print("A2")
     
         elif old_type == 'nominal':
+            print("B")
             if new_type == 'numerical':
+                print("B1")
                 #UZUPELNIAM NULLE
                 data[colName] = Data.handleNullValues(col)
+                print("colName", colName)
+                print("data[colName]", data[colName])
                 #ONE-HOT
+                print("będę enkodować dane")
+                print("kolumna do enkodowania: ", colName)
+                print("dane przed enkodowaniem: ", data[colName])
+                print("całe dane przed enkodowaniem: ", data)
+                data[colName] = data[colName].astype(str)
                 data = pd.get_dummies(data, columns=[colName])
+                print("data po enkodowaniu: ", data)
                 #ZAPIS DANYCH I
                 Data.set_data(data)
+                print("DataFrame w obiekcie Data po zapisie:", Data.get_data())
                 #ZAKTUALIZOWANIE COLUMN TYPES
                 Data.updateColumnTypes()
+                print("ColumnTypes w obiekcie Data po zapisie:", Data.get_columnTypes())
             elif new_type == 'categorical':
+                print("B2")
                 #UZUPELNIAM NULLE
                 data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
-                df_defaultTypes[colName]['type'] = new_type
+                matching_row['type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 #ZAKTUALIZOWANIE COLUMN TYPES
                 Data.updateColumnTypes()
             else:
-                print("Nieznany podprzypadek dla Case 2")
+                print("B3")
         
         elif old_type == 'categorical':
+            print("C")
             if new_type == 'numerical':
+                print("C1")
                 #UZUPELNIAM NULLE
                 data[colName] = Data.handleNullValues(col)
                 #ONE-HOT
@@ -213,18 +253,19 @@ class Data:
                 #ZAKTUALIZOWANIE COLUMN TYPES
                 Data.updateColumnTypes()
             elif new_type == 'nominal':
+                print("C2")
                 #UZUPELNIAM NULLE
                 data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
-                df_defaultTypes[colName]['type'] = new_type
+                matching_row['type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 #ZAKTUALIZOWANIE COLUMN TYPES
                 Data.updateColumnTypes()
             else:
-                print("Nieznany podprzypadek dla Case 3")
+                print("C3")
         else:
-            print("Nieznany przypadek")
+            print("D")
     
     @staticmethod
     def change_types(df):
@@ -233,6 +274,8 @@ class Data:
         df_cols = df_cols.rename(columns={'field': 'column'})
         df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
         data = Data.get_data()
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
 
         # Wyświetlenie obu DataFrame
         print("df_cols:")
@@ -273,11 +316,14 @@ class Data:
                 print("matching row", df_defaultTypes[df_defaultTypes['column'] == row['column']])
                 if row['type'] != matching_row.iloc[0]['type']:
                     print("będę zmieniać typ i wypełniać nulle w kolumnie ", row['column'])
-                    Data.change_single_column_type(row, df_defaultTypes[row]['type'], row['type'])
+                    Data.change_single_column_type(row, matching_row.iloc[0]['type'], row['type'])
                 else:
                     print("będę wypełniać nulle w kolumnie ", row['column'])
                     Data.handleNullValues(row)
                     #Data.set_data(df_cols)
+        data = pd.DataFrame(Data.get_data().copy())
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
             
 
 
