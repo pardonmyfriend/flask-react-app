@@ -199,6 +199,8 @@ def run_dbscan_service(df, params, target):
     
     clusters = dbscan.fit_predict(X)
 
+    print(clusters)
+
     df_cluster = pd.DataFrame(X)
     df_cluster['cluster'] = clusters
     df_cluster['cluster'] = df_cluster['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
@@ -212,6 +214,21 @@ def run_dbscan_service(df, params, target):
     cluster_sizes = {str(key): value for key, value in cluster_sizes.items()}
 
     feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
+
+    if df_cluster[df_cluster['cluster'] != 'Noise'].empty:
+        return {
+            "cluster_dataframe": df_cluster.to_dict(orient='records'),
+            "pca_dataframe": [],
+            "cluster_sizes": cluster_sizes,
+            "silhouette_score": "Not Applicable",
+            "centroids": [],
+            "intra_cluster_distances": [],
+            "inter_cluster_distances": {
+                "index": [],
+                "columns": [],
+                "data": []
+            },
+        }
     
     intra_cluster_distances = df_cluster[df_cluster['cluster'] != 'Noise'].groupby('cluster').apply(
         lambda cluster: pairwise_distances(cluster[feature_columns]).mean() if len(cluster) > 1 else 0
@@ -340,11 +357,13 @@ def run_knn_service(df, params, target):
     accuracy = accuracy_score(y_test, y_pred)
 
     unique_classes = sorted(np.unique(y_test))
+    unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
+                  float(c) if isinstance(c, (np.floating, float)) else 
+                  str(c) for c in unique_classes]
+    
     conf_matrix = confusion_matrix(y_test, y_pred)
 
     class_report = classification_report(y_test, y_pred, output_dict=True)
-
-    print(conf_matrix)
 
     roc_data, pr_data = None, None
     if len(np.unique(y)) == 2:
@@ -432,6 +451,10 @@ def run_decision_tree_service(df, params, target):
     accuracy = accuracy_score(y_test, y_pred)
 
     unique_classes = sorted(np.unique(y_test))
+    unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
+                  float(c) if isinstance(c, (np.floating, float)) else 
+                  str(c) for c in unique_classes]
+    
     conf_matrix = confusion_matrix(y_test, y_pred)
 
     class_report = classification_report(y_test, y_pred, output_dict=True)
@@ -538,6 +561,12 @@ def run_svm_service(df, params, target):
     y_prob = svm.predict_proba(X_test) if len(np.unique(y)) == 2 else None
 
     accuracy = accuracy_score(y_test, y_pred)
+
+    unique_classes = sorted(np.unique(y_test))
+    unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
+                  float(c) if isinstance(c, (np.floating, float)) else 
+                  str(c) for c in unique_classes]
+    
     conf_matrix = confusion_matrix(y_test, y_pred)
     class_report = classification_report(y_test, y_pred, output_dict=True)
 
@@ -545,7 +574,9 @@ def run_svm_service(df, params, target):
     y_train_reset = y_train.reset_index(drop=True)
 
     support_vector_counts = dict(zip(*np.unique(y_train_reset[svm.support_], return_counts=True)))
-    support_vector_counts = {key: int(value) for key, value in support_vector_counts.items()}
+    support_vector_counts = {int(key) if isinstance(key, (np.integer, int)) else 
+                            float(key) if isinstance(key, (np.floating, float)) else 
+                            str(key): int(value) for key, value in support_vector_counts.items()}
 
     df_pred = pd.DataFrame(X_test).reset_index(drop=True)
     y_test = pd.Series(y_test).reset_index(drop=True)
@@ -564,9 +595,10 @@ def run_svm_service(df, params, target):
     df_pca['true'] = y_test
     df_pca['pred'] = y_pred
 
-    print(df_pca)
-
-    prediction_histogram = pd.Series(y_pred).value_counts()
+    prediction_histogram = {
+        str(k) if isinstance(k, (np.integer, int, np.floating, float)) else k: v
+        for k, v in pd.Series(y_pred).value_counts().items()
+    }
 
     return {
         "confusion_matrix": conf_matrix.tolist(),
@@ -577,5 +609,6 @@ def run_svm_service(df, params, target):
         "pca_dataframe": df_pca.to_dict(orient='records'),
         "accuracy": accuracy,
         "training_time": train_time,
-        "prediction_histogram": prediction_histogram.to_dict()
+        "prediction_histogram": prediction_histogram,
+        "unique_classes": unique_classes
     }

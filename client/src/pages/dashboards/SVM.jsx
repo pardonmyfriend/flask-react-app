@@ -14,7 +14,7 @@ function SVM({ svmData }) {
         const cols = orderedKeys.map(key => ({
             field: key,
             headerName: key.toUpperCase(),
-            flex: 1,
+            width: 150,
         }));
 
         const rows = svmData.dataframe;
@@ -24,7 +24,7 @@ function SVM({ svmData }) {
 
     const renderConfusionMatrix = () => {
         const matrix = svmData.confusion_matrix;
-        const classNames = [...new Set(svmData.dataframe.map(row => row['original class']))];
+        const classNames = svmData.unique_classes;
 
         return (
             <ResponsivePlot

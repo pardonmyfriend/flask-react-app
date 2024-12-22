@@ -21,6 +21,8 @@ function Dashboard({ data, algorithmName, params, target }) {
       setLoading(true);
       setError(null);
 
+      console.log('Target:', target);
+
       const payload = {
           params: params,
           data: data.rows,

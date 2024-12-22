@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import pandas as pd
 from app.models.data import Data
+from app.services.data_service import load_dataset_service
 
 data_blueprint = Blueprint('data', __name__)
 
@@ -58,6 +59,14 @@ def upload_file():
             return jsonify({"error":"Minimum number of rows: 10"}), 400
     else:
         return jsonify({"error":"Unsupported file type"}), 400
+    
+@data_blueprint.route('/load_dataset/<string:dataset>', methods=['POST'])
+def load_dataset(dataset):
+    try:
+        response = load_dataset_service(dataset)
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     
 @data_blueprint.route('/set_types', methods=['POST'])
 def set_types():

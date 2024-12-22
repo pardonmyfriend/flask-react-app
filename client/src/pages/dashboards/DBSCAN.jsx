@@ -14,7 +14,7 @@ function DBSCAN({ dbscanData }) {
         const cols = orderedKeys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
-            flex: 1,
+            ...(orderedKeys.length <= 6 ? { flex: 1 } : { width: 150 }),
         }));
 
         const rows = dbscanData.cluster_dataframe;

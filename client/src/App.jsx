@@ -1,5 +1,6 @@
 import './App.css';
-import FileUploader from './components/FileUploader';
+// import FileUploader from './components/FileUploader';
+import Start from './pages/start/Start';
 import ProgressStepper from './components/ProgressStepper';
 import DataTable from './components/DataTable';
 import Algorithms from './pages/algorithms/Algorithms';
@@ -140,7 +141,7 @@ function App() {
   });
 
   const pages = ['File upload', 'Preview', 'Data', 'Analysis', 'Results']
-  const pageContent = [<FileUploader />, <Preview/>, <DataTable />, <Algorithms />, <Dashboard />]
+  const pageContent = [<Start />, <Preview/>, <DataTable />, <Algorithms />, <Dashboard />]
 
   return (
     <ThemeProvider theme={theme}>

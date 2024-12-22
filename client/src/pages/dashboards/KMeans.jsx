@@ -16,7 +16,7 @@ function KMeans({ kmeansData, target }) {
         const cols = orderedKeys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
-            flex: 1,
+            ...(orderedKeys.length <= 6 ? { flex: 1 } : { width: 150 }),
         }));
 
         const rows = kmeansData.clustered_dataframe;
@@ -123,7 +123,7 @@ function KMeans({ kmeansData, target }) {
         const cols = Object.keys(kmeansData.centroids[0]).map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
-            flex: 1,
+            ...(kmeansData.centroids[0].length <= 6 ? { flex: 1 } : { width: 150 }),
         }));
 
         const rows = kmeansData.centroids;
