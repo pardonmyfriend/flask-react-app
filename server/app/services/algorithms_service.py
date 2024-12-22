@@ -199,8 +199,6 @@ def run_dbscan_service(df, params, target):
     
     clusters = dbscan.fit_predict(X)
 
-    print(clusters)
-
     df_cluster = pd.DataFrame(X)
     df_cluster['cluster'] = clusters
     df_cluster['cluster'] = df_cluster['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
@@ -215,10 +213,19 @@ def run_dbscan_service(df, params, target):
 
     feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
 
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
+    df_pca = pd.DataFrame(
+        X_pca, 
+        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+    )
+    df_pca['cluster'] = clusters
+    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+
     if df_cluster[df_cluster['cluster'] != 'Noise'].empty:
         return {
             "cluster_dataframe": df_cluster.to_dict(orient='records'),
-            "pca_dataframe": [],
+            "pca_dataframe": df_pca.to_dict(orient='records'),
             "cluster_sizes": cluster_sizes,
             "silhouette_score": "Not Applicable",
             "centroids": [],
@@ -250,15 +257,6 @@ def run_dbscan_service(df, params, target):
         silhouette = silhouette_score(X[clusters != -1], clusters[clusters != -1])
     else:
         silhouette = "Not Applicable"
-    
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X)
-    df_pca = pd.DataFrame(
-        X_pca, 
-        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
-    )
-    df_pca['cluster'] = clusters
-    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
 
     if len(set(clusters)) > 1:
         silhouette_scores = silhouette_samples(X, clusters)
