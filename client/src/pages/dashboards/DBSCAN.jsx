@@ -1,6 +1,6 @@
 import React from "react";
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function DBSCAN({ dbscanData }) {
@@ -24,7 +24,7 @@ function DBSCAN({ dbscanData }) {
         const rows = dbscanData.cluster_dataframe;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />
@@ -235,7 +235,7 @@ function DBSCAN({ dbscanData }) {
         const rows = dbscanData.centroids;
     
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />

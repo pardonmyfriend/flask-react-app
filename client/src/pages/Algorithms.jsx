@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Box, AppBar, Tabs, Tab } from '@mui/material';
-import TabPanel from '../../components/TabPanel';
-import DimensionReduction from './DimensionReduction';
-import ClusterAnalysis from './ClusterAnalysis';
-import Classification from './Classification';
-import ParamsDialog from '../../components/ParamsDialog';
+import TabPanel from '../components/TabPanel';
+import DimensionReduction from './algorithms/DimensionReduction'
+import ClusterAnalysis from './algorithms/ClusterAnalysis';
+import Classification from './algorithms/Classification';
+import ParamsDialog from '../components/ParamsDialog';
 
 function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected }) {
   const [activeTab, setActiveTab] = useState(0)

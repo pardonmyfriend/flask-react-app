@@ -2,6 +2,13 @@ from flask import Blueprint, request, jsonify
 import pandas as pd
 from app.models.data import Data
 from app.services.data_service import load_dataset_service
+from app.services.data_service import (
+    get_basic_stats,
+    analyze_target,
+    get_correlation_matrix,
+    get_missing_data,
+    get_distributions
+)
 
 data_blueprint = Blueprint('data', __name__)
 
@@ -80,4 +87,25 @@ def set_types():
 
     return jsonify({"message": "Data received", "received_data": columnTypes}), 200
     
+@data_blueprint.route('/get_data_summary', methods=['POST'])
+def get_data_summary():
+    request_data = request.get_json()
+    df = request_data.get('data', [])
+    target = request_data.get('target', '')
     
+    df = pd.DataFrame(df)
+    df = df.drop(columns=['id'], errors='ignore')
+
+    # if target and target in df.columns:
+    #     df[target] = df[target].astype(str)
+    try:
+        response = {
+            "basic_stats": get_basic_stats(df),
+            "target_analysis": analyze_target(df, target) if target else None,
+            # "correlation_matrix": get_correlation_matrix(df),
+            # "missing_data": get_missing_data(df),
+            # "distribution": get_distributions(df)
+        }
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400

@@ -2,7 +2,7 @@ import React from "react";
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function PCA({ pcaData, target }) {
@@ -22,7 +22,7 @@ function PCA({ pcaData, target }) {
         const rows = pcaData.pca_components;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />
@@ -45,7 +45,7 @@ function PCA({ pcaData, target }) {
         const rows = pcaData.eigen_values_data;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />

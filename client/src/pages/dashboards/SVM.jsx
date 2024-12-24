@@ -2,7 +2,7 @@ import React from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function SVM({ svmData }) {
@@ -19,7 +19,7 @@ function SVM({ svmData }) {
 
         const rows = svmData.dataframe;
 
-        return <DataTable rows={rows} cols={cols} />;
+        return <DataPresentation rows={rows} cols={cols} />;
     };
 
     const renderConfusionMatrix = () => {

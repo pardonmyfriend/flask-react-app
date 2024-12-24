@@ -2,8 +2,8 @@ import React from "react";
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
 import ScatterPlot from "../../components/plots/ScatterPlot";
+import DataPresentation from "../../components/plots/DataPresentation";
 
 function AgglomerativeClustering({ aggData }) {
     const renderAggDataframe = () => {
@@ -22,7 +22,7 @@ function AgglomerativeClustering({ aggData }) {
         const rows = aggData.cluster_dataframe;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />
@@ -212,7 +212,7 @@ function AgglomerativeClustering({ aggData }) {
         const rows = aggData.centroids;
     
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />

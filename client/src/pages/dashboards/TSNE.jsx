@@ -2,7 +2,7 @@ import React from "react";
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function TSNE({ tsneData, target }) {
@@ -24,7 +24,7 @@ function TSNE({ tsneData, target }) {
         const rows = tsneData.tsne_dataframe;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />

@@ -1,7 +1,7 @@
 import React from 'react'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 
-function DataTable({ rows, cols }) {
+function DataPresentation({ rows, cols }) {
     const dataGridStyle = {
         verflowY: 'auto',
         '& .MuiDataGrid-columnHeaderTitle': {
@@ -30,6 +30,8 @@ function DataTable({ rows, cols }) {
             backgroundColor: '#3fbdbd !important',
         },
     };
+
+    console.log(cols)
 
   return (
     <DataGrid
@@ -65,4 +67,4 @@ function DataTable({ rows, cols }) {
   )
 }
 
-export default DataTable
+export default DataPresentation

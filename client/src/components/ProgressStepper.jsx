@@ -13,6 +13,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [completed, setCompleted] = useState({});
 
   const [file, setFile] = useState(null);
+  const [selectedDataset, setSelectedDataset] = useState(null);
   const [data, setData] = useState(null);
   const [columnTypes, setColumnTypes] = useState(null);
   const [algorithmName, setAlgorithmName] = useState('');
@@ -84,6 +85,8 @@ function ProgressStepper({ steps, stepContent }) {
             {React.cloneElement(stepContent[activeStep], { 
               file: file,
               setFile: setFile,
+              selectedDataset: selectedDataset,
+              setSelectedDataset: setSelectedDataset,
               data: data, 
               setData: setData, 
               algorithmName: algorithmName, 

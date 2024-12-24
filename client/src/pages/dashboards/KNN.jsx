@@ -2,7 +2,7 @@ import React from 'react'
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function KNN({ knnData }) {
@@ -20,7 +20,7 @@ function KNN({ knnData }) {
         const rows = knnData.dataframe;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />
@@ -174,6 +174,7 @@ function KNN({ knnData }) {
 
     const renderClassificationReport = () => {
         const report = knnData.classification_report;
+        console.log(report);
 
         const rows = Object.keys(report).filter(key => key !== "accuracy").map((key) => ({
             id: key,
@@ -191,7 +192,7 @@ function KNN({ knnData }) {
         return (
             <div>
                 <Typography variant="h6">Classification Report</Typography>
-                <DataTable rows={rows} cols={cols} />
+                <DataPresentation rows={rows} cols={cols} />
             </div>
         );
     };

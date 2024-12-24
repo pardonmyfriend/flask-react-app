@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import TabPanel from '../../components/TabPanel';
-import FileUploader from '../../components/FileUploader';
-import Datasets from '../../components/Datasets';
+import TabPanel from '../components/TabPanel';
+import FileUploader from '../components/FileUploader';
+import Datasets from '../components/Datasets';
 import { AppBar, Tab, Tabs, Box } from '@mui/material';
 
-const Start = ({ file, setFile, data, setData, setColumnTypes, onProceed, setTarget }) => {
+const Start = ({ file, setFile, selectedDataset, setSelectedDataset, data, setData, setColumnTypes, onProceed, setTarget }) => {
     const [activeTab, setActiveTab] = useState(0)
 
   return (
@@ -32,7 +32,10 @@ const Start = ({ file, setFile, data, setData, setColumnTypes, onProceed, setTar
         </TabPanel>
         <TabPanel value={activeTab} index={1}>
             <Datasets
+                data={data}
                 setData={setData}
+                selectedDataset={selectedDataset}
+                setSelectedDataset={setSelectedDataset}
                 onProceed={onProceed}
                 setColumnTypes={setColumnTypes}
                 setTarget={setTarget}
