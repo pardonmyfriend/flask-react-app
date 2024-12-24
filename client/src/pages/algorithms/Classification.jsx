@@ -7,6 +7,10 @@ const Classification = ({ handleTileClick, algorithmName, setAlgorithmName, para
     <Box display="flex" flexWrap="wrap" justifyContent="center">
       <Tile 
         title="KNN"
+        info={{
+          name: "K-Nearest Neighbors",
+          description: "Classifies data points based on the majority class of their k nearest neighbors in the feature space."
+        }}
         onClick={() => handleTileClick('KNN')} 
         algorithmName={algorithmName}
         setAlgorithmName={setAlgorithmName}
@@ -17,6 +21,10 @@ const Classification = ({ handleTileClick, algorithmName, setAlgorithmName, para
       />
       <Tile 
         title="Decision Tree"
+        info={{
+          name: "Decision Tree",
+          description: "Builds a tree-like model of decisions and outcomes to classify or predict data based on input features."
+        }}
         onClick={() => handleTileClick('Decision Tree')} 
         algorithmName={algorithmName}
         setAlgorithmName={setAlgorithmName}
@@ -27,6 +35,10 @@ const Classification = ({ handleTileClick, algorithmName, setAlgorithmName, para
       />
       <Tile 
         title="SVM"
+        info={{
+          name: "Support Vector Machine",
+          description: "Finds the optimal hyperplane to classify data into categories, maximizing the margin between classes."
+        }}
         onClick={() => handleTileClick('SVM')} 
         algorithmName={algorithmName}
         setAlgorithmName={setAlgorithmName}
