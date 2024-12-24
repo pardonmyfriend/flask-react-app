@@ -199,9 +199,10 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                 <NumericInput
                   min={0}
                   max={100}
-                  defaultValue={0}
+                  defaultValue={cols[index].valueToFillWith}
                   step={1}
                   precision={0}
+                  value={cols[index].valueToFillWith}
                   onChange={(value) => onValueToFillWithChange(value, index)}
                 />
               ) : col.type === "nominal" ? (
@@ -209,6 +210,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                 <TextField 
                   label="Text Input"
                   variant="outlined"
+                  value={cols[index].valueToFillWith}
                   sx={{
                     minWidth: '80px',
                     marginRight: '8px',

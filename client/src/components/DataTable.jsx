@@ -7,7 +7,7 @@ import PreprocessingDialog from "./PreprocessingDialog";
 import TabPanel from "./TabPanel";
 import ConfirmDialog from "./ConfirmDialog";
 
-const DataTable = ({ data, onProceed, onOpen }) => {
+const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
@@ -114,7 +114,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
       setIsDataLoaded(true);
       onProceed(true);
     }
-    return () => {};
+    //return () => {};
   }, [isDataLoaded, onProceed, data]);
 
   const columnsWithDeleteButton = cols.map((column) => ({
@@ -178,10 +178,53 @@ const DataTable = ({ data, onProceed, onOpen }) => {
       })
       .then((result) => {
         console.log("Fetched data:", result);
+
+        const data = result.data;
+          console.log("data:", data);
+          const keys = Object.keys(data[0]);
+
+          const orderedKeys = keys.includes('id') 
+          ? ['id', ...keys.filter((key) => key !== 'id')] 
+          : keys;
+          
+          const cols = orderedKeys.map((key) => ({
+            field: key,
+            headerName: key.toUpperCase(),
+            width: 150,
+          }));
+
+          const columnTypes = result.types;
+          const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+            column: column.toUpperCase(),
+            type: type,
+          }));
+          
+          setColumnTypes(updatedColumnTypesRows);
+
+          const updatedCols = cols.map((item, index) => ({
+            ...item,
+            type: columnTypes[index].type,
+            class: columnTypes[index].class,
+            nullCount: columnTypes[index].nullCount,
+            handleNullValues: columnTypes[index].handleNullValues,
+            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+            uniqueValues: columnTypes[index].uniqueValues,
+            valueToFillWith: columnTypes[index].valueToFillWith
+          }))
+          console.log("columns with types:", updatedCols);
+
+          //setData({ rows: data, columns: updatedCols });
+          setIsDataLoaded(false);
+          setData({
+            rows: [...data], // Nowa referencja tablicy `data`
+            columns: [...updatedCols], // Nowa referencja tablicy `updatedCols`
+          });
+          setIsDataLoaded(true);
       })
       .catch((error) => {
         console.error("Error during fetch:", error);
       });
+
   };
 
   const handleSelectColumnChange = (event, index) => {
@@ -262,6 +305,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
   };
 
   if (isDataLoaded) {
+    console.log("Current rows state before render:", rows);
     return (
       <Box sx={{ height: 500, width: "100%" }}>
         <AppBar position="static" sx={{ borderRadius: 2 }}>
@@ -311,11 +355,11 @@ const DataTable = ({ data, onProceed, onOpen }) => {
               Delete selected
             </Button>
           </h2>
-
-
+        
           <DataGrid
-            key={rows.length}
+            key={rows.length + JSON.stringify(rows)}
             rows={rows}
+            onRowClick={(params) => console.log("Row clicked:", params.row)}
             columns={columnsWithDeleteButton}
             loading={!rows.length}
             initialState={{

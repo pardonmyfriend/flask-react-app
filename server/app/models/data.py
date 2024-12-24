@@ -133,6 +133,7 @@ class Data:
         print("jestem w handleNullValues")
         colName = col['column']
         data = Data.get_data().copy()
+        columnTypes = Data.get_columnTypes().copy()
         handleNullValues = col['handleNullValues']
         print("handleNullValues: ", handleNullValues)
         print("data: ", data)
@@ -154,7 +155,17 @@ class Data:
         elif handleNullValues == 'Ignore':
             pass
         print("data bez nulli: ", data)
+        # Znajdź odpowiedni słownik
+        column_data = next((col for col in columnTypes if col['column'] == colName), None)
+
+        # Jeśli istnieje, zaktualizuj 'nullCount'
+        if column_data:
+            column_data['nullCount'] = 0
+
+        #columnTypes.loc[columnTypes['column'] == colName, 'nullCount'].values[0] = 0
+        #columnTypes[colName]['nullCount'] = 0
         Data.set_data(data)
+        Data.set_columnTypes(columnTypes)
         print("data bez nulli po zapisie: ", Data.get_data())
     
     @staticmethod
@@ -210,7 +221,9 @@ class Data:
             if new_type == 'numerical':
                 print("B1")
                 #UZUPELNIAM NULLE
-                data[colName] = Data.handleNullValues(col)
+                if data[colName].isnull().any():
+                    data[colName] = Data.handleNullValues(data[colName])
+                #data[colName] = Data.handleNullValues(col)
                 print("colName", colName)
                 print("data[colName]", data[colName])
                 #ONE-HOT
