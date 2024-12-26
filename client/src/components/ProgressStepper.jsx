@@ -19,8 +19,8 @@ function ProgressStepper({ steps, stepContent }) {
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
   const [algorithmSelected, setAlgorithmSelected] = useState(false);
-  const [target, setTarget] = useState('species') //do zmiany
-
+  const [target, setTarget] = useState(null); //do zmiany
+  const [algTab, setAlgTab] = useState(0);
 
   const totalSteps = steps.length;
   const completedSteps = Object.keys(completed).length;
@@ -98,6 +98,8 @@ function ProgressStepper({ steps, stepContent }) {
               onProceed: handleProceed, 
               columnTypes: columnTypes, 
               setColumnTypes: setColumnTypes,
+              algTab: algTab,
+              setAlgTab: setAlgTab,
               target: target,
               setTarget: setTarget})
             }

@@ -6,8 +6,8 @@ import ClusterAnalysis from './algorithms/ClusterAnalysis';
 import Classification from './algorithms/Classification';
 import ParamsDialog from '../components/ParamsDialog';
 
-function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected }) {
-  const [activeTab, setActiveTab] = useState(0)
+function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected, algTab, setAlgTab, target }) {
+  const [activeTab, setActiveTab] = useState(algTab)
   const [dialogOpen, setDialogOpen] = useState(false);
   const [paramsInfo, setParamsInfo] = useState({});
 
@@ -24,6 +24,7 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
     setAlgorithmName('')
     setParamsInfo({});
     setParams({})
+    setAlgTab(activeTab)
     setAlgorithmSelected(false);
     fetch(`http://localhost:5000/algorithms/get_algorithm_info/${algorithm}`, {
       method: 'GET',
@@ -99,6 +100,7 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
           setParams={setParams}
           algorithmSelected={algorithmSelected}
           setAlgorithmSelected={setAlgorithmSelected}
+          target={target}
         />
       </TabPanel>
 

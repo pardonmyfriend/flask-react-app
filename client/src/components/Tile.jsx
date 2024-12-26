@@ -5,7 +5,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 
-const Tile = ({ title, info, onClick, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected }) => {
+const Tile = ({ title, info, onClick, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected, disabled }) => {
   const [expanded, setExpanded] = useState(false);
 
   const selected = algorithmSelected && algorithmName && algorithmName === title;
@@ -25,7 +25,7 @@ const Tile = ({ title, info, onClick, algorithmName, setAlgorithmName, params, s
       <Button
         onClick={onClick}
         variant={selected ? 'contained' : 'outlined'}
-        disabled={algorithmSelected && !selected}
+        disabled={(algorithmSelected && !selected) || disabled}
         sx={{
           width: 200,
           height: 200,
@@ -64,7 +64,7 @@ const Tile = ({ title, info, onClick, algorithmName, setAlgorithmName, params, s
                 position: 'absolute',
                 top: 0,
                 right: 0,
-                color: algorithmSelected ? '#D7D7D7' : '#3FBDBD',
+                color: algorithmSelected || disabled ? '#D7D7D7' : '#3FBDBD',
                 padding: '0.5rem',
                 cursor: 'pointer',
               }}

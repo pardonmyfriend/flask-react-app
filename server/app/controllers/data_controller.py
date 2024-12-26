@@ -6,7 +6,6 @@ from app.services.data_service import (
     get_basic_stats,
     analyze_target,
     get_correlation_matrix,
-    get_pair_plot_data,
     get_distributions
 )
 
@@ -101,7 +100,7 @@ def get_data_summary():
             "basic_stats": get_basic_stats(df),
             "target_analysis": analyze_target(df, target) if target else None,
             "correlation_matrix": get_correlation_matrix(df),
-            "pair_plot": get_pair_plot_data(df, target) if target else None,
+            # "pair_plot": get_pair_plot_data(df, target) if target else None,
             # "missing_data": get_missing_data(df),
             # "distribution": get_distributions(df)
         }
