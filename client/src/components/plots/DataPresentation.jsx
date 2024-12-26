@@ -1,69 +1,38 @@
 import React from 'react'
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { useResizeDetector } from 'react-resize-detector';
+import CustomToolbar from './CustomToolbar';
 
 function DataPresentation({ rows, cols }) {
-    const dataGridStyle = {
-        verflowY: 'auto',
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',
-            fontSize: '17px',
-        },
-        '& .MuiDataGrid-row:nth-of-type(2n)': {
-            backgroundColor: '#f6f6f6',
-        },
-        '& .MuiDataGrid-toolbar': {
-            color: 'white',
-        },
-        '& .MuiButton-textPrimary': {
-            color: 'white !important',
-        },
-        '& .MuiTypography-root': {
-            color: 'white !important',
-        },
-        '& .MuiButtonBase-root': {
-            color: 'white !important',
-        },
-        '& .MuiSvgIcon-root': {
-            color: '#3fbdbd !important',
-        },
-        '& .MuiDataGrid-columnsManagement': {
-            backgroundColor: '#3fbdbd !important',
-        },
-    };
+    const { width, height, ref } = useResizeDetector();
 
-    console.log(cols)
+    const pageSizeOptions = rows.length > 25 ? [10, 25, 50] : (rows.length > 10 ? [10, 25] : []);
+    
+    const parentDivStyle = rows.length > 10 
+        ? { width: width, height: '683px' }
+        : { width: width };
 
   return (
-    <DataGrid
-        rows={rows}
-        columns={cols}
-        loading={!rows.length}
-        showCellVerticalBorder
-        showColumnVerticalBorder
-        checkboxSelection={false}
-        initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-        }}
-        pageSizeOptions={[10, 25, 50]}
-        sx={dataGridStyle}
-        slots={{
-            toolbar: GridToolbar,
-        }}
-        slotProps={{
-            toolbar: {
-                sx: {
-                    backgroundColor: '#474747',
-                    fontWeight: 'bold',
-                    padding: '10px',
-                    fontSize: '30px',
-                    color: '#ffffff',
-                    '& .MuiButtonBase-root': {
-                        color: 'white',
-                    },
-                },
-            },
-        }}
-    />
+    <div ref={ref} style={{ width: '100%' }}>
+        <div style={parentDivStyle}>
+            <DataGrid
+                rows={rows}
+                columns={cols}
+                loading={!rows.length}
+                showCellVerticalBorder
+                showColumnVerticalBorder
+                checkboxSelection={false}
+                disableRowSelectionOnClick={true}
+                initialState={{
+                    pagination: { paginationModel: { pageSize: 10 } },
+                }}
+                pageSizeOptions={pageSizeOptions}
+                slots={{
+                    toolbar: CustomToolbar,
+                }}
+            />
+        </div>
+    </div>
   )
 }
 
