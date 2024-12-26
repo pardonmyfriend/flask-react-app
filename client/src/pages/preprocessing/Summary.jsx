@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import Plot from 'react-plotly.js';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
 import DataPresentation from '../../components/plots/DataPresentation';
 import ResponsivePlot from '../../components/plots/ResponsivePlot';
 
@@ -63,9 +62,6 @@ const Summary = ({ data, target }) => {
       { field: 'data_type', headerName: 'Data Type', width: 100 },
     ];
 
-    console.log(rows)
-    console.log(cols)
-
     return (
         <DataPresentation
             rows={rows}
@@ -116,7 +112,55 @@ const Summary = ({ data, target }) => {
             }}
         />
     );
-  };    
+  };
+  
+  const renderCorrelationHeatmap = () => {
+    const correlationMatrix = analysis.correlation_matrix;
+    const variables = Object.keys(correlationMatrix);
+    const components = Object.keys(correlationMatrix[variables[0]]);
+
+    const zValues = variables.map(variable =>
+        components.map(component => correlationMatrix[variable][component])
+    );
+
+    return (
+      <ResponsivePlot
+        data={[
+            {
+                z: zValues,
+                x: components,
+                y: variables,
+                type: 'heatmap',
+                colorscale: 'RdBu',
+                hoverongaps: false,
+                showscale: true,
+                colorbar: {
+                    title: 'Correlation',
+                    titleside: 'right',
+                },
+                text: zValues.map(row => row.map(value => value.toFixed(2))),
+                texttemplate: '%{text}',
+                textfont: {
+                    size: 12,
+                    color: '#000000',
+                },
+            },
+        ]}
+        layout={{
+            autosize: true,
+            title: 'Correlation matrix',
+            xaxis: {
+                automargin: true,
+            },
+            yaxis: {
+                autorange: 'reversed',
+                automargin: true,
+            },
+            hovermode: 'closest',
+        }}
+      />
+    );
+  };
 
   return (
     <div>
@@ -124,49 +168,7 @@ const Summary = ({ data, target }) => {
         <div>
           {renderBasicStats()}
           {renderClassesCountsPlot()}
-
-          {/* <h2>Correlation Matrix</h2>
-          <Plot
-            data={[
-              {
-                z: Object.values(analysis.correlation_matrix),
-                x: Object.keys(analysis.correlation_matrix),
-                y: Object.keys(analysis.correlation_matrix),
-                type: 'heatmap',
-                colorscale: 'Viridis',
-              },
-            ]}
-            layout={{ title: 'Correlation Matrix', height: 500 }}
-          />
-
-          <h2>Missing Data</h2>
-          <Plot
-            data={[
-              {
-                x: Object.keys(analysis.missing_data),
-                y: Object.values(analysis.missing_data),
-                type: 'bar',
-              },
-            ]}
-            layout={{ title: 'Missing Data (%)', height: 500 }}
-          />
-
-          <h2>Distributions</h2>
-          {Object.entries(analysis.distribution).map(([column, dist]) => (
-            <div key={column}>
-              <h3>{column}</h3>
-              <Plot
-                data={[
-                  {
-                    x: Object.keys(dist.histogram),
-                    y: Object.values(dist.histogram),
-                    type: 'bar',
-                  },
-                ]}
-                layout={{ title: `${column} Histogram`, height: 500 }}
-              />
-            </div>
-          ))} */}
+          {renderCorrelationHeatmap()}
         </div>
       )}
     </div>

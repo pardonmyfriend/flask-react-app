@@ -77,25 +77,11 @@ def get_basic_stats(df):
     return stats.reset_index().to_dict(orient='records')
 
 def analyze_target(df, target_column):
-    print(df[target_column].value_counts().to_dict())
     return df[target_column].value_counts().to_dict()
-    # print("analyze_target")
-    # if target_column not in df.columns:
-    #     return {"error": "Target column not found."}
-    # if pd.api.types.is_numeric_dtype(df[target_column]):
-    #     return df[target_column].describe().to_dict()
-    # else:
-    #     return df[target_column].value_counts().to_dict()
 
 def get_correlation_matrix(df):
-    print("get_correlation_matrix")
     corr = df.select_dtypes(include=[np.number]).corr()
     return corr.round(2).to_dict()
-
-def get_missing_data(df):
-    print("get_missing_data")
-    missing = df.isnull().sum() / len(df) * 100
-    return missing[missing > 0].round(2).to_dict()
 
 def get_distributions(df):
     print("get_distributions")

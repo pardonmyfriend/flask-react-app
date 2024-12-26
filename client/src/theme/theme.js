@@ -79,16 +79,6 @@ const theme = createTheme({
             '& .MuiDataGrid-columnsManagement': {
               backgroundColor: '#3fbdbd !important',
             },
-            '& .MuiDataGrid-toolbarContainer': {
-              backgroundColor: '#474747',
-              fontWeight: 'bold',
-              padding: '10px',
-              fontSize: '30px',
-              color: '#ffffff',
-              '& .MuiButtonBase-root': {
-                color: 'white',
-              },
-            },
           },
         },
       },

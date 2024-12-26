@@ -111,7 +111,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
           {datasets.map((dataset) => (
             <ListItemButton
               key={dataset.id}
-              disabled={!!data && !selectedDataset} // Disable if data exists and no selectedDataset
+              disabled={Boolean(!!data && !selectedDataset)} // Disable if data exists and no selectedDataset
               selected={temporarySelectedDataset === dataset.id}
               onClick={() => handleTemporarySelect(dataset.id)}
               sx={{
@@ -150,7 +150,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
         <Button
           variant="contained"
           color="primary"
-          disabled={!temporarySelectedDataset || selectedDataset}
+          disabled={Boolean(!temporarySelectedDataset || selectedDataset)}
           onClick={handleSelect}
         >
           CONFIRM
@@ -158,7 +158,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
         <Button
           variant={selectedDataset ? "outlined" : "contained"}
           color="error"
-          disabled={!selectedDataset}
+          disabled={Boolean(!selectedDataset)}
           onClick={handleClear}
         >
           CLEAR

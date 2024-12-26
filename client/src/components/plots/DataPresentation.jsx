@@ -6,7 +6,13 @@ import CustomToolbar from './CustomToolbar';
 function DataPresentation({ rows, cols }) {
     const { width, height, ref } = useResizeDetector();
 
-    const pageSizeOptions = rows.length > 25 ? [10, 25, 50] : (rows.length > 10 ? [10, 25] : []);
+    const pageSizeOptions = rows.length > 25 ? [10, 25, 50] : (rows.length > 10 ? [10, 25] : [rows.length]);
+
+    const initialState = rows.length > 10 ? {
+        pagination: { paginationModel: { pageSize: 10 } },
+    } : {
+        pagination: { paginationModel: { pageSize: rows.length } },
+    };
     
     const parentDivStyle = rows.length > 10 
         ? { width: width, height: '683px' }
@@ -23,9 +29,7 @@ function DataPresentation({ rows, cols }) {
                 showColumnVerticalBorder
                 checkboxSelection={false}
                 disableRowSelectionOnClick={true}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
+                initialState={initialState}
                 pageSizeOptions={pageSizeOptions}
                 slots={{
                     toolbar: CustomToolbar,
