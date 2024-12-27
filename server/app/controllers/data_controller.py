@@ -81,21 +81,21 @@ def set_types():
             # print(df)
             # Przekształcanie podsłowników na DataFrame
             #df_cols = pd.DataFrame(data['cols'])
-            df_cols = pd.DataFrame(data['cols']).drop(columns=['headerName', 'width'])
-            df_cols = df_cols.rename(columns={'field': 'column'})
+            # df_cols = pd.DataFrame(data['cols']).drop(columns=['headerName', 'width'])
+            # df_cols = df_cols.rename(columns={'field': 'column'})
             #df_defaultTypes = pd.DataFrame(data['defaultTypes'])
-            df_defaultTypes = Data.get_columnTypes()
-            datas = Data.get_data()
+            # df_defaultTypes = Data.get_columnTypes()
+            # datas = Data.get_data()
 
             # Wyświetlenie obu DataFrame
-            print("df_cols:")
-            print(df_cols)
+            # print("df_cols:")
+            # print(df_cols)
 
-            print("\ndf_defaultTypes:")
-            print(df_defaultTypes)
+            # print("\ndf_defaultTypes:")
+            # print(df_defaultTypes)
 
-            print("\ndata:")
-            print(datas)
+            # print("\ndata:")
+            # print(datas)
 
             print("jestem przed change_types w kontrolerze")
             Data.change_types(data)
@@ -106,7 +106,33 @@ def set_types():
             resultColumnTypes = Data.get_columnTypes().copy()
             result = {
                 "data": resultData.to_dict(orient="records"),
-                "types": resultColumnTypes   
+                "types": resultColumnTypes.to_dict(orient="records")  
+            }
+
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+        print("result", jsonify(result).get_data(as_text=True))
+        return jsonify(result), 200
+    
+@data_blueprint.route('/normalize', methods=['POST'])
+def set_types():
+    res = request.get_json()
+
+    if not res:
+        return jsonify({"error": "No JSON received"}), 400
+    else:
+        try:
+            data = res  # Parsowanie JSON
+            print("Received JSON:", data)
+            Data.normalize_data(data)
+            print("jestem po normalize_data w kontrolerze")
+            resultData = Data.get_data().copy()
+            print("\nresultData:")
+            print(resultData)
+            resultColumnTypes = Data.get_columnTypes().copy()
+            result = {
+                "data": resultData.to_dict(orient="records"),
+                "types": resultColumnTypes.to_dict(orient="records")  
             }
 
         except json.JSONDecodeError:

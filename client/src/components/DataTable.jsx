@@ -23,7 +23,8 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
   useEffect(() => {
     console.log("Loaded data:", data);
     if (data && data.rows) {
-      setRows((prev) => (prev.length === 0 ? data.rows : prev));
+      setRows(data.rows);
+      // setRows((prev) => (prev.length === 0 ? data.rows : prev));
     }
     if (data && data.columns) {
       console.log(data.columns);
@@ -31,7 +32,8 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
         ...col,
         width: Math.max(col.headerName.length * 20, 200),
       }));
-      setCols((prev) => (prev.length === 0 ? updatedColumns : prev));
+      setCols(updatedColumns);
+      // setCols((prev) => (prev.length === 0 ? updatedColumns : prev));
 
       if (!defaultCols.current) {
         defaultCols.current = JSON.parse(JSON.stringify(updatedColumns));
@@ -121,6 +123,10 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
     ...column,
     renderHeader: () => (
       <div style={{ display: "flex", alignItems: "center" }}>
+      {/* Jeśli column.class jest true, wyświetl ikonę przed nazwą */}
+      {column.class === true && (
+        <span style={{ marginRight: "8px" }}>🎯</span> // Ikona przed nazwą
+      )}
         {column.headerName}
         {column.field !== "id" && (
           <IconButton
@@ -304,6 +310,71 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
     setSelectedColumn(null);
   };
 
+  const handleNormalizeData = () => {
+    const defaultTypes = defaultCols.current;
+    fetch("http://127.0.0.1:5000/normalize", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cols, defaultTypes }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json(); // Rozwiąż JSON
+      })
+      .then((result) => {
+        console.log("Fetched data:", result);
+
+        const data = result.data;
+          console.log("data:", data);
+          const keys = Object.keys(data[0]);
+
+          const orderedKeys = keys.includes('id') 
+          ? ['id', ...keys.filter((key) => key !== 'id')] 
+          : keys;
+          
+          const cols = orderedKeys.map((key) => ({
+            field: key,
+            headerName: key.toUpperCase(),
+            width: 150,
+          }));
+
+          const columnTypes = result.types;
+          const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+            column: column.toUpperCase(),
+            type: type,
+          }));
+          
+          setColumnTypes(updatedColumnTypesRows);
+
+          const updatedCols = cols.map((item, index) => ({
+            ...item,
+            type: columnTypes[index].type,
+            class: columnTypes[index].class,
+            nullCount: columnTypes[index].nullCount,
+            handleNullValues: columnTypes[index].handleNullValues,
+            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+            uniqueValues: columnTypes[index].uniqueValues,
+            valueToFillWith: columnTypes[index].valueToFillWith
+          }))
+          console.log("columns with types:", updatedCols);
+
+          //setData({ rows: data, columns: updatedCols });
+          setIsDataLoaded(false);
+          setData({
+            rows: [...data], // Nowa referencja tablicy `data`
+            columns: [...updatedCols], // Nowa referencja tablicy `updatedCols`
+          });
+          setIsDataLoaded(true);
+      })
+      .catch((error) => {
+        console.error("Error during fetch:", error);
+      });
+  };
+
   if (isDataLoaded) {
     console.log("Current rows state before render:", rows);
     return (
@@ -334,6 +405,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
             Your file
             <Button
               variant="contained"
+              onClick={handleNormalizeData}
               style={{ marginBottom: 10, position: "absolute", right: 190 }}
               sx={{
                 backgroundColor: "#3fbdbd",
