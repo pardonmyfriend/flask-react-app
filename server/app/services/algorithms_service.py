@@ -32,8 +32,6 @@ def get_algorithm_info_service(algorithm_name, params, df, target):
     df= df.drop(columns=['id', target], errors='ignore')
     shape = df.shape
 
-    print(shape)
-
     if not params:
         alg_obj = Algorithm(algorithm_name, shape)
     else:
@@ -121,7 +119,9 @@ def run_tsne_service(df, params, target):
         learning_rate=params.get('learning_rate'),
         max_iter=params.get('max_iter'),
         init=params.get('init'),
-        metric=params.get('metric')
+        metric=params.get('metric'),
+        angle=params.get('angle'),
+        random_state=params.get('random_state')
     )
     
     X_tsne = tsne.fit_transform(X)
@@ -301,7 +301,8 @@ def run_agglomerative_clustering_service(df, params, target):
     agg = AgglomerativeClustering(
         n_clusters=params.get('n_clusters'),
         linkage=params.get('linkage'),
-        distance_threshold=params.get('distance_threshold')
+        distance_threshold=params.get('distance_threshold'),
+        metric=params.get('metric')
     )
     
     clusters = agg.fit_predict(X)
@@ -355,13 +356,14 @@ def run_knn_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
+
+    print(params)
 
     knn = KNeighborsClassifier(
         n_neighbors=params.get('n_neighbors'),
         algorithm=params.get('algorithm'),
         metric=params.get('metric'),
-        p=params.get('p'),
         weights=params.get('weights')
     )
 
@@ -447,14 +449,14 @@ def run_decision_tree_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
 
     decision_tree = DecisionTreeClassifier(
         criterion=params.get('criterion'),
         max_depth=params.get('max_depth'),
         min_samples_split=params.get('min_samples_split'),
         min_samples_leaf=params.get('min_samples_leaf'),
-        max_features=params.get('max_features')
+        random_state=params.get('random_state')
     )
 
     start_time = time.time()
@@ -559,14 +561,14 @@ def run_svm_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
 
     svm = SVC(
         C=params.get('C'),
         degree=params.get('degree'),
         kernel=params.get('kernel'),
         gamma=params.get('gamma'),
-        probability=params.get('probability')
+        max_iter=params.get('max_iter')
     )
 
     start_time = time.time()
