@@ -9,10 +9,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Fade from '@mui/material/Fade';
 
 
-const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed }) => {
+const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showSuccessBox, setShowSuccessBox] = useState(false);
-  const [isDisabled, setIsDisabled] = useState(true);
 
   useEffect(() => {
     if (file) {
@@ -26,6 +25,10 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed 
     setFile(null);
     setUploadProgress(0);
     setShowSuccessBox(false);
+    setAlgTab(0)
+    setAlgorithmName('')
+    setParams({})
+    setAlgorithmSelected(false);
     onProceed(false);
   };
 

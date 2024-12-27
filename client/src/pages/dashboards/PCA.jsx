@@ -1,17 +1,20 @@
 import React from "react";
-import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
+import ScatterPlot3D from "../../components/plots/ScatterPlot3D";
+import DataDescription from "../../components/plots/DataDescription";
+import Heatmap from "../../components/plots/Heatmap";
 
 function PCA({ pcaData, target }) {
     const renderPCADataframe = () => {
         const keys = Object.keys(pcaData.pca_components[0]);
 
-        const orderedKeys = keys.includes('id') 
-        ? ['id', ...keys.filter((key) => key !== 'id')] 
-        : keys;
+        const orderedKeys = keys.includes(target) 
+        ? ['id', ...keys.filter((key) => key !== 'id' && key !== target), target] 
+        : ['id', ...keys.filter((key) => key !== 'id')];
+
+        console.log(orderedKeys)
         
         const cols = orderedKeys.map((key) => ({
             field: key,
@@ -29,28 +32,9 @@ function PCA({ pcaData, target }) {
         );
     };
 
-    const renderEigenValuesData = () => {
-        const keys = Object.keys(pcaData.eigen_values_data[0]);
-
-        const orderedKeys = keys.includes('id') 
-        ? ['id', ...keys.filter((key) => key !== 'id')] 
-        : keys;
-        
-        const cols = orderedKeys.map((key) => ({
-            field: key,
-            headerName: key.toUpperCase(),
-            flex: 1,
-        }));
-
-        const rows = pcaData.eigen_values_data;
-
-        return (
-            <DataPresentation
-                rows={rows}
-                cols={cols}
-            />
-        );
-    };
+    const keys = Object.keys(pcaData.pca_components[0]);
+        const pcKeys = keys.filter(key => key.startsWith('PC'));
+        const numComponents = pcKeys.length;
 
     const renderScatterPlot = () => {
         const uniqueGroups = [...new Set(pcaData.pca_components.map(row => row[target]))];
@@ -60,29 +44,98 @@ function PCA({ pcaData, target }) {
             return map;
         }, {});
     
-        const data = uniqueGroups.map(group => ({
-            x: pcaData.pca_components
-                .filter(row => row[target] === group)
-                .map(row => row.PC1),
-            y: pcaData.pca_components
-                .filter(row => row[target] === group)
-                .map(row => row.PC2),
-            type: 'scatter',
-            mode: 'markers',
-            name: group,
-            marker: {
-                color: colorMap[group],
-                size: 10,
-                symbol: 'circle',
-            },
-        }));
+        if (numComponents === 3) {
+            const data = uniqueGroups.map(group => ({
+                x: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => row.PC1),
+                y: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => row.PC2),
+                z: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => row.PC3),
+                type: 'scatter3d',
+                mode: 'markers',
+                name: group,
+                marker: {
+                    color: colorMap[group],
+                    size: 5,
+                    symbol: 'circle',
+                },
+            }));
+    
+            return (
+                <ScatterPlot3D
+                    data={data}
+                    xTitle={'PC1'}
+                    yTitle={'PC2'}
+                    zTitle={'PC3'}
+                />
+            );
+        } else {
+            const data = uniqueGroups.map(group => ({
+                x: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => row.PC1),
+                y: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => row.PC2),
+                type: 'scatter',
+                mode: 'markers',
+                name: group,
+                marker: {
+                    color: colorMap[group],
+                    size: 10,
+                    symbol: 'circle',
+                },
+            }));
+    
+            return (
+                <ScatterPlot
+                    data={data}
+                    xTitle={'PC1'}
+                    yTitle={'PC2'}
+                />
+            );
+        }
+    };
+
+    const renderCorrelationHeatmap = () => {
+        const correlationMatrix = pcaData.correlation_matrix;
+        const variables = Object.keys(correlationMatrix);
+        const components = Object.keys(correlationMatrix[variables[0]]);
+
+        const zValues = variables.map(variable =>
+            components.map(component => correlationMatrix[variable][component])
+        );
 
         return (
-            <ScatterPlot
-                data={data}
-                title={'Scatter plot: PC1 vs PC2'}
-                xTitle={'PC1'}
-                yTitle={'PC2'}
+            <Heatmap 
+                xData={components}
+                yData={variables}
+                zData={zValues}
+                xTitle={'Principal Components'}
+                yTitle={'Original Variables'}
+            />
+        );
+    };
+
+    const renderEigenValuesData = () => {
+        const rows = pcaData.eigen_values_data;
+
+        const cols = [
+            { field: 'id', headerName: 'Principal Component', flex: 1 },
+            { field: 'eigenvalue', headerName: 'Eigenvalue', flex: 1 },
+            { field: '% of total variance', headerName: '% of Total Variance', flex: 1 },
+            { field: 'cumulative eigenvalue', headerName: 'Cumulative Eigenvalue', flex: 1 },
+            { field: 'cumulative %', headerName: 'Cumulative %', flex: 1 },
+        ];
+
+        return (
+            <DataPresentation
+                rows={rows}
+                cols={cols}
             />
         );
     };
@@ -105,43 +158,23 @@ function PCA({ pcaData, target }) {
                             color: '#3FBDBD',
                             width: 2,
                         },
-                        name: 'Explained Variance',
                     },
                 ]}
                 layout={{
                     autosize: true,
-                    title: {
-                        text: 'Explained varance plot',
-                        font: {
-                            size: 22,
-                            color: '#2c3e50',
-                        },
-                    },
                     xaxis: {
-                        title: {
-                            text: 'Principal components',
-                            font: {
-                                size: 18,
-                            },
-                        },
+                        title: 'Principal component',
                         automargin: true,
                         showgrid: true,
                         zeroline: false,
                     },
                     yaxis: {
-                        title: {
-                            text: 'Explained variance (%)',
-                            font: {
-                                size: 18,
-                            },
-                        },
+                        title: 'Explained variance (%)',
                         automargin: true,
                         showgrid: true,
                         zeroline: false,
                     },
                     hovermode: 'closest',
-                    plot_bgcolor: '#f9f9f9',
-                    paper_bgcolor: '#ffffff',
                 }}
                 config={{
                     responsive: true,
@@ -152,86 +185,44 @@ function PCA({ pcaData, target }) {
         );
     };
 
-    const renderCorrelationHeatmap = () => {
-        const correlationMatrix = pcaData.correlation_matrix;
-        const variables = Object.keys(correlationMatrix);
-        const components = Object.keys(correlationMatrix[variables[0]]);
-
-        const zValues = variables.map(variable =>
-            components.map(component => correlationMatrix[variable][component])
-        );
-
-        return (
-            <ResponsivePlot
-            data={[
-                {
-                    z: zValues,
-                    x: components,
-                    y: variables,
-                    type: 'heatmap',
-                    colorscale: 'RdBu',
-                    hoverongaps: false,
-                    showscale: true,
-                    colorbar: {
-                        title: 'Korelacja',
-                        titleside: 'right',
-                    },
-                    text: zValues.map(row => row.map(value => value.toFixed(2))),
-                    texttemplate: '%{text}',
-                    textfont: {
-                        size: 12,
-                        color: '#000000',
-                    },
-                },
-            ]}
-            layout={{
-                autosize: true,
-                title: {
-                    text: 'Correlation matrix',
-                    font: {
-                        size: 22,
-                        color: '#2c3e50',
-                    },
-                },
-                xaxis: {
-                    title: {
-                        text: 'Principal Components',
-                        font: {
-                            size: 18,
-                        },
-                    },
-                    automargin: true,
-                    side: 'bottom',
-                },
-                yaxis: {
-                    title: {
-                        text: 'Origianl variables',
-                        font: {
-                            size: 18,
-                        },
-                    },
-                    automargin: true,
-                },
-                hovermode: 'closest',
-                plot_bgcolor: '#f9f9f9',
-                paper_bgcolor: '#ffffff',
-            }}
-            config={{
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false,
-            }}
-        />
-        );
-    };
-
     return (
         <div>
-            {renderPCADataframe()}
-            {renderEigenValuesData()}
-            {renderExplainedVariancePlot()}
-            {renderScatterPlot()}
-            {renderCorrelationHeatmap()}
+            <DataDescription
+                title="Reduced Data"
+                description="This table presents the input data transformed by PCA. Each row corresponds to a data point with new coordinates along the principal components, which are linear combinations of the original variables."
+            >
+                {renderPCADataframe()}
+            </DataDescription>
+
+            {numComponents <= 3 && 
+                <DataDescription
+                    title="PCA Scatter Plot"
+                    description="This scatter plot visualizes the distribution of the dataset projected onto first two (or three) principal components."
+                >
+                    {renderScatterPlot()}
+                </DataDescription>
+            }
+
+            <DataDescription
+                title="Correlation matrix"
+                description="This heatmap illustrates the correlation between the original variables and the principal components, enabling analysis of each variable's contribution to the components."
+            >
+                {renderCorrelationHeatmap()}
+            </DataDescription>
+
+            <DataDescription
+                title="Eigenvalues and Variance"
+                description="This table provides information about eigenvalues, the percentage of variance explained, and cumulative values for each principal component."
+            >
+                {renderEigenValuesData()}
+            </DataDescription>
+
+            <DataDescription
+                title="Explained Variance Plot"
+                description="This plot shows the percentage of variance explained by each principal component, helping to evaluate how much information each component retains."
+            >
+                {renderExplainedVariancePlot()}
+            </DataDescription>
         </div>
     )
 }

@@ -1,23 +1,16 @@
 import React from 'react';
 import ResponsivePlot from './ResponsivePlot';
 
-const ScatterPlot = ({ data, xTitle, yTitle }) => {
+const ScatterPlot3D = ({ data, xTitle, yTitle, zTitle }) => {
     return (
         <ResponsivePlot
             data={data}
             layout={{
                 autosize: true,
-                xaxis: {
-                    title: xTitle ,
-                    automargin: true,
-                    showgrid: true,
-                    zeroline: false,
-                },
-                yaxis: {
-                    title: yTitle,
-                    automargin: true,
-                    showgrid: true,
-                    zeroline: false,
+                scene: {
+                    xaxis: { title: xTitle },
+                    yaxis: { title: yTitle },
+                    zaxis: { title: zTitle },
                 },
                 legend: {
                     orientation: 'h',
@@ -36,4 +29,4 @@ const ScatterPlot = ({ data, xTitle, yTitle }) => {
     );
 };
 
-export default ScatterPlot;
+export default ScatterPlot3D;

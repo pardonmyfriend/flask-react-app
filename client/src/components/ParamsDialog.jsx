@@ -3,22 +3,12 @@ import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, F
 import NumericInput from './NumericInput';
 import InfoIcon from '@mui/icons-material/Info';
 
-function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, params, setParams }) {
+function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, defaultParams, params, setParams }) {
   useEffect(() => {
-    if (open && paramsInfo) {
-      const defaultParams = {};
-      Object.keys(paramsInfo).forEach(param => {
-        defaultParams[param] = paramsInfo[param].default;
-      })
+    if (open && defaultParams) {
       setParams(defaultParams)
     }
-  }, [open, paramsInfo])
-
-  // useEffect(() => {
-  //   if (!open) {
-  //     setParams({})
-  //   }
-  // }, [open])
+  }, [open, defaultParams])
 
   const handleParamChange = (paramName, value) => {
     setParams(prevParams => ({
@@ -32,7 +22,7 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
     onClose();
   };
 
-  const renderParamInput = (paramName, paramInfo) => {
+  const renderParamInput = (paramName, paramInfo, defaultParam) => {
     const type = paramInfo.type;
     const description = paramInfo.description;
     const isNoneSelected = params[paramName] === null;
@@ -72,7 +62,7 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
             <NumericInput
               min={paramInfo.min}
               max={paramInfo.max}
-              defaultValue={isNoneSelected ? paramInfo.default : paramInfo.min}
+              defaultValue={defaultParam !== null ? defaultParam : paramInfo.min}
               step={type === 'float' ? paramInfo.step : 1}
               precision={type === 'float' ? paramInfo.precision : 0}
               onChange={(value) => handleParamChange(paramName, value)}
@@ -83,7 +73,7 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
           <NumericInput
             min={paramInfo.min}
             max={paramInfo.max}
-            defaultValue={paramInfo.default}
+            defaultValue={defaultParam}
             step={type === 'float' ? paramInfo.step : 1}
             precision={type === 'float' ? paramInfo.precision : 0}
             onChange={(value) => handleParamChange(paramName, value)}
@@ -127,11 +117,11 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Set parameters for {algorithmName}</DialogTitle>
       <DialogContent>
-        {Object.keys(paramsInfo).map((paramName) => renderParamInput(paramName, paramsInfo[paramName]))}
+        {Object.keys(paramsInfo).map((paramName) => renderParamInput(paramName, paramsInfo[paramName], defaultParams[paramName]))}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">Anuluj</Button>
-        <Button onClick={handleSave} color="primary">Zapisz</Button>
+        <Button onClick={onClose} color="primary">Cancel</Button>
+        <Button onClick={handleSave} color="primary">Save</Button>
       </DialogActions>
     </Dialog>
   );

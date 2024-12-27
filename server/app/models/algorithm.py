@@ -1,6 +1,7 @@
 class Algorithm:
-    def __init__(self, algorithm_name, params=None):
+    def __init__(self, algorithm_name, shape, params=None):
         self.algorithm_name = algorithm_name
+        self.shape = shape
         self.param_info = self.get_algorithm_param_info()
 
         if not self.param_info:
@@ -9,13 +10,25 @@ class Algorithm:
         if params is None:
             self.params = self.get_default_params()
         else:
-            self.params = params
+            self.params = self.validate_params(params)
 
     def get_default_params(self):
         default_params = {}
         for param, info in self.param_info.items():
             default_params[param] = info['default']
         return default_params
+    
+    def validate_params(self, params):
+        validated_params = {}
+        default_params = self.get_default_params()
+
+        for param in default_params:
+            if param in params:
+                validated_params[param] = params[param]
+            else:
+                return default_params
+
+        return validated_params
     
     def to_dict(self):
         return {
@@ -30,30 +43,23 @@ class Algorithm:
                 'n_components': {
                     'type': 'int',
                     'min': 1,
-                    'max': 10,
+                    'max': self.shape[1],
                     'default': 2,
-                    'description': 'Number of principal components to retain', 
+                    'nullable': True,
+                    'description': 'Number of principal components to retain',
                 },
                 'whiten': {
                     'type': 'boolean',
                     'default': False,
                     'description': 'Applies normalization to each component',
                 },
-                'svd_solver': {
-                    'type': 'select',
-                    'options': ['auto', 'full', 'arpack', 'randomized'],
-                    'default': 'auto',
-                    'description': 'Method for performing SVD in dimensionality reduction',
-                },
                 'tol': {
                     'type': 'float',
                     'min': 0.0,
-                    'max': 1.0,
                     'default': 0.0,
                     'step': 0.1,
                     'precision': 1,
-                    'description': 'Error tolerance for "arpack" solver',
-                    'dependency': ['svd_solver', 'arpack', 'enable']
+                    'description': 'Error tolerance for "arpack" solver. Ignored for other solvers.'
                 }
             }
         elif self.algorithm_name == 't-SNE':

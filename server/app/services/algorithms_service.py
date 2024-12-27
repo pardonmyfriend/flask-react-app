@@ -1,3 +1,5 @@
+from app.models.algorithm import Algorithm
+
 import pandas as pd
 import numpy as np
 import time
@@ -24,6 +26,22 @@ from sklearn.metrics import (
     precision_recall_curve,
     auc
 )
+
+def get_algorithm_info_service(algorithm_name, params, df, target):
+    df = pd.DataFrame(df)
+    df= df.drop(columns=['id', target], errors='ignore')
+    shape = df.shape
+
+    print(shape)
+
+    if not params:
+        alg_obj = Algorithm(algorithm_name, shape)
+    else:
+        alg_obj = Algorithm(algorithm_name, shape, params)
+
+    return {'algorithm': alg_obj.to_dict()}
+
+
 def preprocess_data(df, target):
     y = df[target] if target in df.columns else None
     X = df.drop(columns=['id', target], errors='ignore')
@@ -35,8 +53,7 @@ def run_pca_service(df, params, target):
     X, y = preprocess_data(df, target)
 
     pca = PCA(
-        n_components=params.get('n_components'), 
-        svd_solver=params.get('svd_solver'), 
+        n_components=params.get('n_components'),
         whiten=params.get('whiten'), 
         tol=params.get('tol')
     )
@@ -50,11 +67,11 @@ def run_pca_service(df, params, target):
 
     df_pca['id'] = range(1, len(df_pca)+1)
 
-    df_pca[target] = y
+    if target:
+        df_pca[target] = y
 
     pca_for_variance = PCA(
         n_components=len(X.columns), 
-        svd_solver=params.get('svd_solver'), 
         whiten=params.get('whiten'), 
         tol=params.get('tol')
     )
@@ -70,11 +87,11 @@ def run_pca_service(df, params, target):
     cumulative_percent = np.cumsum(percent_total_variance)
 
     eigen_values_data = pd.DataFrame({
-        'id': range(1, len(X.columns) + 1),
-        'Eigenvalues': eigenvalues,
+        'id': [f'PC{i}' for i in range(1, len(X.columns) + 1)],
+        'eigenvalue': eigenvalues,
         '% of total variance': percent_total_variance,
-        'Cumulative Eigenvalue': cumulative_eigenvalue,
-        'Cumulative %': cumulative_percent
+        'cumulative eigenvalue': cumulative_eigenvalue,
+        'cumulative %': cumulative_percent
     })
     
     loadings = pd.DataFrame(
@@ -116,7 +133,8 @@ def run_tsne_service(df, params, target):
 
     df_tsne['id'] = range(1, len(df_tsne)+1)
 
-    df_tsne[target] = y
+    if target:
+        df_tsne[target] = y
 
     original_distances = pairwise_distances(X)
     tsne_distances = pairwise_distances(X_tsne)

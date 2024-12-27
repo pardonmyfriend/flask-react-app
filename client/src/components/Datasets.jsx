@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { List, ListItemButton, ListItemText, Button, Box,  Chip, Alert } from '@mui/material';
 
-const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProceed, setColumnTypes, setTarget }) => {
+const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProceed, setColumnTypes, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected }) => {
   const [temporarySelectedDataset, setTemporarySelectedDataset] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,6 +20,10 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
     setData(null);
     setColumnTypes(null);
     setTarget('')
+    setAlgTab(0)
+    setAlgorithmName('')
+    setParams({})
+    setAlgorithmSelected(false);
     onProceed(false);
   };
 
