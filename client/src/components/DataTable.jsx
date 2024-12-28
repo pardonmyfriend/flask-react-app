@@ -242,22 +242,22 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
     renderHeader: () => (
       <div style={{ display: "flex", alignItems: "center" }}>
       {/* Jeśli column.class jest true, wyświetl ikonę przed nazwą */}
-      {column.class === true && (
+      {column.class === "true" && (
         <span style={{ marginRight: "8px" }}>🎯</span> // Ikona przed nazwą
       )}
         {column.headerName}
-        {column.field !== "id" && (
-          <IconButton
-            aria-label={`Delete`}
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteColumn(column.field);
-            }}
-          >
-            <GridDeleteIcon fontSize="small" />
-          </IconButton>
-        )}
+        {column.class !== "true" && column.field !== "id" && (
+        <IconButton
+          aria-label={`Delete`}
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteColumn(column.field);
+          }}
+        >
+          <GridDeleteIcon fontSize="small" />
+        </IconButton>
+      )}
       </div>
     ),
   }));
