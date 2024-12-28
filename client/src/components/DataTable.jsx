@@ -8,7 +8,7 @@ import TabPanel from "./TabPanel";
 import ConfirmDialog from "./ConfirmDialog";
 import Summary from "../pages/preprocessing/Summary";
 
-const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target }) => {
+const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, columnTypesAligned, setColumnTypesAligned }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
@@ -266,6 +266,8 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
     });
     console.log("hasChangedFromNumerical: ", hasChangedFromNumerical);
     setOpen(false); // Zamykanie dialogu
+    console.log("setColumnTypesAligned:", setColumnTypesAligned);
+    setColumnTypesAligned(false);
     if (hasChangedFromNumerical) {
       console.log("jestem w ifie");
       toast.info("Label encoding in progress...", {
@@ -602,7 +604,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
           />
         </TabPanel>
         <PreprocessingDialog
-          open={open}
+          open={columnTypesAligned}
           onClose={handleCloseDialog}
           selectedOption={selectedColumn}
           setSelectedOption={setSelectedColumn}

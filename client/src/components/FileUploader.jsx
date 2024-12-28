@@ -9,7 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Fade from '@mui/material/Fade';
 
 
-const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected }) => {
+const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showSuccessBox, setShowSuccessBox] = useState(false);
 
@@ -25,11 +25,12 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
     setFile(null);
     setUploadProgress(0);
     setShowSuccessBox(false);
-    setAlgTab(0)
-    setAlgorithmName('')
-    setParams({})
+    setAlgTab(0);
+    setAlgorithmName('');
+    setParams({});
     setAlgorithmSelected(false);
     onProceed(false);
+    //setColumnTypesAligned(true)
   };
 
   const validateFileType = (file) => {
@@ -58,7 +59,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
 
   const handleButtonClick = (event) => {
     if (file) return;
-
+    console.log(setColumnTypesAligned);
     resetState();
 
     const files = event.target.files;

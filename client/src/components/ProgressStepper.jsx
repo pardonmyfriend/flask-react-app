@@ -11,7 +11,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [activeStep, setActiveStep] = useState(0);
   const [canProceedToNextStep, setCanProceedToNextStep] = useState(false);
   const [completed, setCompleted] = useState({});
-
+  const [columnTypesAligned, setColumnTypesAligned] = useState(true);
   const [file, setFile] = useState(null);
   const [selectedDataset, setSelectedDataset] = useState(null);
   const [data, setData] = useState(null);
@@ -101,7 +101,10 @@ function ProgressStepper({ steps, stepContent }) {
               algTab: algTab,
               setAlgTab: setAlgTab,
               target: target,
-              setTarget: setTarget})
+              setTarget: setTarget,
+              columnTypesAligned: columnTypesAligned,
+              setColumnTypesAligned: setColumnTypesAligned
+            })
             }
           </Box>
           <Fab 
