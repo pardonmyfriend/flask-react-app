@@ -52,6 +52,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
 
         const data = responseData.data;
         const columnTypes = responseData.types;
+        console.log("columnTypes:", columnTypes)
         const target = responseData.target;
 
         const keys = Object.keys(data[0]);
@@ -81,6 +82,8 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
 
         console.log(responseData);
         setTarget(target);
+        console.log("updatedCols", updatedCols)
+        console.log("updatedColumnTypesRows", updatedColumnTypesRows)
         setColumnTypes(updatedColumnTypesRows);
         setData({ rows: data, columns: updatedCols });
         onProceed(true);
