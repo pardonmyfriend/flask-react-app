@@ -8,7 +8,7 @@ import TabPanel from "./TabPanel";
 import ConfirmDialog from "./ConfirmDialog";
 import Summary from "../pages/preprocessing/Summary";
 
-const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target }) => {
+const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, columnTypesAligned, setColumnTypesAligned }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
@@ -25,7 +25,6 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
     console.log("Loaded data:", data);
     if (data && data.rows) {
       setRows(data.rows);
-      // setRows((prev) => (prev.length === 0 ? data.rows : prev));
     }
     if (data && data.columns) {
       console.log(data.columns);
@@ -34,7 +33,6 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
         width: Math.max(col.headerName.length * 20, 200),
       }));
       setCols(updatedColumns);
-      // setCols((prev) => (prev.length === 0 ? updatedColumns : prev));
 
       if (!defaultCols.current) {
         defaultCols.current = JSON.parse(JSON.stringify(updatedColumns));
@@ -56,13 +54,66 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
 
   const handleDeleteSelected = () => {
     if (rows.length - selectedRows.length >= 10) {
-      setRows((prevRows) => {
-        const updatedRows = prevRows.filter(
-          (row) => !selectedRows.includes(row.id)
-        );
-        console.log(updatedRows);
-        return updateIds(updatedRows);
-      });
+      //usuwanie wierszy
+      fetch("http://127.0.0.1:5000/data/delete_rows", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ selectedRows, cols, rows }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json(); // Rozwiąż JSON
+        })
+        .then((result) => {
+          console.log("Fetched data:", result);
+
+          const data = result.data;
+            console.log("data:", data);
+            const keys = Object.keys(data[0]);
+
+            const orderedKeys = keys.includes('id') 
+            ? ['id', ...keys.filter((key) => key !== 'id')] 
+            : keys;
+            
+            const cols = orderedKeys.map((key) => ({
+              field: key,
+              headerName: key.toUpperCase(),
+              width: 150,
+            }));
+
+            const columnTypes = result.types;
+            const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+              column: column.toUpperCase(),
+              type: type,
+            }));
+            
+            setColumnTypes(updatedColumnTypesRows);
+
+            const updatedCols = cols.map((item, index) => ({
+              ...item,
+              type: columnTypes[index].type,
+              class: columnTypes[index].class,
+              nullCount: columnTypes[index].nullCount,
+              handleNullValues: columnTypes[index].handleNullValues,
+              uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+              uniqueValues: columnTypes[index].uniqueValues,
+              valueToFillWith: columnTypes[index].valueToFillWith
+            }))
+            console.log("columns with types:", updatedCols);
+            setIsDataLoaded(false);
+            setData({
+              rows: [...data], // Nowa referencja tablicy `data`
+              columns: [...updatedCols], // Nowa referencja tablicy `updatedCols`
+            });
+            setIsDataLoaded(true);
+        })
+        .catch((error) => {
+          console.error("Error during fetch:", error);
+        });
     } else {
       toast.error("Minimum number of rows: 10", {
         progressStyle: {
@@ -77,12 +128,67 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
   const handleConfirmDialogAnswer = (answer) => {
     if (answer === "Yes") {
       console.log("column to delete: ", columnToDelete);
-      const newColumns = cols.filter(
-        (column) => column.field !== columnToDelete
-      );
-      console.log(newColumns);
-      setCols(newColumns);
-      return newColumns;
+      //usuwanie kolumny
+      const defaultTypes = defaultCols.current;
+      fetch("http://127.0.0.1:5000/data/delete_column", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ columnToDelete, cols, rows }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json(); // Rozwiąż JSON
+        })
+        .then((result) => {
+          console.log("Fetched data:", result);
+
+          const data = result.data;
+            console.log("data:", data);
+            const keys = Object.keys(data[0]);
+
+            const orderedKeys = keys.includes('id') 
+            ? ['id', ...keys.filter((key) => key !== 'id')] 
+            : keys;
+            
+            const cols = orderedKeys.map((key) => ({
+              field: key,
+              headerName: key.toUpperCase(),
+              width: 150,
+            }));
+
+            const columnTypes = result.types;
+            const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+              column: column.toUpperCase(),
+              type: type,
+            }));
+            
+            setColumnTypes(updatedColumnTypesRows);
+
+            const updatedCols = cols.map((item, index) => ({
+              ...item,
+              type: columnTypes[index].type,
+              class: columnTypes[index].class,
+              nullCount: columnTypes[index].nullCount,
+              handleNullValues: columnTypes[index].handleNullValues,
+              uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+              uniqueValues: columnTypes[index].uniqueValues,
+              valueToFillWith: columnTypes[index].valueToFillWith
+            }))
+            console.log("columns with types:", updatedCols);
+            setIsDataLoaded(false);
+            setData({
+              rows: [...data], // Nowa referencja tablicy `data`
+              columns: [...updatedCols], // Nowa referencja tablicy `updatedCols`
+            });
+            setIsDataLoaded(true);
+        })
+        .catch((error) => {
+          console.error("Error during fetch:", error);
+        });
     }
   };
 
@@ -160,6 +266,8 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
     });
     console.log("hasChangedFromNumerical: ", hasChangedFromNumerical);
     setOpen(false); // Zamykanie dialogu
+    console.log("setColumnTypesAligned:", setColumnTypesAligned);
+    setColumnTypesAligned(false);
     if (hasChangedFromNumerical) {
       console.log("jestem w ifie");
       toast.info("Label encoding in progress...", {
@@ -219,8 +327,6 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
             valueToFillWith: columnTypes[index].valueToFillWith
           }))
           console.log("columns with types:", updatedCols);
-
-          //setData({ rows: data, columns: updatedCols });
           setIsDataLoaded(false);
           setData({
             rows: [...data], // Nowa referencja tablicy `data`
@@ -281,13 +387,9 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
 
   const handleCheckboxChange = (event, columnId) => {
     console.log("columnId:", columnId);
-
     const isChecked = event.target.checked; // Sprawdzamy, czy checkbox jest zaznaczony
-
     setSelectedColumn(isChecked ? columnId : null); // Ustawiamy selectedColumn tylko, gdy checkbox jest zaznaczony
-
     const newCols = [...cols]; // Tworzymy nową kopię tablicy wierszy
-
     if (isChecked) {
       // Jeśli checkbox jest zaznaczony:
       newCols[columnId].type = "categorical";
@@ -313,7 +415,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
 
   const handleNormalizeData = () => {
     const defaultTypes = defaultCols.current;
-    fetch("http://127.0.0.1:5000/normalize", {
+    fetch("http://127.0.0.1:5000/data/normalize", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -362,8 +464,6 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
             valueToFillWith: columnTypes[index].valueToFillWith
           }))
           console.log("columns with types:", updatedCols);
-
-          //setData({ rows: data, columns: updatedCols });
           setIsDataLoaded(false);
           setData({
             rows: [...data], // Nowa referencja tablicy `data`
@@ -504,7 +604,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
           />
         </TabPanel>
         <PreprocessingDialog
-          open={open}
+          open={columnTypesAligned}
           onClose={handleCloseDialog}
           selectedOption={selectedColumn}
           setSelectedOption={setSelectedColumn}

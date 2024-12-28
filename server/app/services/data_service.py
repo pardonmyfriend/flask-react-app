@@ -62,6 +62,7 @@ def load_dataset_service(name):
         for item in columnTypesList
     ]
     Data.set_columnTypes(mappedColumnTypes)
+    print("columnTypes:", Data.get_columnTypes())
     df = Data.unify_types(df)
     data = df.to_dict(orient='records')
 

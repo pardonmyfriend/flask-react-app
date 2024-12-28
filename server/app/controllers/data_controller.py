@@ -60,8 +60,9 @@ def upload_file():
                 for item in columnTypesList
             ]
             Data.set_columnTypes(mappedColumnTypes)
+            print("mappedColumnTypes: ", mappedColumnTypes)
             df = Data.unify_types(df)
-            print(df)
+            print("df:", df)
             data = df.to_dict(orient='records')
             result = {
                 "data": data,
@@ -92,26 +93,6 @@ def set_types():
         try:
             data = res  # Parsowanie JSON
             print("Received JSON:", data)
-            # df = pd.DataFrame(data)
-            # print(df)
-            # Przekształcanie podsłowników na DataFrame
-            #df_cols = pd.DataFrame(data['cols'])
-            # df_cols = pd.DataFrame(data['cols']).drop(columns=['headerName', 'width'])
-            # df_cols = df_cols.rename(columns={'field': 'column'})
-            #df_defaultTypes = pd.DataFrame(data['defaultTypes'])
-            # df_defaultTypes = Data.get_columnTypes()
-            # datas = Data.get_data()
-
-            # Wyświetlenie obu DataFrame
-            # print("df_cols:")
-            # print(df_cols)
-
-            # print("\ndf_defaultTypes:")
-            # print(df_defaultTypes)
-
-            # print("\ndata:")
-            # print(datas)
-
             print("jestem przed change_types w kontrolerze")
             Data.change_types(data)
             print("jestem po change_types w kontrolerze")
@@ -155,18 +136,58 @@ def normalize_data():
         print("result", jsonify(result).get_data(as_text=True))
         return jsonify(result), 200
     
+@data_blueprint.route('/delete_column', methods=['POST'])
+def delete_column():
+    res = request.get_json()
 
-# @data_blueprint.route('/set_types', methods=['POST'])
-# def set_types():
-#     columnTypes = request.get_json()
+    if not res:
+        return jsonify({"error": "No JSON received"}), 400
+    else:
+        try:
+            data = res  # Parsowanie JSON
+            print("Received JSON:", data)
+            Data.delete_column(data)
+            print("jestem po delete_column w kontrolerze")
+            resultData = Data.get_data().copy()
+            print("\nresultData:")
+            print(resultData)
+            resultColumnTypes = Data.get_columnTypes().copy()
+            result = {
+                "data": resultData.to_dict(orient="records"),
+                "types": resultColumnTypes.to_dict(orient="records")  
+            }
 
-#     if not columnTypes:
-#         return jsonify({"error": "No JSON received"}), 400
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+        print("result", jsonify(result).get_data(as_text=True))
+        return jsonify(result), 200    
     
-#     print("Received data:", columnTypes)
-#     Data.set_columnTypes(columnTypes)
+@data_blueprint.route('/delete_rows', methods=['POST'])
+def delete_rows():
+    res = request.get_json()
 
-#     return jsonify({"message": "Data received", "received_data": columnTypes}), 200
+    if not res:
+        return jsonify({"error": "No JSON received"}), 400
+    else:
+        try:
+            data = res  # Parsowanie JSON
+            print("Received JSON:", data)
+            Data.delete_rows(data)
+            print("jestem po delete_rows w kontrolerze")
+            resultData = Data.get_data().copy()
+            print("\nresultData:")
+            print(resultData)
+            resultColumnTypes = Data.get_columnTypes().copy()
+            print("resultColTypes: ", resultColumnTypes)
+            result = {
+                "data": resultData.to_dict(orient="records"),
+                "types": resultColumnTypes.to_dict(orient="records")  
+            }
+
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+        print("result", jsonify(result).get_data(as_text=True))
+        return jsonify(result), 200    
     
 @data_blueprint.route('/get_data_summary', methods=['POST'])
 def get_data_summary():

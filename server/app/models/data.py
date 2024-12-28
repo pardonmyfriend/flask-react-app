@@ -77,13 +77,6 @@ class Data:
     
     @staticmethod
     def analyze_null_values(df):
-        # #procent nullów w kolumnach
-        # print(df.isnull().mean() * 100)
-        # #procent wierszy z nullami
-        # rows_with_null = df.isnull().any(axis=1).sum()
-        # print(f"Liczba wierszy z brakami: {rows_with_null}")
-        # total_rows = len(df)
-        # print(f"Procent wierszy z brakami: {rows_with_null / total_rows * 100:.2f}%")
         result = {}
         for column in df.columns:
             null_count = df[column].isna().sum()  # Liczymy liczbę wartości NaN w kolumnie
@@ -111,26 +104,6 @@ class Data:
     
     @staticmethod
     def updateColumnTypes():
-        # print("jestem w updateColumnTypes")
-        # data = Data.get_data().copy()
-        # print("data", data)
-        # columnTypes = Data.get_columnTypes().copy()
-        # print("columnTypes", columnTypes)
-        # columns = set(data.columns)
-        # #kolumny listy słowników
-        # columnTypesColumns = {row['column'] for _, row in columnTypes.iterrows()}
-        # #columnTypesColumns = {colType['column'] for colType in columnTypes}
-        # if columns != columnTypesColumns:
-        #     #usunięcie z columnTypes tych kolumn, których nie ma w data
-        #     columnTypes = [colType for colType in columnTypes if colType['column'] in columns]
-        #     #dodanie do columnTypes tych kolumn, których jeszcze w nim nie ma
-        #     columnsToAdd = columns - columnTypesColumns
-        #     for col in columnsToAdd:
-        #         new_dict = {'column': col, 'type': 'numerical', 'class': 'false', 'nullCount': 0, 'handleNullValues': 'Ignore', 'uniqueValuesCount': 2, 'uniqueValues': [0, 1], 'valueToFillWith': None}
-        #         columnTypes.append(new_dict)
-        #     print("updateColumnTypes - column Typer to save: ", columnTypes)
-        #     Data.set_columnTypes(columnTypes)
-
         print("jestem w updateColumnTypes")
     
         # Skopiowanie danych i typów kolumn
@@ -212,18 +185,9 @@ class Data:
         elif handleNullValues == 'Ignore':
             pass
         print("data bez nulli: ", data)
-        # Znajdź odpowiedni słownik
-        #column_data = next((col for col in columnTypes if col['column'] == colName), None)
         column_data = columnTypes.loc[columnTypes['column'] == colName]
-
-        # Jeśli istnieje, zaktualizuj 'nullCount'
-        # if column_data and handleNullValues != 'Ignore':
-        #     column_data['nullCount'] = 0
         if not column_data.empty and handleNullValues != 'Ignore':
             column_data['nullCount'] = 0
-
-        #columnTypes.loc[columnTypes['column'] == colName, 'nullCount'].values[0] = 0
-        #columnTypes[colName]['nullCount'] = 0
         Data.set_data(data)
         Data.set_columnTypes(columnTypes)
         print("data bez nulli po zapisie: ", Data.get_data())
@@ -362,6 +326,8 @@ class Data:
         df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
         data = Data.get_data()
         data = data.replace({np.nan: None})
+        df_cols = df_cols.replace({np.nan: None})
+        df_defaultTypes = df_defaultTypes.replace({np.nan: None})
         Data.set_data(data)
 
         # Wyświetlenie obu DataFrame
@@ -373,20 +339,6 @@ class Data:
 
         print("\ndata:")
         print(data)
-
-        #df_cols = pd.DataFrame(df['cols'])
-        #df_defaultTypes = pd.DataFrame(df['defaultTypes'])
-
-        # for col in df_cols:
-        #     print("jestem w forze przy kolumnie ", col)
-        #     if col in df_defaultTypes:
-        #         if df_cols[col]['type'] != df_defaultTypes[col]['type']:
-        #             print("będę zmieniać typ i wypełniać nulle w kolumnie ", col['column'])
-        #             Data.change_single_column_type(col, df_defaultTypes[col]['type'], df_cols[col]['type'])
-        #         else:
-        #             print("będę wypełniać nulle w kolumnie ", col['column'])
-        #             df_cols[col] = Data.handleNullValues(col)
-        #             Data.set_data(df_cols)
 
         for index, row in df_cols.iterrows():
             if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
@@ -411,6 +363,9 @@ class Data:
         data = pd.DataFrame(Data.get_data().copy())
         data = data.replace({np.nan: None})
         Data.set_data(data)
+        colTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        colTypes = colTypes.replace({np.nan: None})
+        Data.set_columnTypes(colTypes)
 
     @staticmethod
     def normalize_column(col):
@@ -458,6 +413,45 @@ class Data:
                     continue  # Pomiń dalszą część iteracji dla tego wiersza
                 if row['type'] == 'numerical':
                     Data.normalize_column(row['column'])
+
+    @staticmethod
+    def delete_column(df):
+        print("jestem w metodzie delete_column")
+        df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
+        df_cols = df_cols.rename(columns={'field': 'column'})
+        data = pd.DataFrame(df['rows'])
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
+        Data.updateColumnTypes()
+        columnToDelete = df['columnToDelete']
+        print("columnToDelete:", columnToDelete)
+        new_data = data.drop(columns=[columnToDelete])
+        Data.set_data(new_data)
+        Data.updateColumnTypes()
+
+    @staticmethod
+    def delete_rows(df):
+        print("jestem w metodzie delete_rows")
+        df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
+        df_cols = df_cols.rename(columns={'field': 'column'})
+        data = pd.DataFrame(df['rows'])
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
+        Data.updateColumnTypes()
+        rowsToDelete = df['selectedRows']
+        print("rowsToDelete:", rowsToDelete)
+        adjusted_rowsToDelete = [i - 1 for i in rowsToDelete]
+        print("adjrowsToDelete:", adjusted_rowsToDelete)
+        new_data = data.drop(index=adjusted_rowsToDelete)
+        new_data = new_data.reset_index(drop=True)
+        new_data['id'] = new_data.index + 1
+        print("new_data[id]: ", new_data["id"])
+        new_data = new_data.replace({np.nan: None})
+        Data.set_data(new_data)
+        Data.updateColumnTypes()
+
+
+
                 
 
 
