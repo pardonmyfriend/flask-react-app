@@ -9,10 +9,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Fade from '@mui/material/Fade';
 
 
-const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed }) => {
+const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showSuccessBox, setShowSuccessBox] = useState(false);
-  const [isDisabled, setIsDisabled] = useState(true);
 
   useEffect(() => {
     if (file) {
@@ -26,6 +25,10 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed 
     setFile(null);
     setUploadProgress(0);
     setShowSuccessBox(false);
+    setAlgTab(0)
+    setAlgorithmName('')
+    setParams({})
+    setAlgorithmSelected(false);
     onProceed(false);
   };
 
@@ -93,7 +96,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed 
     formData.append('file', fileToSend);
     
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:5000/upload', true);
+    xhr.open('POST', 'http://127.0.0.1:5000/data/upload', true);
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
@@ -141,14 +144,14 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed 
           }))
           console.log("columns with types:", updatedCols);
 
-          setData({ rows: data, columns: updatedCols });
-        }
-        setUploadProgress(100);
+          setUploadProgress(100);
 
-        setTimeout(() => {
-          setShowSuccessBox(true);
-          onProceed(true);
-        }, 1000);
+          setTimeout(() => {
+            setData({ rows: data, columns: updatedCols });
+            setShowSuccessBox(true);
+            onProceed(true);
+          }, 1000);
+        }
       } else {
         try {
           const errorResponse = JSON.parse(xhr.responseText);
@@ -199,6 +202,10 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed 
           <Typography variant="body1" color="text.secondary" sx={{ marginBottom: "16px" }}>
             File already uploaded. Remove it to upload a new one.
           </Typography>
+        ) : data ? (
+          <Typography variant="body1" color="text.secondary" sx={{ marginBottom: "16px" }}>
+            You have already selected a dataset. Please deselect it to upload your file.
+          </Typography>
         ) : (
           <>
             <Typography variant="body1" sx={{ marginBottom: "12px" }}>
@@ -217,11 +224,11 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed 
           onChange={handleButtonClick}
           style={{ display: "none" }}
           id="fileInput"
-          disabled={!!file}
+          disabled={!!data}
         />
 
         <label htmlFor="fileInput">
-          <Button color="primary" variant="contained" component="span" disabled={!!file}>
+          <Button color="primary" variant="contained" component="span" disabled={!!data}>
             Browse file
           </Button>
         </label>

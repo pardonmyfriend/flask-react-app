@@ -3,7 +3,7 @@ import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Tree from 'react-d3-tree';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function DecisionTree({ treeData }) {
@@ -15,13 +15,13 @@ function DecisionTree({ treeData }) {
         const cols = orderedKeys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
-            flex: 1,
+            width: 150,
         }));
 
         const rows = treeData.dataframe;
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />
@@ -192,7 +192,7 @@ function DecisionTree({ treeData }) {
         return (
             <div>
                 <Typography variant="h6">Classification Report</Typography>
-                <DataTable rows={rows} cols={cols} />
+                <DataPresentation rows={rows} cols={cols} />
             </div>
         );
     };
@@ -259,7 +259,7 @@ function DecisionTree({ treeData }) {
                 type: 'bar',
                 orientation: 'h',
                 marker: {
-                    color: 'rgba(75, 192, 192, 0.6)'
+                    color: 'rgba(63, 189, 189, 0.6)'
                 }
             }
         ];
@@ -289,7 +289,7 @@ function DecisionTree({ treeData }) {
         }));
 
         return (
-            <DataTable
+            <DataPresentation
                 rows={rows}
                 cols={cols}
             />

@@ -1,3 +1,5 @@
+from app.models.algorithm import Algorithm
+
 import pandas as pd
 import numpy as np
 import time
@@ -14,6 +16,7 @@ from sklearn.manifold import trustworthiness
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import _tree
 
+from scipy.stats import entropy
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
@@ -24,6 +27,20 @@ from sklearn.metrics import (
     precision_recall_curve,
     auc
 )
+
+def get_algorithm_info_service(algorithm_name, params, df, target):
+    df = pd.DataFrame(df)
+    df= df.drop(columns=['id', target], errors='ignore')
+    shape = df.shape
+
+    if not params:
+        alg_obj = Algorithm(algorithm_name, shape)
+    else:
+        alg_obj = Algorithm(algorithm_name, shape, params)
+
+    return {'algorithm': alg_obj.to_dict()}
+
+
 def preprocess_data(df, target):
     y = df[target] if target in df.columns else None
     X = df.drop(columns=['id', target], errors='ignore')
@@ -35,8 +52,7 @@ def run_pca_service(df, params, target):
     X, y = preprocess_data(df, target)
 
     pca = PCA(
-        n_components=params.get('n_components'), 
-        svd_solver=params.get('svd_solver'), 
+        n_components=params.get('n_components'),
         whiten=params.get('whiten'), 
         tol=params.get('tol')
     )
@@ -50,11 +66,19 @@ def run_pca_service(df, params, target):
 
     df_pca['id'] = range(1, len(df_pca)+1)
 
-    df_pca[target] = y
+    if target:
+        df_pca[target] = y
+
+    loadings = pd.DataFrame(
+        pca.components_.T, 
+        columns=[f'PC{i+1}' for i in range(len(pca.components_))], 
+        index=X.columns
+    )
+
+    correlation_matrix = loadings * np.sqrt(pca.explained_variance_ratio_)
 
     pca_for_variance = PCA(
         n_components=len(X.columns), 
-        svd_solver=params.get('svd_solver'), 
         whiten=params.get('whiten'), 
         tol=params.get('tol')
     )
@@ -70,27 +94,17 @@ def run_pca_service(df, params, target):
     cumulative_percent = np.cumsum(percent_total_variance)
 
     eigen_values_data = pd.DataFrame({
-        'id': range(1, len(X.columns) + 1),
-        'Eigenvalues': eigenvalues,
+        'id': [f'PC{i}' for i in range(1, len(X.columns) + 1)],
+        'eigenvalue': eigenvalues,
         '% of total variance': percent_total_variance,
-        'Cumulative Eigenvalue': cumulative_eigenvalue,
-        'Cumulative %': cumulative_percent
+        'cumulative eigenvalue': cumulative_eigenvalue,
+        'cumulative %': cumulative_percent
     })
-    
-    loadings = pd.DataFrame(
-        pca.components_.T, 
-        columns=[f'PC{i+1}' for i in range(len(pca.components_))], 
-        index=X.columns
-    )
-
-    correlation_matrix = loadings * np.sqrt(pca.explained_variance_ratio_)
 
     return {
         "pca_components": df_pca.to_dict(orient='records'),
         "explained_variance": explained_variance.tolist(),
         "eigen_values_data": eigen_values_data.to_dict(orient='records'),
-        "original_features": X.columns.tolist(),
-        "loadings": loadings.to_dict(orient='index'),
         "correlation_matrix": correlation_matrix.to_dict(orient='index')
     }
 
@@ -104,7 +118,9 @@ def run_tsne_service(df, params, target):
         learning_rate=params.get('learning_rate'),
         max_iter=params.get('max_iter'),
         init=params.get('init'),
-        metric=params.get('metric')
+        metric=params.get('metric'),
+        angle=params.get('angle'),
+        random_state=params.get('random_state')
     )
     
     X_tsne = tsne.fit_transform(X)
@@ -116,18 +132,37 @@ def run_tsne_service(df, params, target):
 
     df_tsne['id'] = range(1, len(df_tsne)+1)
 
-    df_tsne[target] = y
+    if target:
+        df_tsne[target] = y
 
     original_distances = pairwise_distances(X)
     tsne_distances = pairwise_distances(X_tsne)
 
-    trust_score = trustworthiness(X, X_tsne, n_neighbors=5)
+    k = 5
+    trust_score = trustworthiness(X, X_tsne, n_neighbors=k)
+
+    original_neighbors = np.argsort(original_distances, axis=1)[:, 1:k+1]
+    tsne_neighbors = np.argsort(tsne_distances, axis=1)[:, 1:k+1]
+    continuity = 1 - np.mean([
+        len(set(original_neighbors[i]) - set(tsne_neighbors[i])) / k
+        for i in range(original_neighbors.shape[0])
+    ])
+
+    mse = np.mean((original_distances - tsne_distances) ** 2)
+    original_prob = np.exp(-original_distances) / np.sum(np.exp(-original_distances), axis=1, keepdims=True)
+    tsne_prob = np.exp(-tsne_distances) / np.sum(np.exp(-tsne_distances), axis=1, keepdims=True)
+    kl_divergence = np.mean([entropy(original_prob[i], tsne_prob[i]) for i in range(original_prob.shape[0])])
+
+    metrics_df = pd.DataFrame({
+        'Metric': ['Trustworthiness', 'Continuity', 'Mean Squared Error (MSE)', 'KL Divergence'],
+        'Value': [trust_score, continuity, mse, kl_divergence]
+    })
 
     return {
         "tsne_dataframe": df_tsne.to_dict(orient='records'),
         "original_distances": original_distances.flatten().tolist(),
         "tsne_distances": tsne_distances.flatten().tolist(),
-        "trust_score": trust_score,
+        "metrics": metrics_df.to_dict(orient='records')
     }
 
 def run_kmeans_service(df, params, target):
@@ -147,9 +182,20 @@ def run_kmeans_service(df, params, target):
     )
     
     clusters = kmeans.fit_predict(X_scaled)
-    df['cluster'] = clusters
+    
+    df_cluster = pd.DataFrame(X)
+    df_cluster['cluster'] = clusters
+    df_cluster['id'] = range(1, len(df_cluster)+1)
+
+    cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
 
     silhouette_avg = silhouette_score(X_scaled, clusters)
+
+    feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
+
+    intra_cluster_distances = df_cluster.groupby('cluster').apply(
+        lambda cluster: pairwise_distances(cluster[feature_columns]).mean() if len(cluster) > 1 else 0
+    ).reset_index(name='intra-cluster distance')
 
     centroids = kmeans.cluster_centers_
     centroids_original = scaler.inverse_transform(centroids)
@@ -158,7 +204,16 @@ def run_kmeans_service(df, params, target):
         centroids_original, columns=X.columns
     ).reset_index().rename(columns={"index": "cluster"})
 
-    centroids_df['id'] = range(1, len(centroids_df)+1)
+    # centroids_df['id'] = range(1, len(centroids_df)+1)
+
+    centroid_matrix = centroids_df[feature_columns].values
+    inter_cluster_distances = pairwise_distances(centroid_matrix)
+
+    inter_cluster_df = pd.DataFrame(
+        inter_cluster_distances,
+        index=centroids_df['cluster'],
+        columns=centroids_df['cluster']
+    )
 
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X)
@@ -167,7 +222,6 @@ def run_kmeans_service(df, params, target):
         columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
     )
     df_pca['cluster'] = clusters
-    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
 
     df_pca[target] = y
 
@@ -180,10 +234,13 @@ def run_kmeans_service(df, params, target):
     df_pca['id'] = range(1, len(df_pca)+1)
 
     return {
-        "clustered_dataframe": df.to_dict(orient='records'),
+        "clustered_dataframe": df_cluster.to_dict(orient='records'),
         "silhouette_score": silhouette_avg,
         "centroids": centroids_df.to_dict(orient='records'),
         "pca_dataframe": df_pca.to_dict(orient='records'),
+        "cluster_sizes": cluster_sizes,
+        "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
+        "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
     }
 
 def run_dbscan_service(df, params, target):
@@ -212,6 +269,30 @@ def run_dbscan_service(df, params, target):
     cluster_sizes = {str(key): value for key, value in cluster_sizes.items()}
 
     feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
+
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
+    df_pca = pd.DataFrame(
+        X_pca, 
+        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
+    )
+    df_pca['cluster'] = clusters
+    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
+
+    if df_cluster[df_cluster['cluster'] != 'Noise'].empty:
+        return {
+            "cluster_dataframe": df_cluster.to_dict(orient='records'),
+            "pca_dataframe": df_pca.to_dict(orient='records'),
+            "cluster_sizes": cluster_sizes,
+            "silhouette_score": "Not Applicable",
+            "centroids": [],
+            "intra_cluster_distances": [],
+            "inter_cluster_distances": {
+                "index": [],
+                "columns": [],
+                "data": []
+            },
+        }
     
     intra_cluster_distances = df_cluster[df_cluster['cluster'] != 'Noise'].groupby('cluster').apply(
         lambda cluster: pairwise_distances(cluster[feature_columns]).mean() if len(cluster) > 1 else 0
@@ -233,15 +314,6 @@ def run_dbscan_service(df, params, target):
         silhouette = silhouette_score(X[clusters != -1], clusters[clusters != -1])
     else:
         silhouette = "Not Applicable"
-    
-    pca = PCA(n_components=2)
-    X_pca = pca.fit_transform(X)
-    df_pca = pd.DataFrame(
-        X_pca, 
-        columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
-    )
-    df_pca['cluster'] = clusters
-    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
 
     if len(set(clusters)) > 1:
         silhouette_scores = silhouette_samples(X, clusters)
@@ -268,7 +340,8 @@ def run_agglomerative_clustering_service(df, params, target):
     agg = AgglomerativeClustering(
         n_clusters=params.get('n_clusters'),
         linkage=params.get('linkage'),
-        distance_threshold=params.get('distance_threshold')
+        distance_threshold=params.get('distance_threshold'),
+        metric=params.get('metric')
     )
     
     clusters = agg.fit_predict(X)
@@ -322,13 +395,14 @@ def run_knn_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
+
+    print(params)
 
     knn = KNeighborsClassifier(
         n_neighbors=params.get('n_neighbors'),
         algorithm=params.get('algorithm'),
         metric=params.get('metric'),
-        p=params.get('p'),
         weights=params.get('weights')
     )
 
@@ -340,11 +414,13 @@ def run_knn_service(df, params, target):
     accuracy = accuracy_score(y_test, y_pred)
 
     unique_classes = sorted(np.unique(y_test))
+    unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
+                  float(c) if isinstance(c, (np.floating, float)) else 
+                  str(c) for c in unique_classes]
+    
     conf_matrix = confusion_matrix(y_test, y_pred)
 
     class_report = classification_report(y_test, y_pred, output_dict=True)
-
-    print(conf_matrix)
 
     roc_data, pr_data = None, None
     if len(np.unique(y)) == 2:
@@ -412,14 +488,14 @@ def run_decision_tree_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
 
     decision_tree = DecisionTreeClassifier(
         criterion=params.get('criterion'),
         max_depth=params.get('max_depth'),
         min_samples_split=params.get('min_samples_split'),
         min_samples_leaf=params.get('min_samples_leaf'),
-        max_features=params.get('max_features')
+        random_state=params.get('random_state')
     )
 
     start_time = time.time()
@@ -432,6 +508,10 @@ def run_decision_tree_service(df, params, target):
     accuracy = accuracy_score(y_test, y_pred)
 
     unique_classes = sorted(np.unique(y_test))
+    unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
+                  float(c) if isinstance(c, (np.floating, float)) else 
+                  str(c) for c in unique_classes]
+    
     conf_matrix = confusion_matrix(y_test, y_pred)
 
     class_report = classification_report(y_test, y_pred, output_dict=True)
@@ -520,14 +600,14 @@ def run_svm_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
 
     svm = SVC(
         C=params.get('C'),
         degree=params.get('degree'),
         kernel=params.get('kernel'),
         gamma=params.get('gamma'),
-        probability=params.get('probability')
+        max_iter=params.get('max_iter')
     )
 
     start_time = time.time()
@@ -538,6 +618,12 @@ def run_svm_service(df, params, target):
     y_prob = svm.predict_proba(X_test) if len(np.unique(y)) == 2 else None
 
     accuracy = accuracy_score(y_test, y_pred)
+
+    unique_classes = sorted(np.unique(y_test))
+    unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
+                  float(c) if isinstance(c, (np.floating, float)) else 
+                  str(c) for c in unique_classes]
+    
     conf_matrix = confusion_matrix(y_test, y_pred)
     class_report = classification_report(y_test, y_pred, output_dict=True)
 
@@ -545,7 +631,9 @@ def run_svm_service(df, params, target):
     y_train_reset = y_train.reset_index(drop=True)
 
     support_vector_counts = dict(zip(*np.unique(y_train_reset[svm.support_], return_counts=True)))
-    support_vector_counts = {key: int(value) for key, value in support_vector_counts.items()}
+    support_vector_counts = {int(key) if isinstance(key, (np.integer, int)) else 
+                            float(key) if isinstance(key, (np.floating, float)) else 
+                            str(key): int(value) for key, value in support_vector_counts.items()}
 
     df_pred = pd.DataFrame(X_test).reset_index(drop=True)
     y_test = pd.Series(y_test).reset_index(drop=True)
@@ -564,9 +652,10 @@ def run_svm_service(df, params, target):
     df_pca['true'] = y_test
     df_pca['pred'] = y_pred
 
-    print(df_pca)
-
-    prediction_histogram = pd.Series(y_pred).value_counts()
+    prediction_histogram = {
+        str(k) if isinstance(k, (np.integer, int, np.floating, float)) else k: v
+        for k, v in pd.Series(y_pred).value_counts().items()
+    }
 
     return {
         "confusion_matrix": conf_matrix.tolist(),
@@ -577,5 +666,6 @@ def run_svm_service(df, params, target):
         "pca_dataframe": df_pca.to_dict(orient='records'),
         "accuracy": accuracy,
         "training_time": train_time,
-        "prediction_histogram": prediction_histogram.to_dict()
+        "prediction_histogram": prediction_histogram,
+        "unique_classes": unique_classes
     }

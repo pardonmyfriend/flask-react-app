@@ -2,7 +2,7 @@ import React from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
-import DataTable from "../../components/plots/DataTable";
+import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 
 function SVM({ svmData }) {
@@ -14,17 +14,17 @@ function SVM({ svmData }) {
         const cols = orderedKeys.map(key => ({
             field: key,
             headerName: key.toUpperCase(),
-            flex: 1,
+            width: 150,
         }));
 
         const rows = svmData.dataframe;
 
-        return <DataTable rows={rows} cols={cols} />;
+        return <DataPresentation rows={rows} cols={cols} />;
     };
 
     const renderConfusionMatrix = () => {
         const matrix = svmData.confusion_matrix;
-        const classNames = [...new Set(svmData.dataframe.map(row => row['original class']))];
+        const classNames = svmData.unique_classes;
 
         return (
             <ResponsivePlot

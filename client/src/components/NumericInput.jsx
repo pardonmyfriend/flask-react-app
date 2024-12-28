@@ -45,7 +45,11 @@ function NumericInput({ min, max, defaultValue, step, precision, onChange, disab
     if (isNaN(newValue)) {
       newValue = min;
     }
-    newValue = roundToPrecision(Math.max(min, Math.min(newValue, max)));
+    if (max !== undefined) {
+      newValue = roundToPrecision(Math.max(min, Math.min(newValue, max)));
+    } else {
+      newValue = roundToPrecision(Math.max(min, newValue));
+    }
     setInputValue(newValue.toFixed(precision));
     if (onChange) onChange(newValue);
     setIsFocused(false);

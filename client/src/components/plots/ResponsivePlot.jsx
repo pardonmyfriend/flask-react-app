@@ -2,7 +2,7 @@ import React from 'react';
 import Plot from 'react-plotly.js';
 import { useResizeDetector } from 'react-resize-detector';
 
-const ResponsivePlot = ({ data, layout, config, bigger }) => {
+const ResponsivePlot = ({ data, layout, bigger }) => {
     const { width, height, ref } = useResizeDetector();
 
     return (
@@ -11,7 +11,11 @@ const ResponsivePlot = ({ data, layout, config, bigger }) => {
                 <Plot
                     data={data}
                     layout={{ ...layout, width, height }}
-                    config={config}
+                    config={{
+                        responsive: true,
+                        displayModeBar: true,
+                        displaylogo: false,
+                    }}
                 />
             )}
         </div>

@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Box, AppBar, Tabs, Tab } from '@mui/material';
-import TabPanel from '../../components/TabPanel';
-import DimensionReduction from './DimensionReduction';
-import ClusterAnalysis from './ClusterAnalysis';
-import Classification from './Classification';
-import ParamsDialog from '../../components/ParamsDialog';
+import TabPanel from '../components/TabPanel';
+import DimensionReduction from './algorithms/DimensionReduction'
+import ClusterAnalysis from './algorithms/ClusterAnalysis';
+import Classification from './algorithms/Classification';
+import ParamsDialog from '../components/ParamsDialog';
 
-function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected }) {
-  const [activeTab, setActiveTab] = useState(0)
+function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setParams, data, algorithmSelected, setAlgorithmSelected, algTab, setAlgTab, target }) {
+  const [activeTab, setActiveTab] = useState(algTab)
   const [dialogOpen, setDialogOpen] = useState(false);
   const [paramsInfo, setParamsInfo] = useState({});
+  const [defaultParams, setDefaultParams] = useState({})
 
   useEffect(() => {
     if (algorithmSelected) {
@@ -21,18 +22,37 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
   }, [algorithmSelected, onProceed]);
 
   const handleTileClick = (algorithm) => {
+    const payload = params ? {
+      algorithm: algorithm,
+      params: params,
+      data: data.rows,
+      target: target
+    } : {
+      algorithm: algorithm,
+      data: data.rows,
+      target: target
+    }
+
+    setDefaultParams({})
     setAlgorithmName('')
     setParamsInfo({});
     setParams({})
-    setAlgorithmSelected(false);
-    fetch(`http://localhost:5000/algorithms/get_algorithm_info/${algorithm}`, {
-      method: 'GET',
+    setAlgTab(activeTab)
+    // setAlgorithmSelected(false);
+    fetch(`http://localhost:5000/algorithms/get_algorithm_info`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     })
     .then(response => response.json())
     .then(data => {
       if (data.algorithm) {
         setAlgorithmName(data.algorithm.algorithm_name)
         setParamsInfo(data.algorithm.param_info)
+        setDefaultParams(data.algorithm.params)
+        console.log(data.algorithm)
         setDialogOpen(true);
       }
     })
@@ -42,13 +62,14 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
   };
 
   const handleSaveParams = (params) => {
-    console.log(algorithmName)
-    console.log(params);
+    console.log(defaultParams)
+    console.log(params)
     setAlgorithmSelected(true);
     onProceed(true)
   };
 
   const handleDialogClose = () => {
+    setDefaultParams({});
     setDialogOpen(false);
   };
 
@@ -99,6 +120,7 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
           setParams={setParams}
           algorithmSelected={algorithmSelected}
           setAlgorithmSelected={setAlgorithmSelected}
+          target={target}
         />
       </TabPanel>
 
@@ -108,6 +130,7 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
         onSaveParams={handleSaveParams}
         algorithmName={algorithmName}
         paramsInfo={paramsInfo}
+        defaultParams={defaultParams}
         params={params}
         setParams={setParams}
       />

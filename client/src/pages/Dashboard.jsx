@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
-import PCA from './PCA';
-import TSNE from './TSNE';
-import KMeans from './KMeans';
-import DBSCAN from './DBSCAN';
-import AgglomerativeClustering from './AgglomerativeClustering';
-import KNN from './KNN';
-import DecisionTree from './DecisionTree';
-import SVM from './SVM';
+import PCA from './dashboards/PCA';
+import TSNE from './dashboards/TSNE';
+import KMeans from './dashboards/KMeans';
+import DBSCAN from './dashboards/DBSCAN';
+import AgglomerativeClustering from './dashboards/AgglomerativeClustering';
+import KNN from './dashboards/KNN';
+import DecisionTree from './dashboards/DecisionTree';
+import SVM from './dashboards/SVM';
 
 function Dashboard({ data, algorithmName, params, target }) {
   const [algorithmData, setAlgorithmData] = useState(null)
@@ -88,8 +88,7 @@ function Dashboard({ data, algorithmName, params, target }) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          flexGrow: 1 // Ustaw wysokość na cały ekran
-          // width: '100%',
+          flexGrow: 1
         }}
       >
         <CircularProgress />

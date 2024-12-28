@@ -38,7 +38,7 @@ const Preview = ({ data, columnTypes, onProceed }) => {
 
   if (isDataLoaded) {
     return (
-      <Box sx={{ height: 500, width: "100%" }}>
+      <Box>
         <ToastContainer position="top-right" autoClose={3000} />
         <h2
           style={{
