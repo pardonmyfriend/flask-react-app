@@ -8,7 +8,7 @@ import TabPanel from "./TabPanel";
 import ConfirmDialog from "./ConfirmDialog";
 import Summary from "../pages/preprocessing/Summary";
 
-const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, columnTypesAligned, setColumnTypesAligned }) => {
+const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, setTarget, columnTypesAligned, setColumnTypesAligned }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
@@ -38,11 +38,22 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, c
         defaultCols.current = JSON.parse(JSON.stringify(updatedColumns));
         console.log("Default columns set (deep copy):", defaultCols.current);
       }
+
+       // Sprawdzenie, czy któryś z kolumn ma target: true
+      const targetColumn = updatedColumns.find((col) => col.class === "true");
+      if (targetColumn) {
+        console.log("Target column found:", targetColumn);
+        setTarget(targetColumn.field); // Ustawienie wartości field jako target
+      }
+      else {
+        console.log("No target column found or field is missing.");
+        setTarget(null);
+      }
     }
     console.log("Columns set to:", data.columns);
     console.log("Rows set to:", data.rows);
     console.log("Default cols: ", defaultCols.current);
-    console.log("labada");
+    console.log("Target:", target);
   }, [data]);
 
   const apiRef = useGridApiRef();
