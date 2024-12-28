@@ -8,6 +8,7 @@ from app.services.data_service import (
     get_correlation_matrix,
     get_distributions
 )
+import json
 
 data_blueprint = Blueprint('data', __name__)
 
@@ -38,8 +39,12 @@ def upload_file():
         if Data.validate_data(df):
             df = Data.map_data_id(df)
             Data.set_data(df)
+            dat = Data.get_data()
+            print("\ndata:")
+            print(dat)
             nullValuesAnalysis = Data.analyze_null_values(df)
             uniqueValuesAnalysis = Data.analyze_unique_values(df)
+            uniqueValuesList = Data.unique_values_to_list(df)
             columnTypesList = [{"column": col, "type": str(dtype)} for col, dtype in df.dtypes.items()]
             mappedColumnTypes = [
                 {
@@ -47,7 +52,10 @@ def upload_file():
                     "type": types_dict.get(item["type"], "nominal"),
                     "class": 'false',
                     "nullCount": int(nullValuesAnalysis.get(item["column"], 0)),
-                    "uniqueValues": int(uniqueValuesAnalysis.get(item["column"], 0))
+                    "handleNullValues": 'Ignore',
+                    "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
+                    "uniqueValues": uniqueValuesList.get(item["column"], []),
+                    "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else None
                 }
                 for item in columnTypesList
             ]
@@ -74,17 +82,91 @@ def load_dataset(dataset):
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     
-@data_blueprint.route('/set_types', methods=['POST'])
+@data_blueprint.route('/update', methods=['POST'])
 def set_types():
-    columnTypes = request.get_json()
+    res = request.get_json()
 
-    if not columnTypes:
+    if not res:
         return jsonify({"error": "No JSON received"}), 400
-    
-    print("Received data:", columnTypes)
-    Data.set_columnTypes(columnTypes)
+    else:
+        try:
+            data = res  # Parsowanie JSON
+            print("Received JSON:", data)
+            # df = pd.DataFrame(data)
+            # print(df)
+            # Przekształcanie podsłowników na DataFrame
+            #df_cols = pd.DataFrame(data['cols'])
+            # df_cols = pd.DataFrame(data['cols']).drop(columns=['headerName', 'width'])
+            # df_cols = df_cols.rename(columns={'field': 'column'})
+            #df_defaultTypes = pd.DataFrame(data['defaultTypes'])
+            # df_defaultTypes = Data.get_columnTypes()
+            # datas = Data.get_data()
 
-    return jsonify({"message": "Data received", "received_data": columnTypes}), 200
+            # Wyświetlenie obu DataFrame
+            # print("df_cols:")
+            # print(df_cols)
+
+            # print("\ndf_defaultTypes:")
+            # print(df_defaultTypes)
+
+            # print("\ndata:")
+            # print(datas)
+
+            print("jestem przed change_types w kontrolerze")
+            Data.change_types(data)
+            print("jestem po change_types w kontrolerze")
+            resultData = Data.get_data().copy()
+            print("\nresultData:")
+            print(resultData)
+            resultColumnTypes = Data.get_columnTypes().copy()
+            result = {
+                "data": resultData.to_dict(orient="records"),
+                "types": resultColumnTypes.to_dict(orient="records")  
+            }
+
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+        print("result", jsonify(result).get_data(as_text=True))
+        return jsonify(result), 200
+    
+@data_blueprint.route('/normalize', methods=['POST'])
+def normalize_data():
+    res = request.get_json()
+
+    if not res:
+        return jsonify({"error": "No JSON received"}), 400
+    else:
+        try:
+            data = res  # Parsowanie JSON
+            print("Received JSON:", data)
+            Data.normalize_numerical(data)
+            print("jestem po normalize_data w kontrolerze")
+            resultData = Data.get_data().copy()
+            print("\nresultData:")
+            print(resultData)
+            resultColumnTypes = Data.get_columnTypes().copy()
+            result = {
+                "data": resultData.to_dict(orient="records"),
+                "types": resultColumnTypes.to_dict(orient="records")  
+            }
+
+        except json.JSONDecodeError:
+            print("Invalid JSON data received.")
+        print("result", jsonify(result).get_data(as_text=True))
+        return jsonify(result), 200
+    
+
+# @data_blueprint.route('/set_types', methods=['POST'])
+# def set_types():
+#     columnTypes = request.get_json()
+
+#     if not columnTypes:
+#         return jsonify({"error": "No JSON received"}), 400
+    
+#     print("Received data:", columnTypes)
+#     Data.set_columnTypes(columnTypes)
+
+#     return jsonify({"message": "Data received", "received_data": columnTypes}), 200
     
 @data_blueprint.route('/get_data_summary', methods=['POST'])
 def get_data_summary():

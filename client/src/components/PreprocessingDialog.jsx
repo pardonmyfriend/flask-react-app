@@ -4,15 +4,25 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, Button, Select, Menu
 import React from 'react';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import TextField from '@mui/material/TextField';
+import NumericInput from './NumericInput';
 
-function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, cols, handleCheckboxChange, setColsTypesDefaultValues, defaultCols }) {
+function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, cols, handleCheckboxChange, setColsTypesDefaultValues, defaultCols, onHandleNullValuesChange, onValueToFillWithChange }) {
     const colTypes = ['numerical', 'nominal', 'categorical'];
 
   return (
     <div style={{ position: 'relative' }}>
-      <Dialog open={open} onClose={onClose} aria-hidden={!open} maxWidth="lg" // Możesz dostosować maksymalną szerokość
-        fullWidth>
-        <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types"}
+      <Dialog open={open} 
+      onClose={(e, reason) => {
+        // Zablokowanie zamknięcia dialogu przez kliknięcie poza nim
+        if (reason === 'backdropClick') {
+          e.stopPropagation();
+        }
+      }}
+      aria-hidden={!open} maxWidth="lg" // Możesz dostosować maksymalną szerokość
+        fullWidth
+        disableEscapeKeyDown
+        >
+        <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types and handle null values"}
         </DialogTitle>
         <DialogContent>
 
@@ -72,7 +82,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
             </Tooltip>
             </Typography>
             <Typography variant="body1" sx={{ minWidth: '100px', display: 'flex', alignItems: 'center', fontWeight: 'bold', marginLeft: 'auto' }}>Fill with value
-            <Tooltip title={<>Enter the value <br /> to fill null values</>} arrow>
+            <Tooltip title={<>Enter the value <br /> to fill null values with.</>} arrow>
             <IconButton size="small" sx={{ padding: 0 }}>
             <InfoOutlinedIcon sx={{ fontSize: 18 }} />
             </IconButton>
@@ -82,7 +92,9 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
         </Box>
 
           {cols.map((col, index) => (
-            <Box sx={{
+            <Box 
+            key={index}
+            sx={{
               display: 'flex',
               flexWrap: 'wrap',
               gap: 2,
@@ -91,7 +103,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
               }
             }}>
 
-              <Box key={index} 
+              <Box key={index+100} 
               sx={{
                 flex: '1 1 45%',
                 border: '1px solid #ccc',
@@ -103,7 +115,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
               }}
               >
               {/* Typography po lewej */}
-              <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}>{col.headerName}</Typography>
+              <Typography variant="body1" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center', maxWidth: '150px' }}>{col.headerName}</Typography>
               <Typography variant="body1" sx={{ minWidth: '100px', marginRight: '8px', marginLeft: '5px', display: 'flex', alignItems: 'center' }}>{defaultCols[index+1]?.type}</Typography>
               {/* Select po prawej */}
               <FormControl>
@@ -118,7 +130,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                   sx={{ minWidth: '130px', marginRight: '8px', display: 'flex', alignItems: 'center' }}
                 >
                   {colTypes
-                  .filter((colType) => !(colType === 'categorical' && cols[index].uniqueValues === 0)) // Filtr warunku
+                  .filter((colType) => !(colType === 'categorical' && cols[index].uniqueValuesCount === 0)) // Filtr warunku
                   .map((colType, colIndex) => (
                     <MenuItem key={colIndex} value={colType}>
                       {colType}
@@ -126,7 +138,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                   ))}
               </Select>
               </FormControl>
-              {cols[index].uniqueValues !== 0 ? (
+              {cols[index].uniqueValuesCount !== 0 ? (
                 <Checkbox
                   checked={selectedOption === index + 1}
                   onChange={(event) => handleCheckboxChange(event, index + 1)}
@@ -138,7 +150,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
               )}
             </Box>
 
-            <Box key={index} 
+            <Box key={index+10} 
               sx={{
                 flex: '1 1 40%',
                 border: '1px solid #ccc',
@@ -150,7 +162,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
               }}
               >
               {/* Typography po lewej */}
-              <Typography variant="body1" sx={{ minWidth: '100px',  display: 'flex', alignItems: 'center', marginLeft: '10px' }}>{col.nullCount}</Typography>
+              <Typography variant="body1" sx={{ minWidth: '80px',  display: 'flex', alignItems: 'center', marginLeft: '10px' }}>{col.nullCount}</Typography>
               {/* Select po prawej */}
               {col.nullCount !== 0 && (
                 <>
@@ -159,35 +171,92 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
               <Select
                 labelId={`additional-select-${index}-label`}
                 id={`additional-select-${index}`}
-                value={cols[index].handleNull || ''}
+                value={cols[index].handleNullValues || ''}
                 label="Handle Null"
-                //onChange={(event) => onHandleNullChange(event, index)}
+                onChange={(event) => onHandleNullValuesChange(event, index)}
                 autoWidth={true}
                 sx={{
-                  minWidth: '150px',
+                  minWidth: '180px',
                   marginRight: '8px',
                   display: 'flex',
                   alignItems: 'center',
+                  maxWidth: '180px',
                 }}
               >
                 {/* Opcje radzenia sobie z nullami */}
-                <MenuItem value="ignore">Ignore</MenuItem>
-                <MenuItem value="drop">Drop rows</MenuItem>
-                <MenuItem value="drop">Drop column</MenuItem>
-                <MenuItem value="fill">Fill with average value</MenuItem>
-                <MenuItem value="fill">Fill with median</MenuItem>
-                <MenuItem value="fill">Fill with specific value</MenuItem>
+                <MenuItem key={index+20} value="Ignore">Ignore</MenuItem>
+                <MenuItem key={index+21} value="Drop rows">Drop rows</MenuItem>
+                <MenuItem key={index+22} value="Drop column">Drop column</MenuItem>
+                <MenuItem key={index+23} value="Fill with average value">Fill with average value</MenuItem>
+                <MenuItem key={index+24} value="Fill with median">Fill with median</MenuItem>
+                <MenuItem key={index+25} value="Fill with specific value">Fill with specific value</MenuItem>
               </Select>
             </FormControl>
-                <TextField 
-                  label="Your Label" 
-                  variant="outlined" 
-                  sx={{ minWidth: '80px', marginRight: '8px', display: 'flex', alignItems: 'center', maxWidth: '150px', }}
-                />
 
+            {col.handleNullValues === "Fill with specific value" ? (
+              col.type === "numerical" ? (
+                // NumericInput (dla typu "a")
+                <NumericInput
+                  min={0}
+                  max={100}
+                  defaultValue={cols[index].valueToFillWith}
+                  step={1}
+                  precision={0}
+                  value={cols[index].valueToFillWith}
+                  onChange={(value) => onValueToFillWithChange(value, index)}
+                />
+              ) : col.type === "nominal" ? (
+                // TextField (dla typu "b")
+                <TextField 
+                  label="Text Input"
+                  variant="outlined"
+                  value={cols[index].valueToFillWith}
+                  sx={{
+                    minWidth: '80px',
+                    marginRight: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    maxWidth: '120px',
+                  }}
+                  onChange={(value) => onValueToFillWithChange(value, index)}
+                />
+              ) : col.type === "categorical" ? (
+                // Select (dla typu "c")
+                <FormControl>
+                <InputLabel id={`select-${index}-label`}>Value</InputLabel>
+                <Select
+                  labelId={`select-${index}-label`}
+                  id={`select-${index}`}
+                  value={cols[index].valueToFillWith} // Możesz dostosować domyślną wartość
+                  label="Opcja"
+                  autoWidth={true}
+                  sx={{
+                    minWidth: '130px',
+                    marginRight: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  onChange={(value) => onValueToFillWithChange(value, index)}
+                  //onChange={(event) => onSelectChange(event, index)} // Dostosuj funkcję zmiany
+                >
+                  {/* Iterowanie po uniqueValues dla konkretnej kolumny */}
+                  {cols[index].uniqueValues.map((uniqueValue, uniqueIndex) => (
+                    <MenuItem key={uniqueIndex} value={uniqueValue}>
+                      {uniqueValue}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              ) : (
+                // Domyślny komponent (jeśli typ nie pasuje)
+                <Box sx={{ width: '130px', height: '40px' }} />
+              )
+            ) : (
+              // Warunek, gdy handleNullValues nie jest "Fill with specific value"
+              <Box sx={{ width: '130px', height: '40px' }} />
+            )}
               </>)}
             </Box>
-
             </Box>
           ))}
         </div>

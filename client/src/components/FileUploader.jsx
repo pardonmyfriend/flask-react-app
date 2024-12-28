@@ -137,7 +137,10 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
             type: columnTypes[index].type,
             class: columnTypes[index].class,
             nullCount: columnTypes[index].nullCount,
-            uniqueValues: columnTypes[index].uniqueValues
+            handleNullValues: columnTypes[index].handleNullValues,
+            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+            uniqueValues: columnTypes[index].uniqueValues,
+            valueToFillWith: columnTypes[index].valueToFillWith
           }))
           console.log("columns with types:", updatedCols);
 

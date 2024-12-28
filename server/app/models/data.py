@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 class Data:
     data = None
@@ -96,6 +97,372 @@ class Data:
             unique_values_count = df[column].nunique()  # Liczymy liczbę wartości NaN w kolumnie
             result[column] = unique_values_count if 2 <= unique_values_count <= 10 else 0
         return result
+    
+    @staticmethod
+    def unique_values_to_list(df):
+        result = {
+        col: df[col].unique().tolist() 
+        for col in df.columns 
+        if 2 <= len(df[col].unique()) <= 10
+        }
+        for key, values in result.items():
+            result[key] = [value for value in values if not pd.isna(value)]
+        return result
+    
+    @staticmethod
+    def updateColumnTypes():
+        # print("jestem w updateColumnTypes")
+        # data = Data.get_data().copy()
+        # print("data", data)
+        # columnTypes = Data.get_columnTypes().copy()
+        # print("columnTypes", columnTypes)
+        # columns = set(data.columns)
+        # #kolumny listy słowników
+        # columnTypesColumns = {row['column'] for _, row in columnTypes.iterrows()}
+        # #columnTypesColumns = {colType['column'] for colType in columnTypes}
+        # if columns != columnTypesColumns:
+        #     #usunięcie z columnTypes tych kolumn, których nie ma w data
+        #     columnTypes = [colType for colType in columnTypes if colType['column'] in columns]
+        #     #dodanie do columnTypes tych kolumn, których jeszcze w nim nie ma
+        #     columnsToAdd = columns - columnTypesColumns
+        #     for col in columnsToAdd:
+        #         new_dict = {'column': col, 'type': 'numerical', 'class': 'false', 'nullCount': 0, 'handleNullValues': 'Ignore', 'uniqueValuesCount': 2, 'uniqueValues': [0, 1], 'valueToFillWith': None}
+        #         columnTypes.append(new_dict)
+        #     print("updateColumnTypes - column Typer to save: ", columnTypes)
+        #     Data.set_columnTypes(columnTypes)
+
+        print("jestem w updateColumnTypes")
+    
+        # Skopiowanie danych i typów kolumn
+        data = Data.get_data().copy()
+        print("data", data)
+        
+        columnTypes = Data.get_columnTypes().copy()
+        print("columnTypes", columnTypes)
+        
+        # Zamiana columnTypes na DataFrame, jeśli jeszcze nim nie jest
+        if not isinstance(columnTypes, pd.DataFrame):
+            columnTypes = pd.DataFrame(columnTypes)
+        
+        # Zestaw nazw kolumn w danych
+        columns = set(data.columns)
+        print("columns in data:", columns)
+        
+        # Zestaw kolumn w columnTypes
+        columnTypesColumns = set(columnTypes['column'])
+        print("columns in columnTypes:", columnTypesColumns)
+        
+        # Sprawdzenie różnicy między kolumnami w data i columnTypes
+        if columns != columnTypesColumns:
+            # Usunięcie wierszy z columnTypes dla kolumn, których nie ma w data
+            columnTypes = columnTypes[columnTypes['column'].isin(columns)].copy()
+            
+            # Znalezienie kolumn do dodania
+            columnsToAdd = columns - columnTypesColumns
+            print("columns to add:", columnsToAdd)
+            
+            # Tworzenie DataFrame dla brakujących kolumn
+            new_columns = pd.DataFrame([
+                {
+                    'column': col,
+                    'type': 'numerical',
+                    'class': False,
+                    'nullCount': 0,
+                    'handleNullValues': 'Ignore',
+                    'uniqueValuesCount': 2,
+                    'uniqueValues': [0, 1],
+                    'valueToFillWith': None
+                }
+                for col in columnsToAdd
+            ])
+            
+            # Dodanie nowych kolumn do columnTypes
+            columnTypes = pd.concat([columnTypes, new_columns], ignore_index=True)
+            print("updateColumnTypes - updated columnTypes:", columnTypes)
+            
+            # Zapis zaktualizowanego columnTypes
+            Data.set_columnTypes(columnTypes)
+
+    @staticmethod
+    def handleNullValues(col):
+        print("jestem w handleNullValues")
+        colName = col['column']
+        data = Data.get_data().copy()
+        columnTypes = Data.get_columnTypes().copy()
+        if not isinstance(columnTypes, pd.DataFrame):
+            columnTypes = pd.DataFrame(columnTypes)
+        handleNullValues = col['handleNullValues']
+        print("handleNullValues: ", handleNullValues)
+        print("data: ", data)
+        if handleNullValues == 'Drop rows':
+            data = data.dropna(subset=[colName])
+        elif handleNullValues == 'Drop column':
+            del data[colName]
+        elif handleNullValues == 'Fill with average value':
+            mean = round(data[colName].mean(), 2)
+            data[colName] = data[colName].fillna(mean)
+        elif handleNullValues == 'Fill with median':
+            median = data[colName].median()
+            data[colName] = data[colName].fillna(median)
+        elif handleNullValues == 'Fill with specific value':
+            print("valueToFillWith", col['valueToFillWith'])
+            print("data[colName]", data[colName])
+            valueToFillWith = col['valueToFillWith']
+            data[colName] = data[colName].fillna(valueToFillWith)
+        elif handleNullValues == 'Ignore':
+            pass
+        print("data bez nulli: ", data)
+        # Znajdź odpowiedni słownik
+        #column_data = next((col for col in columnTypes if col['column'] == colName), None)
+        column_data = columnTypes.loc[columnTypes['column'] == colName]
+
+        # Jeśli istnieje, zaktualizuj 'nullCount'
+        # if column_data and handleNullValues != 'Ignore':
+        #     column_data['nullCount'] = 0
+        if not column_data.empty and handleNullValues != 'Ignore':
+            column_data['nullCount'] = 0
+
+        #columnTypes.loc[columnTypes['column'] == colName, 'nullCount'].values[0] = 0
+        #columnTypes[colName]['nullCount'] = 0
+        Data.set_data(data)
+        Data.set_columnTypes(columnTypes)
+        print("data bez nulli po zapisie: ", Data.get_data())
+    
+    @staticmethod
+    def change_single_column_type(col, old_type, new_type):
+        print("1")
+        df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        print("2")
+        matching_row = df_defaultTypes[df_defaultTypes['column'] == col['column']]
+        matching_row_index = df_defaultTypes[df_defaultTypes['column'] == col['column']].index
+        print("3")
+        data = Data.get_data().copy()
+        print("4")
+        colName = col['column']
+        print("5")
+
+        #zmieniam class kolumny, jeśli class jest true
+        #matching_row['class'] = col['class']
+        df_defaultTypes.loc[matching_row_index, 'class'] = col['class']
+        print("6")
+        #zmieniam handleNullValues
+        #matching_row['handleNullValues'] = col['handleNullValues']
+        df_defaultTypes.loc[matching_row_index, 'handleNullValues'] = col['handleNullValues']
+        print("7")
+        #zmieniam valueToFill
+        print("matching_row['valueToFillWith']", matching_row['valueToFillWith'])
+        print("8")
+        print("col", col)
+        print("col['valueToFill']", col['valueToFillWith'])
+        #matching_row['valueToFill'] = col['valueToFill']
+        df_defaultTypes.loc[matching_row_index, 'valueToFillWith'] = col['valueToFillWith']
+        print("9")
+        if old_type == 'numerical':
+            print("A")
+            print("new_type", new_type)
+            print("old_type", old_type)
+            if new_type == 'nominal' or new_type == 'categorical':
+                print("A1")
+                #ZMIANA TYPU
+                #zmieniam typ kolumny w kopii data na string
+                data[colName] = data[colName].astype(str)
+                #zmieniam typ kolumny w kopii columnTypes na nominal lub categorical
+                matching_row['type'] = new_type
+                #ZAPIS DANYCH I
+                Data.set_data(data)
+                Data.set_columnTypes(df_defaultTypes)
+                #UZUPELNIAM NULLE
+                if data[colName].isnull().any():
+                    data[colName] = Data.handleNullValues(data[colName])
+                #data[colName] = Data.handleNullValues(col)
+                #ZAPIS DANYCH II
+                Data.set_data(data)
+            else:
+                print("A2")
+    
+        elif old_type == 'nominal':
+            print("B")
+            if new_type == 'numerical':
+                print("B1")
+                #UZUPELNIAM NULLE
+                if data[colName].isnull().any():
+                    data[colName] = Data.handleNullValues(data[colName])
+                #data[colName] = Data.handleNullValues(col)
+                print("colName", colName)
+                print("data[colName]", data[colName])
+                #ONE-HOT
+                print("będę enkodować dane")
+                print("kolumna do enkodowania: ", colName)
+                print("dane przed enkodowaniem: ", data[colName])
+                print("całe dane przed enkodowaniem: ", data)
+                data[colName] = data[colName].astype(str)
+                data = pd.get_dummies(data, columns=[colName])
+                print("data po enkodowaniu: ", data)
+                #ZAPIS DANYCH I
+                Data.set_data(data)
+                Data.set_columnTypes(df_defaultTypes)
+                print("DataFrame w obiekcie Data po zapisie:", Data.get_data())
+                #ZAKTUALIZOWANIE COLUMN TYPES
+                Data.updateColumnTypes()
+                print("ColumnTypes w obiekcie Data po zapisie:", Data.get_columnTypes())
+            elif new_type == 'categorical':
+                print("B2")
+                #UZUPELNIAM NULLE
+                if data[colName].isnull().any():
+                    data[colName] = Data.handleNullValues(data[colName])
+                #data[colName] = Data.handleNullValues(col)
+                #tylko nazwa typu się zmienia
+                matching_row['type'] = new_type
+                #ZAPIS DANYCH I
+                Data.set_data(data)
+                Data.set_columnTypes(df_defaultTypes)
+                #ZAKTUALIZOWANIE COLUMN TYPES
+                Data.updateColumnTypes()
+            else:
+                print("B3")
+        
+        elif old_type == 'categorical':
+            print("C")
+            if new_type == 'numerical':
+                print("C1")
+                #UZUPELNIAM NULLE
+                if data[colName].isnull().any():
+                    data[colName] = Data.handleNullValues(data[colName])
+                #data[colName] = Data.handleNullValues(col)
+                #ONE-HOT
+                data = pd.get_dummies(data, columns=[colName])
+                #ZAPIS DANYCH I
+                Data.set_data(data)
+                Data.set_columnTypes(df_defaultTypes)
+                #ZAKTUALIZOWANIE COLUMN TYPES
+                Data.updateColumnTypes()
+            elif new_type == 'nominal':
+                print("C2")
+                #UZUPELNIAM NULLE
+                if data[colName].isnull().any():
+                    data[colName] = Data.handleNullValues(data[colName])
+                #data[colName] = Data.handleNullValues(col)
+                #tylko nazwa typu się zmienia
+                matching_row['type'] = new_type
+                #ZAPIS DANYCH I
+                Data.set_data(data)
+                Data.set_columnTypes(df_defaultTypes)
+                #ZAKTUALIZOWANIE COLUMN TYPES
+                Data.updateColumnTypes()
+            else:
+                print("C3")
+        else:
+            print("D")
+    
+    @staticmethod
+    def change_types(df):
+        print("jestem w metodzie change_types")
+        df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
+        df_cols = df_cols.rename(columns={'field': 'column'})
+        df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        data = Data.get_data()
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
+
+        # Wyświetlenie obu DataFrame
+        print("df_cols:")
+        print(df_cols)
+
+        print("\ndf_defaultTypes:")
+        print(df_defaultTypes)
+
+        print("\ndata:")
+        print(data)
+
+        #df_cols = pd.DataFrame(df['cols'])
+        #df_defaultTypes = pd.DataFrame(df['defaultTypes'])
+
+        # for col in df_cols:
+        #     print("jestem w forze przy kolumnie ", col)
+        #     if col in df_defaultTypes:
+        #         if df_cols[col]['type'] != df_defaultTypes[col]['type']:
+        #             print("będę zmieniać typ i wypełniać nulle w kolumnie ", col['column'])
+        #             Data.change_single_column_type(col, df_defaultTypes[col]['type'], df_cols[col]['type'])
+        #         else:
+        #             print("będę wypełniać nulle w kolumnie ", col['column'])
+        #             df_cols[col] = Data.handleNullValues(col)
+        #             Data.set_data(df_cols)
+
+        for index, row in df_cols.iterrows():
+            if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
+                continue  # Pomiń dalszą część iteracji dla tego wiersza
+            print(f"index: {index}, row: {row}")
+            print("jestem w forze przy kolumnie ", row['column'])
+            #match = any(d['column'] == row['column'] for d in df_defaultTypes)
+            print("row[column]:", row['column'])
+            print("df_defaultColumnTypes toList:", df_defaultTypes['column'].unique().tolist())
+            if row['column'] in df_defaultTypes['column'].unique().tolist():
+                print("kolumna jest w defaultColumns")
+                print("row['type']", row['type'])
+                matching_row = df_defaultTypes[df_defaultTypes['column'] == row['column']]
+                print("matching row", df_defaultTypes[df_defaultTypes['column'] == row['column']])
+                if row['type'] != matching_row.iloc[0]['type']:
+                    print("będę zmieniać typ i wypełniać nulle w kolumnie ", row['column'])
+                    Data.change_single_column_type(row, matching_row.iloc[0]['type'], row['type'])
+                else:
+                    print("będę wypełniać nulle w kolumnie ", row['column'])
+                    Data.handleNullValues(row)
+                    #Data.set_data(df_cols)
+        data = pd.DataFrame(Data.get_data().copy())
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
+
+    @staticmethod
+    def normalize_column(col):
+        data = pd.DataFrame(Data.get_data().copy())
+        print("col", col)
+        print("data[col]", data[col])
+
+        # Separowanie wartości nie-NaN
+        non_null_data = data[col].dropna()
+        
+        # MinMaxScaler wymaga danych w formacie 2D, więc przekształcamy
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        normalized_values = scaler.fit_transform(non_null_data.values.reshape(-1, 1))
+        
+        # Tworzymy nową kolumnę z zachowaniem brakujących wartości
+        data[col] = data[col].copy()  # Tworzymy kopię dla bezpieczeństwa
+        data.loc[non_null_data.index, col] = normalized_values.flatten()
+        Data.set_data(data)
+
+    @staticmethod
+    def normalize_numerical(df):
+        print("jestem w metodzie normalize_data")
+        df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
+        df_cols = df_cols.rename(columns={'field': 'column'})
+        columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        data = pd.DataFrame(df['rows'])
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
+        Data.updateColumnTypes()
+        columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
+
+        # Wyświetlenie obu DataFrame
+        print("df_cols:")
+        print(df_cols)
+
+        print("\ncolumnTypes:")
+        print(columnTypes)
+
+        print("\ndata:")
+        print(data)
+
+        #iteracja po kolumnach i normalizacja tych, które są numerical
+        for index, row in columnTypes.iterrows():
+                if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
+                    continue  # Pomiń dalszą część iteracji dla tego wiersza
+                if row['type'] == 'numerical':
+                    Data.normalize_column(row['column'])
+                
+
+
+
+
 
 
     

@@ -1,25 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  DataGrid,
-  GridDeleteIcon,
-  GridToolbar,
-  useGridApiRef,
-} from "@mui/x-data-grid";
-import {
-  Box,
-  Button,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  AppBar,
-  Tabs,
-  Tab,
-} from "@mui/material";
+import { DataGrid, GridDeleteIcon, GridToolbar, useGridApiRef } from "@mui/x-data-grid";
+import { Box, Button, IconButton, AppBar, Tabs, Tab } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PreprocessingDialog from "./PreprocessingDialog";
@@ -27,7 +8,7 @@ import TabPanel from "./TabPanel";
 import ConfirmDialog from "./ConfirmDialog";
 import Summary from "../pages/preprocessing/Summary";
 
-const DataTable = ({ data, onProceed, onOpen, target }) => {
+const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
@@ -37,15 +18,14 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
   const [open, setOpen] = useState(true);
   const [selectedColumn, setSelectedColumn] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
-  const [encoding, setEncoding] = useState("");
-  const [isEncodingDialogOpen, setIsEncodingDialogOpen] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState(null);
 
   useEffect(() => {
     console.log("Loaded data:", data);
     if (data && data.rows) {
-      setRows((prev) => (prev.length === 0 ? data.rows : prev));
+      setRows(data.rows);
+      // setRows((prev) => (prev.length === 0 ? data.rows : prev));
     }
     if (data && data.columns) {
       console.log(data.columns);
@@ -53,7 +33,8 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
         ...col,
         width: Math.max(col.headerName.length * 20, 200),
       }));
-      setCols((prev) => (prev.length === 0 ? updatedColumns : prev));
+      setCols(updatedColumns);
+      // setCols((prev) => (prev.length === 0 ? updatedColumns : prev));
 
       if (!defaultCols.current) {
         defaultCols.current = JSON.parse(JSON.stringify(updatedColumns));
@@ -136,13 +117,17 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
       setIsDataLoaded(true);
       onProceed(true);
     }
-    return () => {};
+    //return () => {};
   }, [isDataLoaded, onProceed, data]);
 
   const columnsWithDeleteButton = cols.map((column) => ({
     ...column,
     renderHeader: () => (
       <div style={{ display: "flex", alignItems: "center" }}>
+      {/* Jeśli column.class jest true, wyświetl ikonę przed nazwą */}
+      {column.class === true && (
+        <span style={{ marginRight: "8px" }}>🎯</span> // Ikona przed nazwą
+      )}
         {column.headerName}
         {column.field !== "id" && (
           <IconButton
@@ -160,18 +145,10 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
     ),
   }));
 
-  const handleOpenDialog = () => {
-    setOpen(true); // Otwieramy dialog
-  };
-
-  const closeEncodingDialog = () => {
-    console.log("Encoding algorithm selected:", encoding);
-    setIsEncodingDialogOpen(false); // Zamknięcie dialogu
-  };
-
   const handleCloseDialog = () => {
     console.log("default: ", defaultCols.current);
     console.log("after changes: ", cols);
+    const defaultTypes = defaultCols.current;
     const hasChangedFromNumerical = defaultCols.current.some((col, index) => {
       const currentType = cols[index]?.type; // Typ w aktualnej kolumnie
       const defaultType = col.type; // Typ w kolumnie domyślnej
@@ -191,16 +168,14 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
           boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
           //backgroundColor: "#ff5733",
         },
-      });
-      //console.log("openEncoding: ", isEncodingDialogOpen);
-    }
+      })}
 
     fetch("http://127.0.0.1:5000/data/update", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ cols, encoding }),
+      body: JSON.stringify({ cols, defaultTypes }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -210,10 +185,53 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
       })
       .then((result) => {
         console.log("Fetched data:", result);
+
+        const data = result.data;
+          console.log("data:", data);
+          const keys = Object.keys(data[0]);
+
+          const orderedKeys = keys.includes('id') 
+          ? ['id', ...keys.filter((key) => key !== 'id')] 
+          : keys;
+          
+          const cols = orderedKeys.map((key) => ({
+            field: key,
+            headerName: key.toUpperCase(),
+            width: 150,
+          }));
+
+          const columnTypes = result.types;
+          const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+            column: column.toUpperCase(),
+            type: type,
+          }));
+          
+          setColumnTypes(updatedColumnTypesRows);
+
+          const updatedCols = cols.map((item, index) => ({
+            ...item,
+            type: columnTypes[index].type,
+            class: columnTypes[index].class,
+            nullCount: columnTypes[index].nullCount,
+            handleNullValues: columnTypes[index].handleNullValues,
+            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+            uniqueValues: columnTypes[index].uniqueValues,
+            valueToFillWith: columnTypes[index].valueToFillWith
+          }))
+          console.log("columns with types:", updatedCols);
+
+          //setData({ rows: data, columns: updatedCols });
+          setIsDataLoaded(false);
+          setData({
+            rows: [...data], // Nowa referencja tablicy `data`
+            columns: [...updatedCols], // Nowa referencja tablicy `updatedCols`
+          });
+          setIsDataLoaded(true);
       })
       .catch((error) => {
         console.error("Error during fetch:", error);
       });
+
   };
 
   const handleSelectColumnChange = (event, index) => {
@@ -232,6 +250,31 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
       }
     }
 
+    setCols(newCols); // Ustawiamy stan
+    console.log("newCols: ", newCols);
+  };
+
+  const onHandleNullValuesChange = (event, index) => {
+    console.log("index:", index);
+    const newCols = [...cols]; // Tworzymy nową kopię tablicy wierszy
+    console.log("old handle null value: ", newCols[index+1].handleNullValues);
+    newCols[index+1].handleNullValues = event.target.value; // Zmieniamy pole 'type' na wybraną opcję
+    console.log("new handle null value: ", event.target.value);
+    setCols(newCols); // Ustawiamy stan
+    console.log("newCols: ", newCols);
+  };
+
+  const onValueToFillWithChange = (eventOrValue, index) => {
+    const value =
+    typeof eventOrValue === "object" && eventOrValue.target
+      ? eventOrValue.target.value // Dla inputów i select
+      : eventOrValue; // Dla numeric input, gdzie wartość jest przekazywana bezpośrednio
+
+    console.log("index:", index);
+    const newCols = [...cols]; // Tworzymy nową kopię tablicy wierszy
+    console.log("old value to fill with: ", newCols[index+1].valueToFillWith);
+    newCols[index+1].valueToFillWith = value; // Zmieniamy pole 'type' na wybraną opcję
+    console.log("new value to fill with: ", value);
     setCols(newCols); // Ustawiamy stan
     console.log("newCols: ", newCols);
   };
@@ -262,17 +305,79 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
     setCols(newCols); // Ustawiamy stan
   };
 
-  const handleRadioChange = (event) => {
-    setEncoding(event.target.value);
-  };
-
   const setColsTypesDefaultValues = () => {
     console.log("default cols 1:", defaultCols.current);
     setCols(JSON.parse(JSON.stringify(defaultCols.current)));
     setSelectedColumn(null);
   };
 
+  const handleNormalizeData = () => {
+    const defaultTypes = defaultCols.current;
+    fetch("http://127.0.0.1:5000/normalize", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ cols, rows }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json(); // Rozwiąż JSON
+      })
+      .then((result) => {
+        console.log("Fetched data:", result);
+
+        const data = result.data;
+          console.log("data:", data);
+          const keys = Object.keys(data[0]);
+
+          const orderedKeys = keys.includes('id') 
+          ? ['id', ...keys.filter((key) => key !== 'id')] 
+          : keys;
+          
+          const cols = orderedKeys.map((key) => ({
+            field: key,
+            headerName: key.toUpperCase(),
+            width: 150,
+          }));
+
+          const columnTypes = result.types;
+          const updatedColumnTypesRows = columnTypes.map(({ column, type }) => ({
+            column: column.toUpperCase(),
+            type: type,
+          }));
+          
+          setColumnTypes(updatedColumnTypesRows);
+
+          const updatedCols = cols.map((item, index) => ({
+            ...item,
+            type: columnTypes[index].type,
+            class: columnTypes[index].class,
+            nullCount: columnTypes[index].nullCount,
+            handleNullValues: columnTypes[index].handleNullValues,
+            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
+            uniqueValues: columnTypes[index].uniqueValues,
+            valueToFillWith: columnTypes[index].valueToFillWith
+          }))
+          console.log("columns with types:", updatedCols);
+
+          //setData({ rows: data, columns: updatedCols });
+          setIsDataLoaded(false);
+          setData({
+            rows: [...data], // Nowa referencja tablicy `data`
+            columns: [...updatedCols], // Nowa referencja tablicy `updatedCols`
+          });
+          setIsDataLoaded(true);
+      })
+      .catch((error) => {
+        console.error("Error during fetch:", error);
+      });
+  };
+
   if (isDataLoaded) {
+    console.log("Current rows state before render:", rows);
     return (
       <Box>
         <AppBar position="static" sx={{ borderRadius: 2 }}>
@@ -301,6 +406,7 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
             Your file
             <Button
               variant="contained"
+              onClick={handleNormalizeData}
               style={{ marginBottom: 10, position: "absolute", right: 190 }}
               sx={{
                 backgroundColor: "#3fbdbd",
@@ -322,38 +428,11 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
               Delete selected
             </Button>
           </h2>
-
-          <div>
-            <Dialog
-              open={isEncodingDialogOpen}
-              onClose={closeEncodingDialog}
-              ref={dialogRef}
-            >
-              <DialogTitle>How do you want to handle null values?</DialogTitle>
-              <DialogContent>
-                <RadioGroup value={encoding} onChange={handleRadioChange}>
-                  <FormControlLabel
-                    value="One-Hot Encoding"
-                    control={<Radio />}
-                    label="One-Hot Encoding"
-                  />
-                  <FormControlLabel
-                    value="Label Encoding"
-                    control={<Radio />}
-                    label="Label Encoding"
-                  />
-                </RadioGroup>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={closeEncodingDialog} color="secondary">
-                  Confirm
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </div>
+        
           <DataGrid
-            key={rows.length}
+            key={rows.length + JSON.stringify(rows)}
             rows={rows}
+            onRowClick={(params) => console.log("Row clicked:", params.row)}
             columns={columnsWithDeleteButton}
             loading={!rows.length}
             initialState={{
@@ -367,6 +446,7 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
             apiRef={apiRef}
             onStateChange={handleStateChange}
             sx={{
+              height: 400,
               "& .MuiDataGrid-columnHeaderTitle": {
                 fontWeight: "bold",
                 fontSize: "17px",
@@ -429,6 +509,8 @@ const DataTable = ({ data, onProceed, onOpen, target }) => {
           selectedOption={selectedColumn}
           setSelectedOption={setSelectedColumn}
           onSelectChange={handleSelectColumnChange}
+          onHandleNullValuesChange={onHandleNullValuesChange}
+          onValueToFillWithChange={onValueToFillWithChange}
           selectedRow={selectedRow}
           setSelectedRow={setSelectedRow}
           handleCheckboxChange={handleCheckboxChange}
