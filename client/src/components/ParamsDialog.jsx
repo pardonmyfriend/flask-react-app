@@ -3,22 +3,12 @@ import { Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, F
 import NumericInput from './NumericInput';
 import InfoIcon from '@mui/icons-material/Info';
 
-function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, params, setParams }) {
+function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, defaultParams, params, setParams }) {
   useEffect(() => {
-    if (open && paramsInfo) {
-      const defaultParams = {};
-      Object.keys(paramsInfo).forEach(param => {
-        defaultParams[param] = paramsInfo[param].default;
-      })
+    if (open && defaultParams) {
       setParams(defaultParams)
     }
-  }, [open, paramsInfo])
-
-  // useEffect(() => {
-  //   if (!open) {
-  //     setParams({})
-  //   }
-  // }, [open])
+  }, [open, defaultParams])
 
   const handleParamChange = (paramName, value) => {
     setParams(prevParams => ({
@@ -32,14 +22,21 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
     onClose();
   };
 
-  const renderParamInput = (paramName, paramInfo) => {
+  const renderParamInput = (paramName, paramInfo, defaultParam) => {
     const type = paramInfo.type;
     const description = paramInfo.description;
     const isNoneSelected = params[paramName] === null;
+    const isOtherSelected = params[paramName] === paramInfo.other;
+    const disableSelect = paramInfo.dependency && params[paramInfo.dependency[0]] === paramInfo.dependency[1];
 
     const handleCheckboxChange = (event) => {
       const isChecked = event.target.checked;
-      handleParamChange(paramName, isChecked ? null : paramInfo.min);
+      if (paramInfo?.nullable) {
+        handleParamChange(paramName, isChecked ? null : (defaultParam !== null ? defaultParam : paramInfo.min));
+      }
+      else if (paramInfo?.other) {
+        handleParamChange(paramName, isChecked ? paramInfo.other : paramInfo.min);
+      }
 
       if (paramInfo?.dependency && paramInfo.dependency[2] === 'uncheck') {
         handleParamChange(paramInfo.dependency[0], isChecked ? params[paramInfo.dependency[1]] : null);
@@ -72,18 +69,39 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
             <NumericInput
               min={paramInfo.min}
               max={paramInfo.max}
-              defaultValue={isNoneSelected ? paramInfo.default : paramInfo.min}
+              defaultValue={defaultParam !== null ? defaultParam : paramInfo.min}
               step={type === 'float' ? paramInfo.step : 1}
               precision={type === 'float' ? paramInfo.precision : 0}
               onChange={(value) => handleParamChange(paramName, value)}
               disabled={isNoneSelected || (paramInfo.dependency && params[paramInfo.dependency[0]] !== paramInfo.dependency[1] && paramInfo.dependency[2] === 'enable')}
             />
           </Box>
+        ) : (type === 'int' || type === 'float') && paramInfo.other ? (
+          <Box display='flex' alignItems='center'>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isOtherSelected}
+                  onChange={handleCheckboxChange}
+                />
+              }
+              label={paramInfo.other}
+            />
+            <NumericInput
+              min={paramInfo.min}
+              max={paramInfo.max}
+              defaultValue={defaultParam !== paramInfo.other ? defaultParam : paramInfo.min}
+              step={type === 'float' ? paramInfo.step : 1}
+              precision={type === 'float' ? paramInfo.precision : 0}
+              onChange={(value) => handleParamChange(paramName, value)}
+              disabled={isOtherSelected}
+            />
+          </Box>
         ) : type === 'int' || type === 'float' ? (
           <NumericInput
             min={paramInfo.min}
             max={paramInfo.max}
-            defaultValue={paramInfo.default}
+            defaultValue={defaultParam}
             step={type === 'float' ? paramInfo.step : 1}
             precision={type === 'float' ? paramInfo.precision : 0}
             onChange={(value) => handleParamChange(paramName, value)}
@@ -103,7 +121,15 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
           <FormControl fullWidth>
             <Select
               value={params[paramName] || ''}
-              onChange={(e) => handleParamChange(paramName, e.target.value)}
+              disabled={disableSelect}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                handleParamChange(paramName, newValue);
+
+                if (paramInfo.dependency && paramInfo.dependency[1] === newValue) {
+                  handleParamChange(paramInfo.dependency[0], paramInfo.dependency[2]);
+                }
+              }}
             >
               {paramInfo.options.map((option) => (
                 <MenuItem key={option} value={option}>
@@ -124,14 +150,28 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog 
+      open={open}
+      onClose={(event, reason) => {
+        if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+          onClose();
+        }
+      }}
+    >
       <DialogTitle>Set parameters for {algorithmName}</DialogTitle>
       <DialogContent>
-        {Object.keys(paramsInfo).map((paramName) => renderParamInput(paramName, paramsInfo[paramName]))}
+        {Object.keys(paramsInfo).map((paramName) => renderParamInput(paramName, paramsInfo[paramName], defaultParams[paramName]))}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">Anuluj</Button>
-        <Button onClick={handleSave} color="primary">Zapisz</Button>
+        <Button 
+          onClick={() => {
+            setParams({});
+            onClose();
+          }} 
+          color="primary">
+          Cancel
+        </Button>
+        <Button onClick={handleSave} color="primary">Save</Button>
       </DialogActions>
     </Dialog>
   );

@@ -25,8 +25,9 @@ import "react-toastify/dist/ReactToastify.css";
 import PreprocessingDialog from "./PreprocessingDialog";
 import TabPanel from "./TabPanel";
 import ConfirmDialog from "./ConfirmDialog";
+import Summary from "../pages/preprocessing/Summary";
 
-const DataTable = ({ data, onProceed, onOpen }) => {
+const DataTable = ({ data, onProceed, onOpen, target }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [cols, setCols] = useState([]);
@@ -194,7 +195,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
       //console.log("openEncoding: ", isEncodingDialogOpen);
     }
 
-    fetch("http://127.0.0.1:5000/update", {
+    fetch("http://127.0.0.1:5000/data/update", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -273,7 +274,7 @@ const DataTable = ({ data, onProceed, onOpen }) => {
 
   if (isDataLoaded) {
     return (
-      <Box sx={{ height: 500, width: "100%" }}>
+      <Box>
         <AppBar position="static" sx={{ borderRadius: 2 }}>
           <Tabs
             value={activeTab}
@@ -414,6 +415,12 @@ const DataTable = ({ data, onProceed, onOpen }) => {
                 },
               },
             }}
+          />
+        </TabPanel>
+        <TabPanel value={activeTab} index={1}>
+          <Summary
+              data={data}
+              target={target}
           />
         </TabPanel>
         <PreprocessingDialog

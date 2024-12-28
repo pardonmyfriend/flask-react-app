@@ -13,13 +13,14 @@ function ProgressStepper({ steps, stepContent }) {
   const [completed, setCompleted] = useState({});
 
   const [file, setFile] = useState(null);
+  const [selectedDataset, setSelectedDataset] = useState(null);
   const [data, setData] = useState(null);
   const [columnTypes, setColumnTypes] = useState(null);
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
   const [algorithmSelected, setAlgorithmSelected] = useState(false);
-  const [target, setTarget] = useState('species') //do zmiany
-
+  const [target, setTarget] = useState(null); //do zmiany
+  const [algTab, setAlgTab] = useState(0);
 
   const totalSteps = steps.length;
   const completedSteps = Object.keys(completed).length;
@@ -84,6 +85,8 @@ function ProgressStepper({ steps, stepContent }) {
             {React.cloneElement(stepContent[activeStep], { 
               file: file,
               setFile: setFile,
+              selectedDataset: selectedDataset,
+              setSelectedDataset: setSelectedDataset,
               data: data, 
               setData: setData, 
               algorithmName: algorithmName, 
@@ -95,6 +98,8 @@ function ProgressStepper({ steps, stepContent }) {
               onProceed: handleProceed, 
               columnTypes: columnTypes, 
               setColumnTypes: setColumnTypes,
+              algTab: algTab,
+              setAlgTab: setAlgTab,
               target: target,
               setTarget: setTarget})
             }

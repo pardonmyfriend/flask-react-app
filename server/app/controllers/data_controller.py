@@ -1,6 +1,13 @@
 from flask import Blueprint, request, jsonify
 import pandas as pd
 from app.models.data import Data
+from app.services.data_service import load_dataset_service
+from app.services.data_service import (
+    get_basic_stats,
+    analyze_target,
+    get_correlation_matrix,
+    get_distributions
+)
 
 data_blueprint = Blueprint('data', __name__)
 
@@ -59,6 +66,14 @@ def upload_file():
     else:
         return jsonify({"error":"Unsupported file type"}), 400
     
+@data_blueprint.route('/load_dataset/<string:dataset>', methods=['POST'])
+def load_dataset(dataset):
+    try:
+        response = load_dataset_service(dataset)
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
 @data_blueprint.route('/set_types', methods=['POST'])
 def set_types():
     columnTypes = request.get_json()
@@ -71,4 +86,24 @@ def set_types():
 
     return jsonify({"message": "Data received", "received_data": columnTypes}), 200
     
+@data_blueprint.route('/get_data_summary', methods=['POST'])
+def get_data_summary():
+    request_data = request.get_json()
+    df = request_data.get('data', [])
+    target = request_data.get('target', '')
     
+    df = pd.DataFrame(df)
+    df = df.drop(columns=['id'], errors='ignore')
+
+    try:
+        response = {
+            "basic_stats": get_basic_stats(df),
+            "target_analysis": analyze_target(df, target) if target else None,
+            "correlation_matrix": get_correlation_matrix(df),
+            # "pair_plot": get_pair_plot_data(df, target) if target else None,
+            # "missing_data": get_missing_data(df),
+            # "distribution": get_distributions(df)
+        }
+        return jsonify(response), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400

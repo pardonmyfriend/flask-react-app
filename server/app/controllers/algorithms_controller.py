@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
-from app.models.algorithm import Algorithm
 
 from app.services.algorithms_service import (
+    get_algorithm_info_service,
     run_pca_service,
     run_tsne_service,
     run_kmeans_service,
@@ -14,15 +14,19 @@ from app.services.algorithms_service import (
 
 algorithms_blueprint = Blueprint('algorithms', __name__)
 
-@algorithms_blueprint.route('/get_algorithm_info/<string:algorithm_name>', methods=['GET'])
-def get_algorithm_info(algorithm_name):
+@algorithms_blueprint.route('/get_algorithm_info', methods=['POST'])
+def get_algorithm_info():
+    request_data = request.get_json()
+    algorithm_name = request_data.get('algorithm', '')
+    params = request_data.get('params', None)
+    data = request_data.get('data', [])
+    target = request_data.get('target', '')
+    
     try:
-        alg_obj = Algorithm(algorithm_name)
+        response = get_algorithm_info_service(algorithm_name, params, data, target)
+        return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-
-    return jsonify({'algorithm': alg_obj.to_dict()}), 200
-
 
 @algorithms_blueprint.route('/run_PCA', methods=['POST'])
 def run_pca():
@@ -30,6 +34,8 @@ def run_pca():
     df = request_data.get('data', [])
     params = request_data.get('params', {})
     target = request_data.get('target', '')
+
+    print(params)
 
     try:
         response = run_pca_service(df, params, target)

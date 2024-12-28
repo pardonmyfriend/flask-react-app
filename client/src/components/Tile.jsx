@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Tooltip, IconButton, Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import CheckIcon from '@mui/icons-material/Check';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
 
-const Tile = ({ title, onClick, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected }) => {
+const Tile = ({ title, info, onClick, algorithmName, setAlgorithmName, params, setParams, algorithmSelected, setAlgorithmSelected, disabled }) => {
   const [expanded, setExpanded] = useState(false);
 
   const selected = algorithmSelected && algorithmName && algorithmName === title;
@@ -25,7 +25,7 @@ const Tile = ({ title, onClick, algorithmName, setAlgorithmName, params, setPara
       <Button
         onClick={onClick}
         variant={selected ? 'contained' : 'outlined'}
-        disabled={algorithmSelected && !selected}
+        disabled={(algorithmSelected && !selected) || disabled}
         sx={{
           width: 200,
           height: 200,
@@ -49,20 +49,45 @@ const Tile = ({ title, onClick, algorithmName, setAlgorithmName, params, setPara
       >
         {title}
 
-        <Tooltip title="Informacje" arrow>
-        <span
+        {!selected && (
+          <Tooltip
+            title={
+              <div>
+                <strong style={{ color: '#3FBDBD' }}>{info.name}</strong> <br />
+                {info.description}
+              </div>
+            } 
+            arrow
+          >
+            <span
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                color: algorithmSelected || disabled ? '#D7D7D7' : '#3FBDBD',
+                padding: '0.5rem',
+                cursor: 'pointer',
+              }}
+            >
+              <InfoIcon />
+            </span>
+          </Tooltip>
+        )}
+
+        {selected && (
+          <span
             style={{
               position: 'absolute',
               top: 0,
               right: 0,
-              color: selected ? '#fff' : '#3FBDBD',
+              color: '#fff',
               padding: '0.5rem',
               cursor: 'pointer',
             }}
           >
-            {selected ? <CheckIcon /> : <InfoIcon />}
+            <CheckIcon />
           </span>
-        </Tooltip>
+        )}
       </Button>
 
       {selected && (
