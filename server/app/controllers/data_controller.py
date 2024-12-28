@@ -115,7 +115,7 @@ def set_types():
         return jsonify(result), 200
     
 @data_blueprint.route('/normalize', methods=['POST'])
-def set_types():
+def normalize_data():
     res = request.get_json()
 
     if not res:
@@ -124,7 +124,7 @@ def set_types():
         try:
             data = res  # Parsowanie JSON
             print("Received JSON:", data)
-            Data.normalize_data(data)
+            Data.normalize_numerical(data)
             print("jestem po normalize_data w kontrolerze")
             resultData = Data.get_data().copy()
             print("\nresultData:")

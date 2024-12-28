@@ -317,7 +317,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ cols, defaultTypes }),
+      body: JSON.stringify({ cols, rows }),
     })
       .then((response) => {
         if (!response.ok) {

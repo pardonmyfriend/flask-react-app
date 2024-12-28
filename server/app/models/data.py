@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 class Data:
     data = None
@@ -411,35 +412,53 @@ class Data:
         data = data.replace({np.nan: None})
         Data.set_data(data)
 
-@staticmethod
-def normalize_data(df):
-    print("jestem w metodzie normalize_data")
-    df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
-    df_cols = df_cols.rename(columns={'field': 'column'})
-    columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
-    data = pd.DataFrame(df['data'])
-    data = data.replace({np.nan: None})
-    Data.set_data(data)
-    Data.updateColumnTypes()
-    columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
+    @staticmethod
+    def normalize_column(col):
+        data = pd.DataFrame(Data.get_data().copy())
+        print("col", col)
+        print("data[col]", data[col])
 
-    # Wyświetlenie obu DataFrame
-    print("df_cols:")
-    print(df_cols)
+        # Separowanie wartości nie-NaN
+        non_null_data = data[col].dropna()
+        
+        # MinMaxScaler wymaga danych w formacie 2D, więc przekształcamy
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        normalized_values = scaler.fit_transform(non_null_data.values.reshape(-1, 1))
+        
+        # Tworzymy nową kolumnę z zachowaniem brakujących wartości
+        data[col] = data[col].copy()  # Tworzymy kopię dla bezpieczeństwa
+        data.loc[non_null_data.index, col] = normalized_values.flatten()
+        Data.set_data(data)
 
-    print("\ncolumnTypes:")
-    print(columnTypes)
+    @staticmethod
+    def normalize_numerical(df):
+        print("jestem w metodzie normalize_data")
+        df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
+        df_cols = df_cols.rename(columns={'field': 'column'})
+        columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        data = pd.DataFrame(df['rows'])
+        data = data.replace({np.nan: None})
+        Data.set_data(data)
+        Data.updateColumnTypes()
+        columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
 
-    print("\ndata:")
-    print(data)
+        # Wyświetlenie obu DataFrame
+        print("df_cols:")
+        print(df_cols)
 
-    #iteracja po kolumnach i normalizacja tych, które są numerical
-    for index, row in columnTypes.iterrows():
-            if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
-                continue  # Pomiń dalszą część iteracji dla tego wiersza
-            if row['type'] == 'numerical':
-                Data.normalize_column()
-            
+        print("\ncolumnTypes:")
+        print(columnTypes)
+
+        print("\ndata:")
+        print(data)
+
+        #iteracja po kolumnach i normalizacja tych, które są numerical
+        for index, row in columnTypes.iterrows():
+                if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
+                    continue  # Pomiń dalszą część iteracji dla tego wiersza
+                if row['type'] == 'numerical':
+                    Data.normalize_column(row['column'])
+                
 
 
 
