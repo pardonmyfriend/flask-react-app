@@ -4,14 +4,15 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
+import BarPlot from "../../components/plots/BarPlot";
 
 function KMeans({ kmeansData, target }) {
     const renderClusteredDataframe = () => {
         const keys = Object.keys(kmeansData.clustered_dataframe[0]);
 
-        const orderedKeys = keys.includes('id') 
-            ? ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'] 
-            : [...keys.filter((key) => key !== 'cluster'), 'cluster'];
+        const orderedKeys = keys.includes(target) 
+            ? ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster' && key !== target), 'cluster', target] 
+            : ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'];
 
         const cols = orderedKeys.map((key) => ({
             field: key,
@@ -64,69 +65,38 @@ function KMeans({ kmeansData, target }) {
         );
     };
 
-    const renderScatterPlotForTarget = () => {
-        const uniqueGroups = [...new Set(kmeansData.pca_dataframe.map(row => row[target]))];
-        const colorMap = uniqueGroups.reduce((map, group, index) => {
-            const colors = ['#D94F3D', '#4F9D50', '#4C7D9D', '#D1A23D', '#7D3F9A', '#1C7C6C', '#C84C4C', '#4F8C4F', '#3A7BBF', '#8C5E8C'];
-            map[group] = colors[index % colors.length];
-            return map;
-        }, {});
+    const renderClusterSizes = () => {
+        const clusters = Object.keys(kmeansData.cluster_sizes);
+        const clusterCounts = Object.values(kmeansData.cluster_sizes);
     
-        const data = uniqueGroups.map(group => ({
-            x: kmeansData.pca_dataframe
-                .filter(row => row[target] === group)
-                .map(row => row.PC1),
-            y: kmeansData.pca_dataframe
-                .filter(row => row[target] === group)
-                .map(row => row.PC2),
-            type: 'scatter',
-            mode: 'markers',
-            name: group,
-            marker: {
-                color: colorMap[group],
-                size: 7,
-                symbol: 'circle',
-            },
-        }));
-
+        const mappedClusters = clusters.map((cluster) => 
+            `Cluster ${cluster}`
+        );
+    
         return (
-            <ScatterPlot
-                data={data}
-                title={'Scatter plot for classes'}
-                xTitle={'x'}
-                yTitle={'y'}
+            <BarPlot 
+                xData={mappedClusters}
+                yData={clusterCounts}
+                title="Cluster Sizes"
+                xTitle="Cluster"
+                yTitle="Count"
             />
         );
     };
 
-    const renderBarPlot = () => {
-        return (
-            <ResponsivePlot
-                data={[
-                    {
-                        x: ['Silhouette Score'],
-                        y: [kmeansData.silhouette_score],
-                        type: 'bar',
-                        marker: { color: '#3FBDBD' },
-                    },
-                ]}
-                layout={{
-                    title: 'Clustering Quality (Silhouette Score)',
-                    xaxis: { title: 'Metric' },
-                    yaxis: { title: 'Score' },
-                }}
-            />
-        );
-    };
+    const renderCentroidsTable = () => {
+        const keys = Object.keys(kmeansData.centroids[0]);
 
-    const renderCentroids = () => {
-        const cols = Object.keys(kmeansData.centroids[0]).map((key) => ({
+        const cols = keys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
-            ...(kmeansData.centroids[0].length <= 6 ? { flex: 1 } : { width: 150 }),
+            ...(keys.length <= 6 ? { flex: 1 } : { width: 150 }),
         }));
 
-        const rows = kmeansData.centroids;
+        const rows = kmeansData.centroids.map((row) => ({
+            ...row,
+            id: row.cluster,
+        }));
 
         return (
             <DataPresentation
@@ -136,13 +106,95 @@ function KMeans({ kmeansData, target }) {
         );
     };
 
+    const renderIntraClusterDistances = () => {
+        const clusters = kmeansData.intra_cluster_distances.map(item => item.cluster);
+        const distances = kmeansData.intra_cluster_distances.map(item => item['intra-cluster distance']);
+        
+        const mappedClusters = clusters.map((cluster) => 
+            `Cluster ${cluster}`
+        );
+    
+        return (
+            <BarPlot 
+                xData={mappedClusters}
+                yData={distances}
+                title="Intra-cluster Distances"
+                xTitle="Cluster"
+                yTitle="Average Distance"
+            />
+        );
+    };
+
+    const renderInterClusterDistances = () => {
+        const clusterLabels = kmeansData.inter_cluster_distances.index.map(
+            (label) => (`Cluster ${label}`)
+        );
+    
+        return (
+            <ResponsivePlot
+                data={[
+                    {
+                        z: kmeansData.inter_cluster_distances.data,
+                        x: clusterLabels,
+                        y: clusterLabels,
+                        type: "heatmap",
+                        colorscale: "RdBu",
+                        text: kmeansData.inter_cluster_distances.data.map(row => row.map(value => value.toFixed(2))),
+                        hoverinfo: "text",
+                    },
+                ]}
+                layout={{
+                    title: "Inter-Cluster Distances Heatmap",
+                    annotations: kmeansData.inter_cluster_distances.data.flatMap((row, i) =>
+                        row.map((val, j) => ({
+                            x: clusterLabels[j],
+                            y: clusterLabels[i],
+                            text: val.toFixed(2),
+                            showarrow: false,
+                            font: { size: 10, color: "#000" },
+                        }))
+                    ),
+                }}
+                config={{
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false,
+                }}
+            />
+        );
+    };
+
+    const renderSilhouetteScore = () => {
+        return (
+            <p>
+                Silhouette Score (Overall): {kmeansData.silhouette_score}
+            </p>
+        );
+    };
+
+    const renderSilhouetteScores = () => {
+        return (
+            <BarPlot 
+                xData={kmeansData.pca_dataframe.map(row => row.id)}
+                yData={kmeansData.pca_dataframe.map(row => row.silhouette_score)}
+                title="Silhouette Scores for Each Point"
+                xTitle="Point Index"
+                yTitle="Silhouette Score"
+                linear={false}
+            />
+        );
+    };
+
     return (
         <div>
             {renderClusteredDataframe()}
             {renderScatterPlot()}
-            {renderScatterPlotForTarget()}
-            {renderBarPlot()}
-            {renderCentroids()}
+            {renderClusterSizes()}
+            {renderCentroidsTable()}
+            {renderIntraClusterDistances()}
+            {renderInterClusterDistances()}
+            {renderSilhouetteScore()}
+            {renderSilhouetteScores()}
         </div>
     )
 }

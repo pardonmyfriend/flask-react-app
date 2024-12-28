@@ -259,7 +259,7 @@ function DecisionTree({ treeData }) {
                 type: 'bar',
                 orientation: 'h',
                 marker: {
-                    color: 'rgba(75, 192, 192, 0.6)'
+                    color: 'rgba(63, 189, 189, 0.6)'
                 }
             }
         ];

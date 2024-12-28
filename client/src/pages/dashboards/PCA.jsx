@@ -13,8 +13,6 @@ function PCA({ pcaData, target }) {
         const orderedKeys = keys.includes(target) 
         ? ['id', ...keys.filter((key) => key !== 'id' && key !== target), target] 
         : ['id', ...keys.filter((key) => key !== 'id')];
-
-        console.log(orderedKeys)
         
         const cols = orderedKeys.map((key) => ({
             field: key,
@@ -33,8 +31,8 @@ function PCA({ pcaData, target }) {
     };
 
     const keys = Object.keys(pcaData.pca_components[0]);
-        const pcKeys = keys.filter(key => key.startsWith('PC'));
-        const numComponents = pcKeys.length;
+    const pcKeys = keys.filter(key => key.startsWith('PC'));
+    const numComponents = pcKeys.length;
 
     const renderScatterPlot = () => {
         const uniqueGroups = [...new Set(pcaData.pca_components.map(row => row[target]))];
@@ -68,6 +66,7 @@ function PCA({ pcaData, target }) {
             return (
                 <ScatterPlot3D
                     data={data}
+                    title={'PCA Scatter Plot'}
                     xTitle={'PC1'}
                     yTitle={'PC2'}
                     zTitle={'PC3'}
@@ -86,7 +85,7 @@ function PCA({ pcaData, target }) {
                 name: group,
                 marker: {
                     color: colorMap[group],
-                    size: 10,
+                    size: 7,
                     symbol: 'circle',
                 },
             }));
@@ -94,6 +93,7 @@ function PCA({ pcaData, target }) {
             return (
                 <ScatterPlot
                     data={data}
+                    title={'PCA Scatter Plot'}
                     xTitle={'PC1'}
                     yTitle={'PC2'}
                 />
@@ -115,6 +115,7 @@ function PCA({ pcaData, target }) {
                 xData={components}
                 yData={variables}
                 zData={zValues}
+                title={'Correlation Matrix'}
                 xTitle={'Principal Components'}
                 yTitle={'Original Variables'}
             />
@@ -162,6 +163,7 @@ function PCA({ pcaData, target }) {
                 ]}
                 layout={{
                     autosize: true,
+                    title: 'Explained Variance',
                     xaxis: {
                         title: 'Principal component',
                         automargin: true,

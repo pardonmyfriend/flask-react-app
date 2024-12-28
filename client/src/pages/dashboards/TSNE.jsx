@@ -1,19 +1,17 @@
 import React from "react";
-import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
+import ScatterPlot3D from "../../components/plots/ScatterPlot3D";
+import HistogramPlot from "../../components/plots/HistogramPlot";
+import DataDescription from "../../components/plots/DataDescription";
 
 function TSNE({ tsneData, target }) {
     const renderTSNEDataframe = () => {
         const keys = Object.keys(tsneData.tsne_dataframe[0]);
 
-        console.log(keys)
-
-        const orderedKeys = keys.includes('id') 
-        ? ['id', ...keys.filter((key) => key !== 'id')] 
-        : keys;
+        const orderedKeys = keys.includes(target) 
+        ? ['id', ...keys.filter((key) => key !== 'id' && key !== target), target] 
+        : ['id', ...keys.filter((key) => key !== 'id')];
         
         const cols = orderedKeys.map((key) => ({
             field: key,
@@ -31,6 +29,10 @@ function TSNE({ tsneData, target }) {
         );
     };
 
+    const keys = Object.keys(tsneData.tsne_dataframe[0]);
+    const fKeys = keys.filter(key => key.startsWith('F'));
+    const numComponents = fKeys.length;
+
     const renderScatterPlot = () => {
         const uniqueGroups = [...new Set(tsneData.tsne_dataframe.map(row => row[target]))];
         const colorMap = uniqueGroups.reduce((map, group, index) => {
@@ -38,138 +40,158 @@ function TSNE({ tsneData, target }) {
             map[group] = colors[index % colors.length];
             return map;
         }, {});
-    
-        const data = uniqueGroups.map(group => ({
-            x: tsneData.tsne_dataframe
-                .filter(row => row[target] === group)
-                .map(row => row.F1),
-            y: tsneData.tsne_dataframe
-                .filter(row => row[target] === group)
-                .map(row => row.F2),
-            type: 'scatter',
-            mode: 'markers',
-            name: group,
-            marker: {
-                color: colorMap[group],
-                size: 7,
-                symbol: 'circle',
-            },
-        }));
 
+        if (numComponents === 3) {
+            const data = uniqueGroups.map(group => ({
+                x: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => row.F1),
+                y: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => row.F2),
+                z: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => row.F3),
+                type: 'scatter3d',
+                mode: 'markers',
+                name: group,
+                marker: {
+                    color: colorMap[group],
+                    size: 5,
+                    symbol: 'circle',
+                },
+            }));
+    
+            return (
+                <ScatterPlot3D
+                    data={data}
+                    title={'t-SNE Scatter Plot'}
+                    xTitle={'F1'}
+                    yTitle={'F2'}
+                    zTitle={'F3'}
+                />
+            );
+        } else {
+            const data = uniqueGroups.map(group => ({
+                x: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => row.F1),
+                y: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => row.F2),
+                type: 'scatter',
+                mode: 'markers',
+                name: group,
+                marker: {
+                    color: colorMap[group],
+                    size: 7,
+                    symbol: 'circle',
+                },
+            }));
+    
+            return (
+                <ScatterPlot
+                    data={data}
+                    title={'t-SNE Scatter Plot'}
+                    xTitle={'F1'}
+                    yTitle={'F2'}
+                />
+            );
+        }
+    };   
+
+    const renderHistogramForOriginalSpace = () => {
+        const originalDistancesFlat = tsneData.original_distances;
+      
         return (
-            <ScatterPlot
-                data={data}
-                title={'Scatter plot: F1 vs F2'}
-                xTitle={'F1'}
-                yTitle={'F2'}
+            <HistogramPlot 
+                xData={originalDistancesFlat}
+                title={"Histogram of distances in original space"}
+                xTitle={"Distance"}
+                yTitle={"Pair count"}
             />
         );
     };
 
-    const renderBarPlot = () => {
-        const data = [
-            {
-                x: ['Trustworthiness Score'],
-                y: [tsneData.trust_score],
-                type: 'bar',
-                name: 'Trustworthiness',
-                marker: {
-                    color: '#3FBDBD',
-                },
-            },
-        ];
-    
-        return (
-            <ResponsivePlot
-                data={data}
-                layout={{
-                    autosize: true,
-                    title: {
-                        text: 'Trustworthiness Score',
-                    },
-                    xaxis: {
-                        title: {
-                            text: 'Metric',
-                        },
-                        automargin: true,
-                        showgrid: false,
-                    },
-                    yaxis: {
-                        title: {
-                            text: 'Wartość',
-                        },
-                        automargin: true,
-                        showgrid: true,
-                        zeroline: true,
-                    },
-                    hovermode: 'closest',
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
-            />
-        );
-    };    
-
-    const renderHistogramPlots = () => {
-        const originalDistancesFlat = tsneData.original_distances;
+    const renderHistogramForTSNESpace = () => {
         const tsneDistancesFlat = tsneData.tsne_distances;
       
         return (
-          <div>
-            <ResponsivePlot
-              data={[
-                {
-                  x: originalDistancesFlat,
-                  type: "histogram",
-                  nbinsx: 50,
-                  marker: { color: '#329797' },
-                },
-              ]}
-              layout={{
-                title: "Histogram odległości w przestrzeni oryginalnej",
-                xaxis: { title: "Odległość" },
-                yaxis: { title: "Liczba par" },
-              }}
-              config={{
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false, 
-            }}
+            <HistogramPlot 
+                xData={tsneDistancesFlat}
+                title={"Histogram of distances in t-SNE space"}
+                xTitle={"Distance"}
+                yTitle={"Pair count"}
             />
-      
-            <ResponsivePlot
-              data={[
-                {
-                  x: tsneDistancesFlat,
-                  type: "histogram",
-                  nbinsx: 50,
-                  marker: { color: '#329797' },
-                },
-              ]}
-              layout={{
-                title: "Histogram odległości w przestrzeni t-SNE",
-                xaxis: { title: "Distance" },
-                yaxis: { title: "Pair count" },
-              }}
-              config={{
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false, 
-            }}
-            />
-          </div>
         );
     };
 
+    const renderMetrics = () => {
+        const metrics = tsneData.metrics;
+
+        const cols = [
+            { field: 'id', headerName: 'Metric', flex: 1 },
+            { field: 'Value', headerName: 'Value', flex: 1 },
+        ];
+
+        const rows = metrics.map((metric) => ({
+            id: metric.Metric,
+            Value: metric.Value,
+        }));
+
+        return (
+            <DataPresentation
+                rows={rows}
+                cols={cols}
+            />
+        );
+    }
+
     return (
+        // <div>
+        //     {renderTSNEDataframe()}
+        //     {renderScatterPlot()}
+        //     {renderHistogramForOriginalSpace()}
+        //     {renderHistogramForTSNESpace()}
+        //     {renderMetrics()}
+        // </div>
         <div>
-            {renderTSNEDataframe()}
-            {renderScatterPlot()}
-            {renderHistogramPlots()}
-            {renderBarPlot()}
+            <DataDescription
+                title="Transformed Data"
+                description="This table displays the data points after t-SNE transformation. Each row corresponds to a point represented in the reduced-dimensional space."
+            >
+                {renderTSNEDataframe()}
+            </DataDescription>
+
+            {numComponents <= 3 &&
+                <DataDescription
+                    title="t-SNE Scatter Plot"
+                    description="This scatter plot visualizes the dataset in the reduced-dimensional space obtained from t-SNE, using the first two or three dimensions."
+                >
+                    {renderScatterPlot()}
+                </DataDescription>
+            }
+
+            <DataDescription
+                title="Histogram of Original Space Distances"
+                description="This histogram represents the distribution of pairwise distances in the original high-dimensional space."
+            >
+                {renderHistogramForOriginalSpace()}
+            </DataDescription>
+
+            <DataDescription
+                title="Histogram of t-SNE Space Distances"
+                description="This histogram shows the distribution of pairwise distances in the t-SNE reduced-dimensional space."
+            >
+                {renderHistogramForTSNESpace()}
+            </DataDescription>
+
+            <DataDescription
+                title="t-SNE Quality Metrics"
+                description="This table summarizes various quality metrics for the t-SNE transformation, including trustworthiness, continuity, and others."
+            >
+                {renderMetrics()}
+            </DataDescription>
         </div>
     )
 }

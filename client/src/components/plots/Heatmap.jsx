@@ -1,7 +1,7 @@
 import React from 'react'
 import ResponsivePlot from './ResponsivePlot';
 
-const Heatmap = ({ xData, yData, zData, xTitle, yTitle }) => {
+const Heatmap = ({ xData, yData, zData, title, xTitle, yTitle }) => {
     return (
         <ResponsivePlot
             data={[
@@ -19,6 +19,7 @@ const Heatmap = ({ xData, yData, zData, xTitle, yTitle }) => {
             ]}
             layout={{
                 autosize: true,
+                title: title,
                 xaxis: {
                     title: xTitle,
                     automargin: true,

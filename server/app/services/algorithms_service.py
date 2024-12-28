@@ -16,6 +16,7 @@ from sklearn.manifold import trustworthiness
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import _tree
 
+from scipy.stats import entropy
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
@@ -68,6 +69,14 @@ def run_pca_service(df, params, target):
     if target:
         df_pca[target] = y
 
+    loadings = pd.DataFrame(
+        pca.components_.T, 
+        columns=[f'PC{i+1}' for i in range(len(pca.components_))], 
+        index=X.columns
+    )
+
+    correlation_matrix = loadings * np.sqrt(pca.explained_variance_ratio_)
+
     pca_for_variance = PCA(
         n_components=len(X.columns), 
         whiten=params.get('whiten'), 
@@ -91,21 +100,11 @@ def run_pca_service(df, params, target):
         'cumulative eigenvalue': cumulative_eigenvalue,
         'cumulative %': cumulative_percent
     })
-    
-    loadings = pd.DataFrame(
-        pca.components_.T, 
-        columns=[f'PC{i+1}' for i in range(len(pca.components_))], 
-        index=X.columns
-    )
-
-    correlation_matrix = loadings * np.sqrt(pca.explained_variance_ratio_)
 
     return {
         "pca_components": df_pca.to_dict(orient='records'),
         "explained_variance": explained_variance.tolist(),
         "eigen_values_data": eigen_values_data.to_dict(orient='records'),
-        "original_features": X.columns.tolist(),
-        "loadings": loadings.to_dict(orient='index'),
         "correlation_matrix": correlation_matrix.to_dict(orient='index')
     }
 
@@ -139,13 +138,31 @@ def run_tsne_service(df, params, target):
     original_distances = pairwise_distances(X)
     tsne_distances = pairwise_distances(X_tsne)
 
-    trust_score = trustworthiness(X, X_tsne, n_neighbors=5)
+    k = 5
+    trust_score = trustworthiness(X, X_tsne, n_neighbors=k)
+
+    original_neighbors = np.argsort(original_distances, axis=1)[:, 1:k+1]
+    tsne_neighbors = np.argsort(tsne_distances, axis=1)[:, 1:k+1]
+    continuity = 1 - np.mean([
+        len(set(original_neighbors[i]) - set(tsne_neighbors[i])) / k
+        for i in range(original_neighbors.shape[0])
+    ])
+
+    mse = np.mean((original_distances - tsne_distances) ** 2)
+    original_prob = np.exp(-original_distances) / np.sum(np.exp(-original_distances), axis=1, keepdims=True)
+    tsne_prob = np.exp(-tsne_distances) / np.sum(np.exp(-tsne_distances), axis=1, keepdims=True)
+    kl_divergence = np.mean([entropy(original_prob[i], tsne_prob[i]) for i in range(original_prob.shape[0])])
+
+    metrics_df = pd.DataFrame({
+        'Metric': ['Trustworthiness', 'Continuity', 'Mean Squared Error (MSE)', 'KL Divergence'],
+        'Value': [trust_score, continuity, mse, kl_divergence]
+    })
 
     return {
         "tsne_dataframe": df_tsne.to_dict(orient='records'),
         "original_distances": original_distances.flatten().tolist(),
         "tsne_distances": tsne_distances.flatten().tolist(),
-        "trust_score": trust_score,
+        "metrics": metrics_df.to_dict(orient='records')
     }
 
 def run_kmeans_service(df, params, target):
@@ -165,9 +182,20 @@ def run_kmeans_service(df, params, target):
     )
     
     clusters = kmeans.fit_predict(X_scaled)
-    df['cluster'] = clusters
+    
+    df_cluster = pd.DataFrame(X)
+    df_cluster['cluster'] = clusters
+    df_cluster['id'] = range(1, len(df_cluster)+1)
+
+    cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
 
     silhouette_avg = silhouette_score(X_scaled, clusters)
+
+    feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
+
+    intra_cluster_distances = df_cluster.groupby('cluster').apply(
+        lambda cluster: pairwise_distances(cluster[feature_columns]).mean() if len(cluster) > 1 else 0
+    ).reset_index(name='intra-cluster distance')
 
     centroids = kmeans.cluster_centers_
     centroids_original = scaler.inverse_transform(centroids)
@@ -176,7 +204,16 @@ def run_kmeans_service(df, params, target):
         centroids_original, columns=X.columns
     ).reset_index().rename(columns={"index": "cluster"})
 
-    centroids_df['id'] = range(1, len(centroids_df)+1)
+    # centroids_df['id'] = range(1, len(centroids_df)+1)
+
+    centroid_matrix = centroids_df[feature_columns].values
+    inter_cluster_distances = pairwise_distances(centroid_matrix)
+
+    inter_cluster_df = pd.DataFrame(
+        inter_cluster_distances,
+        index=centroids_df['cluster'],
+        columns=centroids_df['cluster']
+    )
 
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X)
@@ -185,7 +222,6 @@ def run_kmeans_service(df, params, target):
         columns=[f'PC{i+1}' for i in range(X_pca.shape[1])]
     )
     df_pca['cluster'] = clusters
-    df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
 
     df_pca[target] = y
 
@@ -198,10 +234,13 @@ def run_kmeans_service(df, params, target):
     df_pca['id'] = range(1, len(df_pca)+1)
 
     return {
-        "clustered_dataframe": df.to_dict(orient='records'),
+        "clustered_dataframe": df_cluster.to_dict(orient='records'),
         "silhouette_score": silhouette_avg,
         "centroids": centroids_df.to_dict(orient='records'),
         "pca_dataframe": df_pca.to_dict(orient='records'),
+        "cluster_sizes": cluster_sizes,
+        "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
+        "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
     }
 
 def run_dbscan_service(df, params, target):
