@@ -1,18 +1,16 @@
 import React from "react";
-import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import { Typography } from "@mui/material";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 import BarPlot from "../../components/plots/BarPlot";
+import Heatmap from "../../components/plots/Heatmap";
+import DataDescription from "../../components/plots/DataDescription";
 
-function KMeans({ kmeansData, target }) {
+function KMeans({ kmeansData, params }) {
     const renderClusteredDataframe = () => {
         const keys = Object.keys(kmeansData.clustered_dataframe[0]);
 
-        const orderedKeys = keys.includes(target) 
-            ? ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster' && key !== target), 'cluster', target] 
-            : ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'];
+        const orderedKeys = ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'];
 
         const cols = orderedKeys.map((key) => ({
             field: key,
@@ -45,14 +43,18 @@ function KMeans({ kmeansData, target }) {
             y: kmeansData.pca_dataframe
                 .filter(row => row.cluster === cluster)
                 .map(row => row.PC2),
+            customdata: kmeansData.pca_dataframe
+                .filter(row => row.cluster === cluster)
+                .map(row => ({ id: row.id })),
             type: 'scatter',
             mode: 'markers',
-            name: cluster,
+            name: `Cluster ${cluster}`,
             marker: {
                 color: colorMap[cluster],
                 size: 7,
                 symbol: 'circle',
             },
+            hovertemplate: `%{customdata.id}: (%{x}, %{y})<extra>Cluster ${cluster}</extra>`,
         }));
 
         return (
@@ -131,44 +133,12 @@ function KMeans({ kmeansData, target }) {
         );
     
         return (
-            <ResponsivePlot
-                data={[
-                    {
-                        z: kmeansData.inter_cluster_distances.data,
-                        x: clusterLabels,
-                        y: clusterLabels,
-                        type: "heatmap",
-                        colorscale: "RdBu",
-                        text: kmeansData.inter_cluster_distances.data.map(row => row.map(value => value.toFixed(2))),
-                        hoverinfo: "text",
-                    },
-                ]}
-                layout={{
-                    title: "Inter-Cluster Distances Heatmap",
-                    annotations: kmeansData.inter_cluster_distances.data.flatMap((row, i) =>
-                        row.map((val, j) => ({
-                            x: clusterLabels[j],
-                            y: clusterLabels[i],
-                            text: val.toFixed(2),
-                            showarrow: false,
-                            font: { size: 10, color: "#000" },
-                        }))
-                    ),
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
+            <Heatmap 
+                xData={clusterLabels}
+                yData={clusterLabels}
+                zData={kmeansData.inter_cluster_distances.data}
+                title="Inter-Cluster Distances Heatmap"
             />
-        );
-    };
-
-    const renderSilhouetteScore = () => {
-        return (
-            <p>
-                Silhouette Score (Overall): {kmeansData.silhouette_score}
-            </p>
         );
     };
 
@@ -185,16 +155,88 @@ function KMeans({ kmeansData, target }) {
         );
     };
 
+    const renderSilhouetteScore = () => {
+        return (
+            <p>
+                <b>Silhouette Score (Overall):</b> {kmeansData.silhouette_score}
+            </p>
+        );
+    };
+
     return (
         <div>
-            {renderClusteredDataframe()}
-            {renderScatterPlot()}
-            {renderClusterSizes()}
-            {renderCentroidsTable()}
-            {renderIntraClusterDistances()}
-            {renderInterClusterDistances()}
-            {renderSilhouetteScore()}
-            {renderSilhouetteScores()}
+            <h1>K-Means Clustering</h1>
+            <DataDescription
+                title={'Parameters'}
+                notExpanded={true}
+            >
+                <Typography 
+                    variant="body1" 
+                    sx={{ textAlign: 'left' }}
+                >
+                    {params && Object.keys(params).map((paramName) => (
+                        <span key={paramName}>
+                            <b>{paramName}</b>: { 
+                                typeof params[paramName] === 'boolean' 
+                                ? (params[paramName] ? 'true' : 'false')
+                                : params[paramName]
+                            }
+                            <br />
+                        </span>
+                    ))}
+                </Typography>
+            </DataDescription>
+            <DataDescription
+                title="Clustered Dataframe"
+                description="This table presents the dataset with an added 'cluster' column, representing the cluster assignment for each data point."
+            >
+                {renderClusteredDataframe()}
+            </DataDescription>
+
+            <DataDescription
+                title="PCA Scatter Plot of Clusters"
+                description="This scatter plot visualizes the clusters in the reduced-dimensional space using PCA for dimensionality reduction. Each cluster is represented by a unique color."
+            >
+                {renderScatterPlot()}
+            </DataDescription>
+
+            <DataDescription
+                title="Cluster Sizes"
+                description="This bar chart illustrates the sizes of each cluster, showing the number of data points assigned to each cluster."
+            >
+                {renderClusterSizes()}
+            </DataDescription>
+
+            <DataDescription
+                title="Centroids Table"
+                description="This table provides the coordinates of the centroids for each cluster in the original feature space, summarizing the central point of each cluster."
+            >
+                {renderCentroidsTable()}
+            </DataDescription>
+
+            <DataDescription
+                title="Intra-Cluster Distances"
+                description="This bar chart displays the average intra-cluster distance for each cluster, representing the compactness of points within a cluster."
+            >
+                {renderIntraClusterDistances()}
+            </DataDescription>
+
+            <DataDescription
+                title="Inter-Cluster Distances Heatmap"
+                description="This heatmap shows the distances between cluster centroids, providing insight into the separation and relationships between clusters."
+            >
+                {renderInterClusterDistances()}
+            </DataDescription>
+
+            <DataDescription
+                title="Silhouette Score"
+                description="The silhouette scores measure the quality of clustering by evaluating how well-separated and compact the clusters are. The bar chart visualizes the silhouette scores for individual points, highlighting their consistency within their respective clusters, while the overall silhouette score provides a single value summarizing the clustering quality across all data points."
+            >
+                <>
+                    {renderSilhouetteScores()}
+                    {renderSilhouetteScore()}
+                </>
+            </DataDescription>
         </div>
     )
 }

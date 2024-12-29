@@ -15,7 +15,7 @@ function DataPresentation({ rows, cols }) {
     };
     
     const parentDivStyle = rows.length > 10 
-        ? { width: width, height: '683px' }
+        ? { width: width, height: '700px' }
         : { width: width };
 
   return (

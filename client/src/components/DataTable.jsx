@@ -313,7 +313,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target })
 
   const handleNormalizeData = () => {
     const defaultTypes = defaultCols.current;
-    fetch("http://127.0.0.1:5000/normalize", {
+    fetch("http://127.0.0.1:5000/data/normalize", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

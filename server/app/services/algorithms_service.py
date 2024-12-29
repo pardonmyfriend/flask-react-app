@@ -153,6 +153,15 @@ def run_tsne_service(df, params, target):
     tsne_prob = np.exp(-tsne_distances) / np.sum(np.exp(-tsne_distances), axis=1, keepdims=True)
     kl_divergence = np.mean([entropy(original_prob[i], tsne_prob[i]) for i in range(original_prob.shape[0])])
 
+    if np.isposinf(mse):
+        mse = "Inf"
+
+    if np.isposinf(continuity):
+        continuity = "Inf"
+    
+    if np.isposinf(kl_divergence):
+        kl_divergence = "Inf"
+
     metrics_df = pd.DataFrame({
         'Metric': ['Trustworthiness', 'Continuity', 'Mean Squared Error (MSE)', 'KL Divergence'],
         'Value': [trust_score, continuity, mse, kl_divergence]
@@ -203,8 +212,6 @@ def run_kmeans_service(df, params, target):
     centroids_df = pd.DataFrame(
         centroids_original, columns=X.columns
     ).reset_index().rename(columns={"index": "cluster"})
-
-    # centroids_df['id'] = range(1, len(centroids_df)+1)
 
     centroid_matrix = centroids_df[feature_columns].values
     inter_cluster_distances = pairwise_distances(centroid_matrix)
@@ -279,6 +286,8 @@ def run_dbscan_service(df, params, target):
     df_pca['cluster'] = clusters
     df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
 
+    df_pca['id'] = range(1, len(df_pca)+1)
+    
     if df_cluster[df_cluster['cluster'] != 'Noise'].empty:
         return {
             "cluster_dataframe": df_cluster.to_dict(orient='records'),
@@ -321,8 +330,6 @@ def run_dbscan_service(df, params, target):
     else:
         silhouette_scores = None
 
-    df_pca['id'] = range(1, len(df_pca)+1)
-
     return {
         "cluster_dataframe": df_cluster.to_dict(orient='records'),
         "pca_dataframe": df_pca.to_dict(orient='records'),
@@ -351,6 +358,24 @@ def run_agglomerative_clustering_service(df, params, target):
     df_cluster = pd.DataFrame(X)
     df_cluster['cluster'] = clusters
     df_cluster['id'] = range(1, len(df_cluster)+1)
+
+    feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
+
+    intra_cluster_distances = df_cluster[df_cluster['cluster'] != 'Noise'].groupby('cluster').apply(
+        lambda cluster: pairwise_distances(cluster[feature_columns]).mean() if len(cluster) > 1 else 0
+    ).reset_index(name='intra-cluster distance')
+
+    centroids = df_cluster[df_cluster['cluster'] != 'Noise'].groupby('cluster')[feature_columns].mean(numeric_only=True).reset_index()
+    centroids['id'] = range(1, len(centroids)+1)
+
+    centroid_matrix = centroids[feature_columns].values
+    inter_cluster_distances = pairwise_distances(centroid_matrix)
+
+    inter_cluster_df = pd.DataFrame(
+        inter_cluster_distances,
+        index=centroids['cluster'],
+        columns=centroids['cluster']
+    )
     
     cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
 
@@ -380,13 +405,21 @@ def run_agglomerative_clustering_service(df, params, target):
     df_pca['cluster'] = clusters
     df_pca['cluster'] = df_pca['cluster'].apply(lambda x: 'Noise' if x == -1 else x)
 
+    if len(set(clusters)) > 1:
+        silhouette_scores = silhouette_samples(X, clusters)
+        df_pca['silhouette_score'] = silhouette_scores
+    else:
+        silhouette_scores = None
+
+    df_pca['id'] = range(1, len(df_pca)+1)
+
     return {
         "cluster_dataframe": df_cluster.to_dict(orient='records'),
         "pca_dataframe": df_pca.to_dict(orient='records'),
         "cluster_sizes": cluster_sizes,
         "silhouette_score": silhouette,
-        # "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
-        # "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
+        "intra_cluster_distances": intra_cluster_distances.to_dict(orient='records'),
+        "inter_cluster_distances": inter_cluster_df.to_dict(orient='split'),
         "dendrogram_data": dendrogram_data,
         "threshold": params.get('distance_threshold')
     }
@@ -397,8 +430,6 @@ def run_knn_service(df, params, target):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=params.get('test_size'), random_state=42)
 
-    print(params)
-
     knn = KNeighborsClassifier(
         n_neighbors=params.get('n_neighbors'),
         algorithm=params.get('algorithm'),
@@ -408,10 +439,20 @@ def run_knn_service(df, params, target):
 
     knn.fit(X_train, y_train) 
 
+    start_time = time.time()
     y_pred = knn.predict(X_test)
-    y_prob = knn.predict_proba(X_test) if len(np.unique(y)) == 2 else None
+    prediction_time = (time.time() - start_time) / len(X_test)
 
     accuracy = accuracy_score(y_test, y_pred)
+
+    distances, indices = knn.kneighbors(X_test)
+    average_neighbor_distance = distances.mean()
+
+    summary_df = pd.DataFrame([
+        {"Metric": "Accuracy", "Value": accuracy},
+        {"Metric": "Prediction Time (s)", "Value": prediction_time},
+        {"Metric": "Average Neighbor Distance", "Value": average_neighbor_distance},
+    ])
 
     unique_classes = sorted(np.unique(y_test))
     unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
@@ -421,15 +462,6 @@ def run_knn_service(df, params, target):
     conf_matrix = confusion_matrix(y_test, y_pred)
 
     class_report = classification_report(y_test, y_pred, output_dict=True)
-
-    roc_data, pr_data = None, None
-    if len(np.unique(y)) == 2:
-        fpr, tpr, _ = roc_curve(y_test, y_prob[:, 1])
-        roc_auc = auc(fpr, tpr)
-        roc_data = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": roc_auc}
-        
-        precision, recall, _ = precision_recall_curve(y_test, y_prob[:, 1])
-        pr_data = {"precision": precision.tolist(), "recall": recall.tolist()}
 
     df_pred = pd.DataFrame(X_test).reset_index(drop=True)
 
@@ -450,15 +482,20 @@ def run_knn_service(df, params, target):
     df_pca['true'] = y_test
     df_pca['pred'] = y_pred
 
+    df_pca['id'] = range(1, len(df_pca) + 1)
+
+    train_class_distribution = y_train.value_counts().sort_index().to_dict()
+    test_class_distribution = y_test.value_counts().sort_index().to_dict()
+
     return {
-        "accuracy": accuracy,
+        "summary_df": summary_df.to_dict(orient='records'),
         "confusion_matrix": conf_matrix.tolist(),
         "classification_report": class_report,
-        "roc_data": roc_data,
-        "pr_data": pr_data,
         "pca_dataframe": df_pca.to_dict(orient='records'),
         "dataframe": df_pred.to_dict(orient='records'),
-        "unique_classes": unique_classes
+        "unique_classes": unique_classes,
+        "train_class_distribution": train_class_distribution,
+        "test_class_distribution": test_class_distribution,
     }
 
 def build_tree(clf, tree_structure, node, parent=None):
@@ -503,7 +540,6 @@ def run_decision_tree_service(df, params, target):
     train_time = time.time() - start_time
 
     y_pred = decision_tree.predict(X_test)
-    y_prob = decision_tree.predict_proba(X_test) if len(np.unique(y)) == 2 else None
 
     accuracy = accuracy_score(y_test, y_pred)
 
@@ -519,24 +555,16 @@ def run_decision_tree_service(df, params, target):
     feature_importances = decision_tree.feature_importances_
 
     n_nodes = decision_tree.tree_.node_count
-    leaf_depths = [decision_tree.tree_.max_depth]
-    avg_leaf_depth = sum(leaf_depths) / len(leaf_depths)
+    n_leaves = decision_tree.get_n_leaves()
+    max_depth = decision_tree.get_depth()
 
     summary_df = pd.DataFrame([
         {"Metric": "Accuracy", "Value": accuracy},
         {"Metric": "Training Time (s)", "Value": train_time},
         {"Metric": "Number of Nodes", "Value": n_nodes},
-        {"Metric": "Average Leaf Depth", "Value": avg_leaf_depth}
+        {"Metric": "Number of Leaves", "Value": n_leaves},
+        {"Metric": "Max Depth", "Value": max_depth}
     ])
-
-    roc_data, pr_data = None, None
-    if len(np.unique(y)) == 2:
-        fpr, tpr, _ = roc_curve(y_test, y_prob[:, 1])
-        roc_auc = auc(fpr, tpr)
-        roc_data = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": roc_auc}
-
-        precision, recall, _ = precision_recall_curve(y_test, y_prob[:, 1])
-        pr_data = {"precision": precision.tolist(), "recall": recall.tolist()}
 
     df_pred = pd.DataFrame(X_test).reset_index(drop=True)
 
@@ -559,6 +587,8 @@ def run_decision_tree_service(df, params, target):
     df_pca['true'] = y_test
     df_pca['pred'] = y_pred
 
+    df_pca['id'] = range(1, len(df_pca) + 1)
+
     tree_structure = {
         "nodes": [],
         "edges": []
@@ -566,11 +596,12 @@ def run_decision_tree_service(df, params, target):
 
     build_tree(clf=decision_tree, tree_structure=tree_structure, node=0)
 
+    train_class_distribution = y_train.value_counts().sort_index().to_dict()
+    test_class_distribution = y_test.value_counts().sort_index().to_dict()
+
     return {
         "confusion_matrix": conf_matrix.tolist(),
         "classification_report": class_report,
-        "roc_data": roc_data,
-        "pr_data": pr_data,
         "pca_dataframe": df_pca.to_dict(orient='records'),
         "dataframe": df_pred.to_dict(orient='records'),
         "unique_classes": unique_classes,
@@ -578,6 +609,8 @@ def run_decision_tree_service(df, params, target):
         "prediction_histogram": prediction_histogram.to_dict(),
         "feature_names": X.columns.tolist(),
         "summary_df": summary_df.to_dict(orient='records'),
+        "train_class_distribution": train_class_distribution,
+        "test_class_distribution": test_class_distribution,
         "tree_structure": {
             "nodes": [
                 {
@@ -614,10 +647,23 @@ def run_svm_service(df, params, target):
     svm.fit(X_train, y_train)
     train_time = time.time() - start_time
 
+    start_time = time.time()
     y_pred = svm.predict(X_test)
-    y_prob = svm.predict_proba(X_test) if len(np.unique(y)) == 2 else None
+    prediction_time = (time.time() - start_time) / len(X_test)
 
     accuracy = accuracy_score(y_test, y_pred)
+
+    num_support_vectors = len(svm.support_vectors_)
+
+    support_vector_percentage = (num_support_vectors / X_train.shape[0]) * 100
+
+    summary_df = pd.DataFrame([
+        {"Metric": "Accuracy", "Value": accuracy},
+        {"Metric": "Training Time (s)", "Value": train_time},
+        {"Metric": "Prediction Time (s)", "Value": prediction_time},
+        {"Metric": "Number of Support Vectors", "Value": num_support_vectors},
+        {"Metric": "Support Vector Percentage (%)", "Value": support_vector_percentage},
+    ])
 
     unique_classes = sorted(np.unique(y_test))
     unique_classes = [int(c) if isinstance(c, (np.integer, int)) else 
@@ -652,10 +698,15 @@ def run_svm_service(df, params, target):
     df_pca['true'] = y_test
     df_pca['pred'] = y_pred
 
+    df_pca['id'] = range(1, len(df_pca) + 1)
+
     prediction_histogram = {
         str(k) if isinstance(k, (np.integer, int, np.floating, float)) else k: v
         for k, v in pd.Series(y_pred).value_counts().items()
     }
+
+    train_class_distribution = y_train.value_counts().sort_index().to_dict()
+    test_class_distribution = y_test.value_counts().sort_index().to_dict()
 
     return {
         "confusion_matrix": conf_matrix.tolist(),
@@ -664,8 +715,9 @@ def run_svm_service(df, params, target):
         "support_vector_counts": support_vector_counts,
         "dataframe": df_pred.to_dict(orient='records'),
         "pca_dataframe": df_pca.to_dict(orient='records'),
-        "accuracy": accuracy,
-        "training_time": train_time,
+        "summary_df": summary_df.to_dict(orient='records'),
         "prediction_histogram": prediction_histogram,
-        "unique_classes": unique_classes
+        "unique_classes": unique_classes,
+        "train_class_distribution": train_class_distribution,
+        "test_class_distribution": test_class_distribution,
     }

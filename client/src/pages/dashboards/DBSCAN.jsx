@@ -1,19 +1,24 @@
 import React from "react";
-import ResponsivePlot from "../../components/plots/ResponsivePlot";
+import { Alert, Typography } from "@mui/material";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
+import BarPlot from "../../components/plots/BarPlot";
+import Heatmap from "../../components/plots/Heatmap";
+import DataDescription from "../../components/plots/DataDescription";
 
-function DBSCAN({ dbscanData }) {
+function DBSCAN({ dbscanData, params }) {
     const isEmptyData = (data) => !data || data.length === 0;
 
     const renderDBSCANDataframe = () => {
-        if (!dbscanData.cluster_dataframe) return null;
+        if (!dbscanData.cluster_dataframe) return (
+            <Alert severity="info">
+                No data available for this section.
+            </Alert>
+        );
 
         const keys = Object.keys(dbscanData.cluster_dataframe[0]);
         
-        const orderedKeys = keys.includes('id') 
-            ? ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'] 
-            : [...keys.filter((key) => key !== 'cluster'), 'cluster'];
+        const orderedKeys = ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'];
 
         const cols = orderedKeys.map((key) => ({
             field: key,
@@ -32,7 +37,11 @@ function DBSCAN({ dbscanData }) {
     };
 
     const renderScatterPlot = () => {
-        if (!dbscanData.pca_dataframe) return null;
+        if (!dbscanData.pca_dataframe) return (
+            <Alert severity="info">
+                No data available for this section.
+            </Alert>
+        );
 
         const uniqueClusters = [...new Set(dbscanData.pca_dataframe.map(row => row.cluster))];
         const colorMap = uniqueClusters.reduce((map, cluster, index) => {
@@ -48,14 +57,19 @@ function DBSCAN({ dbscanData }) {
             y: dbscanData.pca_dataframe
                 .filter(row => row.cluster === cluster)
                 .map(row => row.PC2),
+            customdata: dbscanData.pca_dataframe
+                .filter(row => row.cluster === cluster)
+                .map(row => ({ id: row.id })),
             type: 'scatter',
             mode: 'markers',
-            name: cluster,
+            name: cluster === "Noise" ? "Noise" : `Cluster ${cluster}`,
             marker: {
                 color: colorMap[cluster],
                 size: 7,
                 symbol: 'circle',
             },
+            hovertemplate: `%{customdata.id}: (%{x}, %{y})<extra>${cluster === "Noise" ? "Noise" : `Cluster ${cluster}`}</extra>`,
+
         }));
 
         return (
@@ -68,8 +82,12 @@ function DBSCAN({ dbscanData }) {
         );
     };
 
-    const renderBarPlot = () => {
-        if (!dbscanData.cluster_sizes) return null;
+    const renderClusterSizes = () => {
+        if (!dbscanData.cluster_sizes) return (
+            <Alert severity="info">
+                No data available for this section.
+            </Alert>
+        );
 
         const clusters = Object.keys(dbscanData.cluster_sizes);
         const clusterCounts = Object.values(dbscanData.cluster_sizes);
@@ -78,100 +96,32 @@ function DBSCAN({ dbscanData }) {
             cluster === "Noise" ? "Noise" : `Cluster ${cluster}`
         );
     
-        const data = [
-            {
-                x: mappedClusters,
-                y: clusterCounts,
-                type: "bar",
-                name: "Cluster sizes",
-                marker: {
-                    color: "#3FBDBD",
-                },
-            },
-        ];
-    
         return (
-            <ResponsivePlot
-                data={data}
-                layout={{
-                    autosize: true,
-                    title: "Cluster Sizes",
-                    xaxis: {
-                        title: "Cluster",
-                        automargin: true,
-                        showgrid: false,
-                        tickmode: "linear",
-                    },
-                    yaxis: {
-                        title: "Number of Points",
-                        automargin: true,
-                        showgrid: true,
-                    },
-                    hovermode: "closest",
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
-            />
-        );
-    };
-
-    const renderHeatmap = () => {
-        if (
-            !dbscanData.inter_cluster_distances ||
-            isEmptyData(dbscanData.inter_cluster_distances.data)
-        ) {
-            // return <p>No inter-cluster distance data available.</p>;
-            return null;
-        }
-
-        const clusterLabels = dbscanData.inter_cluster_distances.index.map(
-            (label) => (label === "Noise" ? "Noise" : `Cluster ${label}`)
-        );
-    
-        return (
-            <ResponsivePlot
-                data={[
-                    {
-                        z: dbscanData.inter_cluster_distances.data,
-                        x: clusterLabels,
-                        y: clusterLabels,
-                        type: "heatmap",
-                        colorscale: "RdBu",
-                        text: dbscanData.inter_cluster_distances.data.map(row => row.map(value => value.toFixed(2))),
-                        hoverinfo: "text",
-                    },
-                ]}
-                layout={{
-                    title: "Inter-Cluster Distances Heatmap",
-                    annotations: dbscanData.inter_cluster_distances.data.flatMap((row, i) =>
-                        row.map((val, j) => ({
-                            x: clusterLabels[j],
-                            y: clusterLabels[i],
-                            text: val.toFixed(2),
-                            showarrow: false,
-                            font: { size: 10, color: "#000" },
-                        }))
-                    ),
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
+            <BarPlot 
+                xData={mappedClusters}
+                yData={clusterCounts}
+                title="Cluster Sizes"
+                xTitle="Cluster"
+                yTitle="Count"
             />
         );
     };
 
     const renderIntraClusterDistances = () => {
         if (isEmptyData(dbscanData.intra_cluster_distances)) {
-            return <p>No intra-cluster distance data available.</p>;
+            return (
+                <Alert severity="info">
+                    No data available for this section.
+                </Alert>
+            );
         }
 
         const clusters = dbscanData.intra_cluster_distances.map(item => item.cluster);
         const distances = dbscanData.intra_cluster_distances.map(item => item['intra-cluster distance']);
+
+        const mappedClusters = clusters.map((cluster) => 
+            `Cluster ${cluster}`
+        );
     
         const data = [
             {
@@ -186,120 +136,157 @@ function DBSCAN({ dbscanData }) {
         ];
     
         return (
-            <ResponsivePlot
-                data={data}
-                layout={{
-                    autosize: true,
-                    title: "Intra-cluster Distances",
-                    xaxis: {
-                        title: "Cluster",
-                        automargin: true,
-                        showgrid: false,
-                        tickmode: "linear",
-                    },
-                    yaxis: {
-                        title: "Average Distance",
-                        automargin: true,
-                        showgrid: true,
-                    },
-                    hovermode: "closest",
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
+            <BarPlot 
+                xData={mappedClusters}
+                yData={distances}
+                title="Intra-cluster Distances"
+                xTitle="Cluster"
+                yTitle="Average Distance"
             />
         );
     };
 
-    const renderCentroidsTable = () => {
-        if (isEmptyData(dbscanData.centroids)) {
-            return <p>No centroids data available.</p>;
+    const renderInterClusterDistances = () => {
+        const distances = dbscanData.inter_cluster_distances;
+        
+        if (
+            !distances ||
+            !distances.index || distances.index.length === 0 ||
+            !distances.columns || distances.columns.length === 0 ||
+            !distances.data || distances.data.length === 0
+        ) {
+            return (
+                <Alert severity="info">
+                    No data available for this section.
+                </Alert>
+            );
         }
 
-        console.log(dbscanData.centroids);
-
-        const keys = Object.keys(dbscanData.centroids[0]);
-
-        const orderedKeys = keys.includes('id') 
-            ? ['id', 'cluster', ...keys.filter((key) => key !== 'id' && key !== 'cluster')] 
-            : ['cluster', ...keys.filter((key) => key !== 'cluster')];
-
-        const cols = orderedKeys.map(key => ({
-            field: key,
-            headerName: key.toUpperCase(),
-            flex: 1,
-        }));
-
-        const rows = dbscanData.centroids;
+        const clusterLabels = dbscanData.inter_cluster_distances.index.map(
+            (label) => (label === "Noise" ? "Noise" : `Cluster ${label}`)
+        );
     
         return (
-            <DataPresentation
-                rows={rows}
-                cols={cols}
+            <Heatmap 
+                xData={clusterLabels}
+                yData={clusterLabels}
+                zData={dbscanData.inter_cluster_distances.data}
+                title="Inter-Cluster Distances Heatmap"
             />
         );
     };
 
     const renderSilhouetteScores = () => {
         if (isEmptyData(dbscanData.pca_dataframe)) {
-            return <p>No PCA data available to compute silhouette scores.</p>;
+            return (
+                <Alert severity="info">
+                    No data available for this section.
+                </Alert>
+            );
         }
 
         if (!dbscanData.pca_dataframe.some(row => 'silhouette_score' in row)) {
-            return <p>No silhouette scores available.</p>;
+            return (
+                <Alert severity="info">
+                    No data available for this section.
+                </Alert>
+            );
         }
 
         return (
-            <ResponsivePlot
-                data={[
-                    {
-                        x: dbscanData.pca_dataframe.map(row => row.id),
-                        y: dbscanData.pca_dataframe.map(row => row.silhouette_score),
-                        type: "bar",
-                        marker: { color: "#3FBDBD" },
-                    },
-                ]}
-                layout={{
-                    title: "Silhouette Scores for Each Point",
-                    xaxis: { title: "Point Index" },
-                    yaxis: { title: "Silhouette Score" },
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
+            <BarPlot 
+                xData={dbscanData.pca_dataframe.map(row => row.id)}
+                yData={dbscanData.pca_dataframe.map(row => row.silhouette_score)}
+                title="Silhouette Scores for Each Point"
+                xTitle="Point Index"
+                yTitle="Silhouette Score"
+                linear={false}
             />
         );
     };
 
     const renderSilhouetteScore = () => {
         if (!dbscanData.silhouette_score || dbscanData.silhouette_score === "Not Applicable") {
-            return <p>Silhouette score is not applicable (all points are noise).</p>;
+            return (
+                null
+            )
         }
 
         return (
-            <div>
-                <h3>Silhouette Score (Overall):</h3>
-                <p>
-                    {dbscanData.silhouette_score}
-                </p>
-            </div>
+            <p>
+                <b>Silhouette Score (Overall):</b> {dbscanData.silhouette_score}
+            </p>
         );
     };
 
     return (
         <div>
-            {renderDBSCANDataframe()}
-            {renderScatterPlot()}
-            {renderBarPlot()}
-            {renderCentroidsTable()}
-            {renderSilhouetteScore()}
-            {renderSilhouetteScores()}
-            {renderIntraClusterDistances()}
-            {renderHeatmap()}
+            <h1>DBSCAN Clustering</h1>
+            <DataDescription
+                title={'Parameters'}
+                notExpanded={true}
+            >
+                <Typography 
+                    variant="body1" 
+                    sx={{ textAlign: 'left' }} // Wyrównanie tylko dla tego przypadku
+                >
+                    {params && Object.keys(params).map((paramName) => (
+                        <span key={paramName}>
+                            <b>{paramName}</b>: { 
+                                typeof params[paramName] === 'boolean' 
+                                ? (params[paramName] ? 'true' : 'false')
+                                : params[paramName]
+                            }
+                            <br />
+                        </span>
+                    ))}
+                </Typography>
+            </DataDescription>
+
+            <DataDescription
+                title="Clustered Dataframe"
+                description="This table displays the dataset with a 'cluster' column indicating the cluster assignment for each data point. Points marked as 'Noise' were not assigned to any cluster due to their low density."
+            >
+                {renderDBSCANDataframe()}
+            </DataDescription>
+
+            <DataDescription
+                title="PCA Scatter Plot of Clusters"
+                description="This scatter plot visualizes the clusters in the reduced-dimensional space using PCA for dimensionality reduction. Noise points are displayed alongside identified clusters."
+            >
+                {renderScatterPlot()}
+            </DataDescription>
+
+            <DataDescription
+                title="Cluster Sizes"
+                description="This bar chart illustrates the sizes of each cluster, showing the number of data points in each cluster. A separate bar is displayed for points categorized as 'Noise'."
+            >
+                {renderClusterSizes()}
+            </DataDescription>
+
+            <DataDescription
+                title="Intra-Cluster Distances"
+                description="This bar chart displays the average intra-cluster distance for each cluster, indicating how compact each cluster is. Noise points are not included in this analysis."
+            >
+                {renderIntraClusterDistances()}
+            </DataDescription>
+
+            <DataDescription
+                title="Inter-Cluster Distances Heatmap"
+                description="This heatmap shows the distances between cluster centroids, illustrating the separation between clusters. Noise points are not included in this analysis."
+            >
+                {renderInterClusterDistances()}
+            </DataDescription>
+
+            <DataDescription
+                title="Silhouette Score"
+                description="The silhouette scores measure the quality of clustering by evaluating how well-separated and compact the clusters are. The bar chart visualizes the silhouette scores for individual points, highlighting their consistency within their respective clusters, while the overall silhouette score provides a single value summarizing the clustering quality across all data points."
+            >
+                <>
+                    {renderSilhouetteScores()}
+                    {renderSilhouetteScore()}
+                </>
+            </DataDescription>
         </div>
     );
 }

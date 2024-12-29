@@ -171,6 +171,37 @@ class Algorithm:
                     'description': 'The algorithm to use for computation. "lloyd" is the standard implementation, while "elkan" is faster for dense datasets with Euclidean distances.',
                 }
             }
+        elif self.algorithm_name == 'DBSCAN':
+            return {
+                'eps': {
+                    'type': 'float',
+                    'min': 0.1,
+                    'max': 20.0,
+                    'default': 0.5,
+                    'step': 0.1,
+                    'precision': 1,
+                    'description': 'The maximum distance between two samples for them to be considered as neighbors. Smaller values result in more clusters.',
+                },
+                'min_samples': {
+                    'type': 'int',
+                    'min': 2,
+                    'max': 100,
+                    'default': 5,
+                    'description': 'The number of samples (or total weight) in a neighborhood for a point to be considered as a core point. Higher values lead to fewer clusters.',
+                },
+                'metric': {
+                    'type': 'select',
+                    'options': ['euclidean', 'manhattan', 'cosine', 'chebyshev'],
+                    'default': 'euclidean',
+                    'description': 'The distance metric used to define the neighborhood.',
+                },
+                'algorithm': {
+                    'type': 'select',
+                    'options': ['auto', 'ball_tree', 'kd_tree', 'brute'],
+                    'default': 'auto',
+                    'description': 'The algorithm used for nearest neighbors search. "auto" chooses the best option based on data, while "ball_tree", "kd_tree", and "brute" can be manually specified for different data distributions.',
+                }
+            }
         elif self.algorithm_name == 'Agglomerative Clustering':
             return {
                 'n_clusters': {
@@ -208,37 +239,6 @@ class Algorithm:
                     'dependency': ['n_clusters', 2, 'uncheck']
                 }
             }
-        elif self.algorithm_name == 'DBSCAN':
-            return {
-                'eps': {
-                    'type': 'float',
-                    'min': 0.1,
-                    'max': 10.0,
-                    'default': 0.5,
-                    'step': 0.1,
-                    'precision': 1,
-                    'description': 'The maximum distance between two samples for them to be considered as neighbors. Smaller values result in more clusters.',
-                },
-                'min_samples': {
-                    'type': 'int',
-                    'min': 1,
-                    'max': 50,
-                    'default': 5,
-                    'description': 'The number of samples (or total weight) in a neighborhood for a point to be considered as a core point. Higher values lead to fewer clusters.',
-                },
-                'metric': {
-                    'type': 'select',
-                    'options': ['euclidean', 'manhattan', 'cosine', 'chebyshev'],
-                    'default': 'euclidean',
-                    'description': 'The distance metric used to define the neighborhood.',
-                },
-                'algorithm': {
-                    'type': 'select',
-                    'options': ['auto', 'ball_tree', 'kd_tree', 'brute'],
-                    'default': 'auto',
-                    'description': 'The algorithm used for nearest neighbors search. "auto" chooses the best option based on data, while "ball_tree", "kd_tree", and "brute" can be manually specified for different data distributions.',
-                }
-            }
         elif self.algorithm_name == 'KNN':
             return {
                 'n_neighbors': {
@@ -269,7 +269,7 @@ class Algorithm:
                 'test_size': {
                     'type': 'float',
                     'min': 0.01,
-                    'max': 0.5,
+                    'max': 0.9,
                     'default': 0.25,
                     'step': 0.01,
                     'precision': 2,
@@ -316,7 +316,7 @@ class Algorithm:
                 'test_size': {
                     'type': 'float',
                     'min': 0.01,
-                    'max': 0.5,
+                    'max': 0.9,
                     'default': 0.25,
                     'step': 0.01,
                     'precision': 2,
@@ -362,7 +362,7 @@ class Algorithm:
                 'test_size': {
                     'type': 'float',
                     'min': 0.01,
-                    'max': 0.5,
+                    'max': 0.9,
                     'default': 0.25,
                     'step': 0.01,
                     'precision': 2,

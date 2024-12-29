@@ -1,4 +1,5 @@
 import React from "react";
+import { Typography } from "@mui/material";
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
@@ -6,7 +7,7 @@ import ScatterPlot3D from "../../components/plots/ScatterPlot3D";
 import DataDescription from "../../components/plots/DataDescription";
 import Heatmap from "../../components/plots/Heatmap";
 
-function PCA({ pcaData, target }) {
+function PCA({ pcaData, target, params }) {
     const renderPCADataframe = () => {
         const keys = Object.keys(pcaData.pca_components[0]);
 
@@ -53,6 +54,9 @@ function PCA({ pcaData, target }) {
                 z: pcaData.pca_components
                     .filter(row => row[target] === group)
                     .map(row => row.PC3),
+                customdata: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => ({ id: row.id })),
                 type: 'scatter3d',
                 mode: 'markers',
                 name: group,
@@ -61,6 +65,7 @@ function PCA({ pcaData, target }) {
                     size: 5,
                     symbol: 'circle',
                 },
+                hovertemplate: `%{customdata.id}: (%{x}, %{y}, %{z})<extra>${group}</extra>`,
             }));
     
             return (
@@ -80,6 +85,9 @@ function PCA({ pcaData, target }) {
                 y: pcaData.pca_components
                     .filter(row => row[target] === group)
                     .map(row => row.PC2),
+                customdata: pcaData.pca_components
+                    .filter(row => row[target] === group)
+                    .map(row => ({ id: row.id })),
                 type: 'scatter',
                 mode: 'markers',
                 name: group,
@@ -88,6 +96,7 @@ function PCA({ pcaData, target }) {
                     size: 7,
                     symbol: 'circle',
                 },
+                hovertemplate: `%{customdata.id}: (%{x}, %{y})<extra>${group}</extra>`,
             }));
     
             return (
@@ -189,6 +198,27 @@ function PCA({ pcaData, target }) {
 
     return (
         <div>
+            <h1>Principal Component Analysis</h1>
+            <DataDescription
+                title={'Parameters'}
+                notExpanded={true}
+            >
+                <Typography 
+                    variant="body1" 
+                    sx={{ textAlign: 'left' }}
+                >
+                    {params && Object.keys(params).map((paramName) => (
+                        <span key={paramName}>
+                            <b>{paramName}</b>: { 
+                                typeof params[paramName] === 'boolean' 
+                                ? (params[paramName] ? 'true' : 'false')
+                                : params[paramName]
+                            }
+                            <br />
+                        </span>
+                    ))}
+                </Typography>
+            </DataDescription>
             <DataDescription
                 title="Reduced Data"
                 description="This table presents the input data transformed by PCA. Each row corresponds to a data point with new coordinates along the principal components, which are linear combinations of the original variables."
