@@ -9,7 +9,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Fade from '@mui/material/Fade';
 
 
-const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned }) => {
+const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned, columnTypesAligned }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showSuccessBox, setShowSuccessBox] = useState(false);
 
@@ -30,7 +30,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
     setParams({});
     setAlgorithmSelected(false);
     onProceed(false);
-    //setColumnTypesAligned(true)
+    setColumnTypesAligned(true)
   };
 
   const validateFileType = (file) => {
@@ -46,6 +46,9 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
   const onDrop = useCallback((acceptedFiles) => {
     if (file) return;
 
+    console.log("ColumnTypesAligned", columnTypesAligned)
+    console.log("SetColumnTypesAligned", setColumnTypesAligned)
+    console.log("setAlgTab", setAlgTab)
     resetState();
 
     if (acceptedFiles.length) {
@@ -59,7 +62,9 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
 
   const handleButtonClick = (event) => {
     if (file) return;
-    console.log(setColumnTypesAligned);
+    console.log("ColumnTypesAligned", columnTypesAligned)
+    console.log("SetColumnTypesAligned", setColumnTypesAligned)
+    console.log("setAlgTab", setAlgTab)
     resetState();
 
     const files = event.target.files;

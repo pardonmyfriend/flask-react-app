@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { List, ListItemButton, ListItemText, Button, Box,  Chip, Alert } from '@mui/material';
 
-const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProceed, setColumnTypes, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected }) => {
+const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProceed, setColumnTypes, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned }) => {
   const [temporarySelectedDataset, setTemporarySelectedDataset] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,6 +36,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
     setSelectedDataset(temporarySelectedDataset);
     setLoading(true);
     setError(null);
+    setColumnTypesAligned(false);
 
     try {
         const response = await fetch(`http://localhost:5000/data/load_dataset/${temporarySelectedDataset}`, {
@@ -72,13 +73,26 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
           type: type,
         }));
 
-        const updatedCols = cols.map((item, index) => ({
-          ...item,
-          type: columnTypes[index].type,
-          class: columnTypes[index].class,
-          nullCount: columnTypes[index].nullCount,
-          uniqueValues: columnTypes[index].uniqueValues
-        }))
+        // const updatedCols = cols.map((item, index) => ({
+        //   ...item,
+        //   type: columnTypes[index].type,
+        //   class: columnTypes[index].class,
+        //   nullCount: columnTypes[index].nullCount,
+        //   uniqueValues: columnTypes[index].uniqueValues
+        // }))
+
+        const updatedCols = cols.map((item) => {
+          const matchingColumnType = columnTypes.find(
+            ({ column }) => column.toUpperCase() === item.field.toUpperCase()
+          );
+          return {
+            ...item,
+            type: matchingColumnType ? matchingColumnType.type : undefined,
+            class: matchingColumnType ? matchingColumnType.class : undefined,
+            nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+            uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+          };
+        });
 
         console.log(responseData);
         setTarget(target);

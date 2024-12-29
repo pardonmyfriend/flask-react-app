@@ -50,14 +50,18 @@ def load_dataset_service(name):
 
     nullValuesAnalysis = Data.analyze_null_values(df)
     uniqueValuesAnalysis = Data.analyze_unique_values(df)
+    uniqueValuesList = Data.unique_values_to_list(df)
     columnTypesList = [{"column": col, "type": str(dtype)} for col, dtype in df.dtypes.items()]
     mappedColumnTypes = [
         {
             "column": item["column"], 
             "type": types_dict.get(item["type"], "nominal"),
-            "class": 'false',
+            "class": 'true' if item["column"] == 'target' else 'false',
+            "handleNullValues": 'Ignore',
             "nullCount": int(nullValuesAnalysis.get(item["column"], 0)),
-            "uniqueValues": int(uniqueValuesAnalysis.get(item["column"], 0))
+            "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
+            "uniqueValues": uniqueValuesList.get(item["column"], []),
+            "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else None
         }
         for item in columnTypesList
     ]

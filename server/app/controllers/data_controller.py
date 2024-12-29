@@ -79,6 +79,7 @@ def upload_file():
 def load_dataset(dataset):
     try:
         response = load_dataset_service(dataset)
+        print(jsonify(response))
         return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

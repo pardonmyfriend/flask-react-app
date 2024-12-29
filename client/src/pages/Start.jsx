@@ -4,7 +4,7 @@ import FileUploader from '../components/FileUploader';
 import Datasets from '../components/Datasets';
 import { AppBar, Tab, Tabs, Box } from '@mui/material';
 
-const Start = ({ file, setFile, selectedDataset, setSelectedDataset, data, setData, setColumnTypes, onProceed, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected }) => {
+const Start = ({ file, setFile, selectedDataset, setSelectedDataset, data, setData, setColumnTypes, onProceed, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, columnTypesAligned, setColumnTypesAligned }) => {
     const [activeTab, setActiveTab] = useState(0)
 
   return (
@@ -32,6 +32,8 @@ const Start = ({ file, setFile, selectedDataset, setSelectedDataset, data, setDa
                 setAlgorithmName={setAlgorithmName}
                 setParams={setParams}
                 setAlgorithmSelected={setAlgorithmSelected}
+                columnTypesAligned={columnTypesAligned}
+                setColumnTypesAligned={setColumnTypesAligned}
             />
         </TabPanel>
         <TabPanel value={activeTab} index={1}>
@@ -47,6 +49,8 @@ const Start = ({ file, setFile, selectedDataset, setSelectedDataset, data, setDa
                 setAlgorithmName={setAlgorithmName}
                 setParams={setParams}
                 setAlgorithmSelected={setAlgorithmSelected}
+                columnTypesAligned={columnTypesAligned}
+                setColumnTypesAligned={setColumnTypesAligned}
             />
         </TabPanel>
     </Box>
