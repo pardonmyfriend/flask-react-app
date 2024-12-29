@@ -1,22 +1,22 @@
 import React from "react";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-
+import { Typography } from "@mui/material";
 import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 import DataPresentation from "../../components/plots/DataPresentation";
+import BarPlot from "../../components/plots/BarPlot";
+import Heatmap from "../../components/plots/Heatmap";
+import DataDescription from "../../components/plots/DataDescription";
 
-function AgglomerativeClustering({ aggData }) {
+function AgglomerativeClustering({ aggData, params }) {
     const renderAggDataframe = () => {
         const keys = Object.keys(aggData.cluster_dataframe[0]);
         
-        const orderedKeys = keys.includes('id') 
-            ? ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'] 
-            : [...keys.filter((key) => key !== 'cluster'), 'cluster'];
+        const orderedKeys = ['id', ...keys.filter((key) => key !== 'id' && key !== 'cluster'), 'cluster'];
 
         const cols = orderedKeys.map((key) => ({
             field: key,
             headerName: key.toUpperCase(),
-            width: 150,
+            ...(orderedKeys.length <= 6 ? { flex: 1 } : { width: 150 }),
         }));
 
         const rows = aggData.cluster_dataframe;
@@ -44,14 +44,18 @@ function AgglomerativeClustering({ aggData }) {
             y: aggData.pca_dataframe
                 .filter(row => row.cluster === cluster)
                 .map(row => row.PC2),
+            customdata: aggData.pca_dataframe
+                .filter(row => row.cluster === cluster)
+                .map(row => ({ id: row.id })),
             type: 'scatter',
             mode: 'markers',
-            name: cluster,
+            name: `Cluster ${cluster}`,
             marker: {
                 color: colorMap[cluster],
                 size: 7,
                 symbol: 'circle',
             },
+            hovertemplate: `%{customdata.id}: (%{x}, %{y})<extra>Cluster ${cluster}</extra>`,
         }));
 
         return (
@@ -64,161 +68,23 @@ function AgglomerativeClustering({ aggData }) {
         );
     };
 
-    const renderBarPlot = () => {
+    const renderClusterSizes = () => {
         const clusters = Object.keys(aggData.cluster_sizes);
         const clusterCounts = Object.values(aggData.cluster_sizes);
     
-        const mappedClusters = clusters.map((cluster) => 
-            cluster === "Noise" ? "Noise" : `Cluster ${cluster}`
-        );
-    
-        const data = [
-            {
-                x: mappedClusters,
-                y: clusterCounts,
-                type: "bar",
-                name: "Cluster sizes",
-                marker: {
-                    color: "#3FBDBD",
-                },
-            },
-        ];
+        const mappedClusters = clusters.map((cluster) => `Cluster ${cluster}`);
     
         return (
-            <ResponsivePlot
-                data={data}
-                layout={{
-                    autosize: true,
-                    title: "Cluster Sizes",
-                    xaxis: {
-                        title: "Cluster",
-                        automargin: true,
-                        showgrid: false,
-                        tickmode: "linear",
-                    },
-                    yaxis: {
-                        title: "Number of Points",
-                        automargin: true,
-                        showgrid: true,
-                    },
-                    hovermode: "closest",
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
-            />
-        );
-    };       
-
-    const renderHeatmap = () => {
-        const clusterLabels = aggData.inter_cluster_distances.index.map(
-            (label) => (label === "Noise" ? "Noise" : `Cluster ${label}`)
-        );
-    
-        return (
-            <ResponsivePlot
-                data={[
-                    {
-                        z: aggData.inter_cluster_distances.data,
-                        x: clusterLabels,
-                        y: clusterLabels,
-                        type: "heatmap",
-                        colorscale: "RdBu",
-                        text: aggData.inter_cluster_distances.data.map(row => row.map(value => value.toFixed(2))),
-                        hoverinfo: "text",
-                    },
-                ]}
-                layout={{
-                    title: "Inter-Cluster Distances Heatmap",
-                    annotations: aggData.inter_cluster_distances.data.flatMap((row, i) =>
-                        row.map((val, j) => ({
-                            x: clusterLabels[j],
-                            y: clusterLabels[i],
-                            text: val.toFixed(2),
-                            showarrow: false,
-                            font: { size: 10, color: "#000" },
-                        }))
-                    ),
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
-            />
-        );
-    };
-
-    const renderIntraClusterDistances = () => {
-        const clusters = aggData.intra_cluster_distances.map(item => item.cluster);
-        const distances = aggData.intra_cluster_distances.map(item => item['intra-cluster distance']);
-    
-        const data = [
-            {
-                x: clusters,
-                y: distances,
-                type: "bar",
-                name: "Intra-cluster Distances",
-                marker: {
-                    color: "#3FBDBD",
-                },
-            },
-        ];
-    
-        return (
-            <ResponsivePlot
-                data={data}
-                layout={{
-                    autosize: true,
-                    title: "Intra-cluster Distances",
-                    xaxis: {
-                        title: "Cluster",
-                        automargin: true,
-                        showgrid: false,
-                        tickmode: "linear",
-                    },
-                    yaxis: {
-                        title: "Average Distance",
-                        automargin: true,
-                        showgrid: true,
-                    },
-                    hovermode: "closest",
-                }}
-                config={{
-                    responsive: true,
-                    displayModeBar: true,
-                    displaylogo: false,
-                }}
+            <BarPlot 
+                xData={mappedClusters}
+                yData={clusterCounts}
+                title="Cluster Sizes"
+                xTitle="Cluster"
+                yTitle="Count"
             />
         );
     };
     
-
-    const renderCentroidsTable = () => {
-        const keys = Object.keys(aggData.centroids[0]);
-
-        const orderedKeys = keys.includes('id') 
-            ? ['id', 'cluster', ...keys.filter((key) => key !== 'id' && key !== 'cluster')] 
-            : ['cluster', ...keys.filter((key) => key !== 'cluster')];
-
-        const cols = orderedKeys.map(key => ({
-            field: key,
-            headerName: key.toUpperCase(),
-            flex: 1,
-        }));
-
-        const rows = aggData.centroids;
-    
-        return (
-            <DataPresentation
-                rows={rows}
-                cols={cols}
-            />
-        );
-    };
-
     const renderDendrogram = () => {
         const dendro = aggData.dendrogram_data;
 
@@ -320,50 +186,144 @@ function AgglomerativeClustering({ aggData }) {
             />
         );
     };
+
+    const renderIntraClusterDistances = () => {
+        const clusters = aggData.intra_cluster_distances.map(item => item.cluster);
+        const distances = aggData.intra_cluster_distances.map(item => item['intra-cluster distance']);
+        
+        const mappedClusters = clusters.map((cluster) => 
+            `Cluster ${cluster}`
+        );
     
-    const renderSilhouetteScores = () => (
-        <ResponsivePlot
-            data={[
-                {
-                    x: aggData.pca_dataframe.map(row => row.id),
-                    y: aggData.pca_dataframe.map(row => row.silhouette_score),
-                    type: "bar",
-                    marker: { color: "#3FBDBD" },
-                },
-            ]}
-            layout={{
-                title: "Silhouette Scores for Each Point",
-                xaxis: { title: "Point Index" },
-                yaxis: { title: "Silhouette Score" },
-            }}
-            config={{
-                responsive: true,
-                displayModeBar: true,
-                displaylogo: false,
-            }}
-        />
-    );
+        return (
+            <BarPlot 
+                xData={mappedClusters}
+                yData={distances}
+                title="Intra-cluster Distances"
+                xTitle="Cluster"
+                yTitle="Average Distance"
+            />
+        );
+    };
+
+    const renderInterClusterDistances = () => {
+        const clusterLabels = aggData.inter_cluster_distances.index.map(
+            (label) => ( `Cluster ${label}`)
+        );
+    
+        return (
+            <Heatmap 
+                xData={clusterLabels}
+                yData={clusterLabels}
+                zData={aggData.inter_cluster_distances.data}
+                title="Inter-Cluster Distances Heatmap"
+            />
+        );
+    };
+    
+    const renderSilhouetteScores = () => {
+        return (
+            <BarPlot 
+                xData={aggData.pca_dataframe.map(row => row.id)}
+                yData={aggData.pca_dataframe.map(row => row.silhouette_score)}
+                title="Silhouette Scores for Each Point"
+                xTitle="Point Index"
+                yTitle="Silhouette Score"
+                linear={false}
+            />
+        );
+    };
 
     const renderSilhouetteScore = () => (
-        <div>
-            <h3>Silhouette Score (Overall):</h3>
-            <p>
-                {aggData.silhouette_score}
-            </p>
-        </div>
+        <p>
+            <b>Silhouette Score (Overall):</b> {aggData.silhouette_score}
+        </p>
     );
 
     return (
         <div>
-            {renderAggDataframe()}
+            <h1>Agglomerative Clustering</h1>
+            <DataDescription
+                title={'Parameters'}
+                notExpanded={true}
+            >
+                <Typography 
+                    variant="body1" 
+                    sx={{ textAlign: 'left' }}
+                >
+                    {params && Object.keys(params).map((paramName) => (
+                        <span key={paramName}>
+                            <b>{paramName}</b>: { 
+                                typeof params[paramName] === 'boolean' 
+                                ? (params[paramName] ? 'true' : 'false')
+                                : params[paramName]
+                            }
+                            <br />
+                        </span>
+                    ))}
+                </Typography>
+            </DataDescription>
+            <DataDescription
+                title="Clustered Dataframe"
+                description="This table presents the dataset with an added 'cluster' column, representing the cluster assignment for each data point."
+            >
+                {renderAggDataframe()}
+            </DataDescription>
+
+            <DataDescription
+                title="PCA Scatter Plot of Clusters"
+                description="This scatter plot visualizes the clusters in the reduced-dimensional space using PCA for dimensionality reduction. Each cluster is represented by a unique color."
+            >
+                {renderScatterPlot()}
+            </DataDescription>
+
+            <DataDescription
+                title="Cluster Sizes"
+                description="This bar chart illustrates the sizes of each cluster, showing the number of data points assigned to each cluster."
+            >
+                {renderClusterSizes()}
+            </DataDescription>
+
+            <DataDescription
+                title="Dendrogram"
+                description="This dendrogram represents the hierarchical structure of the clusters, showing how clusters are merged at different levels of distance. A threshold line, if present, indicates the cut-off point for defining clusters."
+            >
+                {renderDendrogram()}
+            </DataDescription>
+
+            <DataDescription
+                title="Intra-Cluster Distances"
+                description="This bar chart displays the average intra-cluster distance for each cluster, representing the compactness of points within a cluster."
+            >
+                {renderIntraClusterDistances()}
+            </DataDescription>
+
+            <DataDescription
+                title="Inter-Cluster Distances Heatmap"
+                description="This heatmap shows the distances between cluster centroids, providing insight into the separation and relationships between clusters."
+            >
+                {renderInterClusterDistances()}
+            </DataDescription>
+
+            <DataDescription
+                title="Silhouette Scores"
+                description="The silhouette scores measure the quality of clustering by evaluating how well-separated and compact the clusters are. The bar chart visualizes the silhouette scores for individual points, highlighting their consistency within their respective clusters, while the overall silhouette score provides a single value summarizing the clustering quality across all data points."
+            >
+                <>
+                    {renderSilhouetteScores()}
+                    {renderSilhouetteScore()}
+                </>
+            </DataDescription>
+
+            {/* {renderAggDataframe()}
             {renderScatterPlot()}
+            {renderClusterSizes()}
             {renderDendrogram()}
-            {renderBarPlot()}
-            {/* {renderCentroidsTable()} */}
-            {renderSilhouetteScore()}
-            {/* {renderSilhouetteScores()} */}
-            {/* {renderIntraClusterDistances()} */}
-            {/* {renderHeatmap()} */}
+            {renderIntraClusterDistances()}
+            {renderInterClusterDistances()}
+            {renderSilhouetteScores()}
+            {renderSilhouetteScore()} */}
+            
         </div>
     );
 }

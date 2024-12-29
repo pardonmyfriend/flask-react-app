@@ -13,6 +13,7 @@ const Heatmap = ({ xData, yData, zData, title, xTitle, yTitle }) => {
                     colorscale: 'RdBu',
                     hoverongaps: false,
                     showscale: true,
+                    hoverinfo: 'none',
                     text: zData.map(row => row.map(value => value.toFixed(2))),
                     texttemplate: '%{text}',
                 },
@@ -27,6 +28,7 @@ const Heatmap = ({ xData, yData, zData, title, xTitle, yTitle }) => {
                 yaxis: {
                     title: yTitle,
                     automargin: true,
+                    autorange: 'reversed',
                 },
                 hovermode: 'closest',
             }}
