@@ -61,23 +61,23 @@ function Dashboard({ data, algorithmName, params, target }) {
 
     switch (algorithmName) {
       case 'PCA':
-        return <PCA pcaData={algorithmData} target={target} />;
+        return <PCA pcaData={algorithmData} target={target} params={params} />;
       case 't-SNE':
-        return <TSNE tsneData={algorithmData} target={target} />;
+        return <TSNE tsneData={algorithmData} target={target} params={params} />;
       case 'K-Means':
-        return <KMeans kmeansData={algorithmData} target={target} />;
+        return <KMeans kmeansData={algorithmData} params={params} />;
       case 'DBSCAN':
-          return <DBSCAN dbscanData={algorithmData} target={target} />;
+          return <DBSCAN dbscanData={algorithmData} params={params} />;
       case 'Agglomerative Clustering':
-        return <AgglomerativeClustering aggData={algorithmData} target={target} />;
+        return <AgglomerativeClustering aggData={algorithmData} params={params} />;
       case 'KNN':
-        return <KNN knnData={algorithmData} />;
+        return <KNN knnData={algorithmData} params={params} />;
       case 'Decision Tree':
-        return <DecisionTree treeData={algorithmData} />
+        return <DecisionTree treeData={algorithmData} params={params} />
       case 'SVM':
-        return <SVM svmData={algorithmData} />
+        return <SVM svmData={algorithmData} params={params} />
       default:
-        return <div>Nieznany algorytm: {algorithmName}</div>;
+        return <div>Unknown algorithm: {algorithmName}</div>;
     }
   };
 

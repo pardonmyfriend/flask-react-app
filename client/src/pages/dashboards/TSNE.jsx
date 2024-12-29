@@ -1,11 +1,12 @@
 import React from "react";
+import { Typography } from "@mui/material";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 import ScatterPlot3D from "../../components/plots/ScatterPlot3D";
 import HistogramPlot from "../../components/plots/HistogramPlot";
 import DataDescription from "../../components/plots/DataDescription";
 
-function TSNE({ tsneData, target }) {
+function TSNE({ tsneData, target, params }) {
     const renderTSNEDataframe = () => {
         const keys = Object.keys(tsneData.tsne_dataframe[0]);
 
@@ -52,6 +53,9 @@ function TSNE({ tsneData, target }) {
                 z: tsneData.tsne_dataframe
                     .filter(row => row[target] === group)
                     .map(row => row.F3),
+                customdata: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => ({ id: row.id })),
                 type: 'scatter3d',
                 mode: 'markers',
                 name: group,
@@ -60,6 +64,7 @@ function TSNE({ tsneData, target }) {
                     size: 5,
                     symbol: 'circle',
                 },
+                hovertemplate: `%{customdata.id}: (%{x}, %{y}, %{z})<extra>${group}</extra>`,
             }));
     
             return (
@@ -79,6 +84,9 @@ function TSNE({ tsneData, target }) {
                 y: tsneData.tsne_dataframe
                     .filter(row => row[target] === group)
                     .map(row => row.F2),
+                customdata: tsneData.tsne_dataframe
+                    .filter(row => row[target] === group)
+                    .map(row => ({ id: row.id })),
                 type: 'scatter',
                 mode: 'markers',
                 name: group,
@@ -87,6 +95,7 @@ function TSNE({ tsneData, target }) {
                     size: 7,
                     symbol: 'circle',
                 },
+                hovertemplate: `%{customdata.id}: (%{x}, %{y})<extra>${group}</extra>`,
             }));
     
             return (
@@ -148,14 +157,28 @@ function TSNE({ tsneData, target }) {
     }
 
     return (
-        // <div>
-        //     {renderTSNEDataframe()}
-        //     {renderScatterPlot()}
-        //     {renderHistogramForOriginalSpace()}
-        //     {renderHistogramForTSNESpace()}
-        //     {renderMetrics()}
-        // </div>
         <div>
+            <h1>t-SNE</h1>
+            <DataDescription
+                title={'Parameters'}
+                notExpanded={true}
+            >
+                <Typography 
+                    variant="body1" 
+                    sx={{ textAlign: 'left' }}
+                >
+                    {params && Object.keys(params).map((paramName) => (
+                        <span key={paramName}>
+                            <b>{paramName}</b>: { 
+                                typeof params[paramName] === 'boolean' 
+                                ? (params[paramName] ? 'true' : 'false')
+                                : params[paramName]
+                            }
+                            <br />
+                        </span>
+                    ))}
+                </Typography>
+            </DataDescription>
             <DataDescription
                 title="Transformed Data"
                 description="This table displays the data points after t-SNE transformation. Each row corresponds to a point represented in the reduced-dimensional space."
@@ -173,16 +196,10 @@ function TSNE({ tsneData, target }) {
             }
 
             <DataDescription
-                title="Histogram of Original Space Distances"
-                description="This histogram represents the distribution of pairwise distances in the original high-dimensional space."
+                title="Distribution of pairwise distances"
+                description="This histograms represent the distribution of pairwise distances in the original high-dimensional space and t-SNE reduced-dimensional space."
             >
                 {renderHistogramForOriginalSpace()}
-            </DataDescription>
-
-            <DataDescription
-                title="Histogram of t-SNE Space Distances"
-                description="This histogram shows the distribution of pairwise distances in the t-SNE reduced-dimensional space."
-            >
                 {renderHistogramForTSNESpace()}
             </DataDescription>
 

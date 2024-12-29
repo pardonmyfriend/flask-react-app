@@ -2,9 +2,9 @@ import React from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-function DataDescription({ title, description, children }) {
+function DataDescription({ title, description, children, notExpanded }) {
     return (
-        <Accordion defaultExpanded={true}>
+        <Accordion defaultExpanded={notExpanded ? false : true}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography variant="h6">{title}</Typography>
             </AccordionSummary>

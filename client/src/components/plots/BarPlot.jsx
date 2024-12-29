@@ -1,7 +1,7 @@
 import React from 'react';
 import ResponsivePlot from './ResponsivePlot';
 
-const ScatterPlot = ({ xData, yData, title, xTitle, yTitle, linear }) => {
+const BarPlot = ({ xData, yData, title, xTitle, yTitle, linear }) => {
     return (
         <ResponsivePlot
             data={[
@@ -37,4 +37,4 @@ const ScatterPlot = ({ xData, yData, title, xTitle, yTitle, linear }) => {
     );
 };
 
-export default ScatterPlot;
+export default BarPlot;
