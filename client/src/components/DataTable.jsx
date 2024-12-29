@@ -104,16 +104,25 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
             
             setColumnTypes(updatedColumnTypesRows);
 
-            const updatedCols = cols.map((item, index) => ({
+            // Zaktualizuj cols - dopasowanie na podstawie nazw kolumn
+          const updatedCols = cols.map((item) => {
+            const matchingColumnType = columnTypes.find(
+              ({ column }) => column.toLowerCase() === item.field.toLowerCase()
+            );
+            console.log("matchingColumnType", matchingColumnType)
+            console.log("matchingColumnType for", item.field, matchingColumnType);
+            // Przypisz dane z matchingColumnType, jeśli istnieje
+            return {
               ...item,
-              type: columnTypes[index].type,
-              class: columnTypes[index].class,
-              nullCount: columnTypes[index].nullCount,
-              handleNullValues: columnTypes[index].handleNullValues,
-              uniqueValuesCount: columnTypes[index].uniqueValuesCount,
-              uniqueValues: columnTypes[index].uniqueValues,
-              valueToFillWith: columnTypes[index].valueToFillWith
-            }))
+              type: matchingColumnType ? matchingColumnType.type : undefined,
+              class: matchingColumnType ? matchingColumnType.class : undefined,
+              nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+              handleNullValues: matchingColumnType ? matchingColumnType.handleNullValues : undefined,
+              uniqueValuesCount: matchingColumnType ? matchingColumnType.uniqueValuesCount : undefined,
+              uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+              valueToFillWith: matchingColumnType ? matchingColumnType.valueToFillWith : undefined,
+            };
+          });
             console.log("columns with types:", updatedCols);
             setIsDataLoaded(false);
             setData({
@@ -179,16 +188,26 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
             
             setColumnTypes(updatedColumnTypesRows);
 
-            const updatedCols = cols.map((item, index) => ({
+            // Zaktualizuj cols - dopasowanie na podstawie nazw kolumn
+          const updatedCols = cols.map((item) => {
+            // Znajdź pasującą kolumnę w updatedColumnTypesRows
+            const matchingColumnType = columnTypes.find(
+              ({ column }) => column.toLowerCase() === item.field.toLowerCase()
+            );
+            console.log("matchingColumnType", matchingColumnType)
+            console.log("matchingColumnType for", item.field, matchingColumnType);
+            // Przypisz dane z matchingColumnType, jeśli istnieje
+            return {
               ...item,
-              type: columnTypes[index].type,
-              class: columnTypes[index].class,
-              nullCount: columnTypes[index].nullCount,
-              handleNullValues: columnTypes[index].handleNullValues,
-              uniqueValuesCount: columnTypes[index].uniqueValuesCount,
-              uniqueValues: columnTypes[index].uniqueValues,
-              valueToFillWith: columnTypes[index].valueToFillWith
-            }))
+              type: matchingColumnType ? matchingColumnType.type : undefined,
+              class: matchingColumnType ? matchingColumnType.class : undefined,
+              nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+              handleNullValues: matchingColumnType ? matchingColumnType.handleNullValues : undefined,
+              uniqueValuesCount: matchingColumnType ? matchingColumnType.uniqueValuesCount : undefined,
+              uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+              valueToFillWith: matchingColumnType ? matchingColumnType.valueToFillWith : undefined,
+            };
+          });
             console.log("columns with types:", updatedCols);
             setIsDataLoaded(false);
             setData({
@@ -327,16 +346,26 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
           
           setColumnTypes(updatedColumnTypesRows);
 
-          const updatedCols = cols.map((item, index) => ({
-            ...item,
-            type: columnTypes[index].type,
-            class: columnTypes[index].class,
-            nullCount: columnTypes[index].nullCount,
-            handleNullValues: columnTypes[index].handleNullValues,
-            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
-            uniqueValues: columnTypes[index].uniqueValues,
-            valueToFillWith: columnTypes[index].valueToFillWith
-          }))
+          // Zaktualizuj cols - dopasowanie na podstawie nazw kolumn
+          const updatedCols = cols.map((item) => {
+            // Znajdź pasującą kolumnę w updatedColumnTypesRows
+            const matchingColumnType = columnTypes.find(
+              ({ column }) => column.toLowerCase() === item.field.toLowerCase()
+            );
+            console.log("matchingColumnType", matchingColumnType)
+            console.log("matchingColumnType for", item.field, matchingColumnType);
+            // Przypisz dane z matchingColumnType, jeśli istnieje
+            return {
+              ...item,
+              type: matchingColumnType ? matchingColumnType.type : undefined,
+              class: matchingColumnType ? matchingColumnType.class : undefined,
+              nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+              handleNullValues: matchingColumnType ? matchingColumnType.handleNullValues : undefined,
+              uniqueValuesCount: matchingColumnType ? matchingColumnType.uniqueValuesCount : undefined,
+              uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+              valueToFillWith: matchingColumnType ? matchingColumnType.valueToFillWith : undefined,
+            };
+          });
           console.log("columns with types:", updatedCols);
           setIsDataLoaded(false);
           setData({
@@ -348,7 +377,6 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
       .catch((error) => {
         console.error("Error during fetch:", error);
       });
-
   };
 
   const handleSelectColumnChange = (event, index) => {
@@ -464,16 +492,26 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
           
           setColumnTypes(updatedColumnTypesRows);
 
-          const updatedCols = cols.map((item, index) => ({
-            ...item,
-            type: columnTypes[index].type,
-            class: columnTypes[index].class,
-            nullCount: columnTypes[index].nullCount,
-            handleNullValues: columnTypes[index].handleNullValues,
-            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
-            uniqueValues: columnTypes[index].uniqueValues,
-            valueToFillWith: columnTypes[index].valueToFillWith
-          }))
+          // Zaktualizuj cols - dopasowanie na podstawie nazw kolumn
+          const updatedCols = cols.map((item) => {
+            // Znajdź pasującą kolumnę w updatedColumnTypesRows
+            const matchingColumnType = columnTypes.find(
+              ({ column }) => column.toLowerCase() === item.field.toLowerCase()
+            );
+            console.log("matchingColumnType", matchingColumnType)
+            console.log("matchingColumnType for", item.field, matchingColumnType);
+            // Przypisz dane z matchingColumnType, jeśli istnieje
+            return {
+              ...item,
+              type: matchingColumnType ? matchingColumnType.type : undefined,
+              class: matchingColumnType ? matchingColumnType.class : undefined,
+              nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+              handleNullValues: matchingColumnType ? matchingColumnType.handleNullValues : undefined,
+              uniqueValuesCount: matchingColumnType ? matchingColumnType.uniqueValuesCount : undefined,
+              uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+              valueToFillWith: matchingColumnType ? matchingColumnType.valueToFillWith : undefined,
+            };
+          });
           console.log("columns with types:", updatedCols);
           setIsDataLoaded(false);
           setData({
@@ -637,8 +675,6 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
           columnName={columnToDelete}
         />
       </Box>
-    );
-  }
-};
+    )}};
 
 export default DataTable;

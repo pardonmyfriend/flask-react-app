@@ -200,7 +200,7 @@ class Data:
         matching_row = df_defaultTypes[df_defaultTypes['column'] == col['column']]
         matching_row_index = df_defaultTypes[df_defaultTypes['column'] == col['column']].index
         print("3")
-        data = Data.get_data().copy()
+        data = pd.DataFrame(Data.get_data().copy())
         print("4")
         colName = col['column']
         print("5")
@@ -229,9 +229,9 @@ class Data:
                 print("A1")
                 #ZMIANA TYPU
                 #zmieniam typ kolumny w kopii data na string
-                data[colName] = data[colName].astype(str)
+                data.loc[:, colName] = data[colName].astype(str)
                 #zmieniam typ kolumny w kopii columnTypes na nominal lub categorical
-                matching_row['type'] = new_type
+                df_defaultTypes.loc[matching_row_index, 'type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 Data.set_columnTypes(df_defaultTypes)
@@ -259,7 +259,7 @@ class Data:
                 print("kolumna do enkodowania: ", colName)
                 print("dane przed enkodowaniem: ", data[colName])
                 print("całe dane przed enkodowaniem: ", data)
-                data[colName] = data[colName].astype(str)
+                data.loc[:, colName] = data[colName].astype(str)
                 data = pd.get_dummies(data, columns=[colName])
                 print("data po enkodowaniu: ", data)
                 #ZAPIS DANYCH I
@@ -276,7 +276,7 @@ class Data:
                     data[colName] = Data.handleNullValues(data[colName])
                 #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
-                matching_row['type'] = new_type
+                df_defaultTypes.loc[matching_row_index, 'type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 Data.set_columnTypes(df_defaultTypes)
@@ -307,7 +307,7 @@ class Data:
                     data[colName] = Data.handleNullValues(data[colName])
                 #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
-                matching_row['type'] = new_type
+                df_defaultTypes.loc[matching_row_index, 'type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 Data.set_columnTypes(df_defaultTypes)
