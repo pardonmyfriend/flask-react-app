@@ -22,7 +22,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
         fullWidth
         disableEscapeKeyDown
         >
-        <DialogTitle sx={{ textAlign: 'center' }}>{"Align column types and handle null values"}
+        <DialogTitle sx={{ textAlign: 'center' }}>{"Verify data type alignment and handle missing values"}
         </DialogTitle>
         <DialogContent>
 
@@ -187,7 +187,7 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                 <MenuItem key={index+20} value="Ignore">Ignore</MenuItem>
                 <MenuItem key={index+21} value="Drop rows">Drop rows</MenuItem>
                 <MenuItem key={index+22} value="Drop column">Drop column</MenuItem>
-                <MenuItem key={index+23} value="Fill with average value">Fill with average value</MenuItem>
+                <MenuItem key={index+23} value="Fill with average value">Fill with mean</MenuItem>
                 <MenuItem key={index+24} value="Fill with median">Fill with median</MenuItem>
                 <MenuItem key={index+25} value="Fill with specific value">Fill with specific value</MenuItem>
               </Select>

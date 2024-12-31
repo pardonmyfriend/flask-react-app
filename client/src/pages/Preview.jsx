@@ -48,7 +48,7 @@ const Preview = ({ data, columnTypes, onProceed }) => {
             position: "relative",
           }}
         >
-          Your file
+          Data preview
         </h2>
         <DataGrid
           key={rows.length}
