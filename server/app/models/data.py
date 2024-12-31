@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 class Data:
     data = None
@@ -104,14 +105,14 @@ class Data:
     
     @staticmethod
     def updateColumnTypes():
-        print("jestem w updateColumnTypes")
+        # print("jestem w updateColumnTypes")
     
         # Skopiowanie danych i typów kolumn
         data = Data.get_data().copy()
-        print("data", data)
+        # print("data", data)
         
         columnTypes = Data.get_columnTypes().copy()
-        print("columnTypes", columnTypes)
+        # print("columnTypes", columnTypes)
         
         # Zamiana columnTypes na DataFrame, jeśli jeszcze nim nie jest
         if not isinstance(columnTypes, pd.DataFrame):
@@ -119,11 +120,11 @@ class Data:
         
         # Zestaw nazw kolumn w danych
         columns = set(data.columns)
-        print("columns in data:", columns)
+        # print("columns in data:", columns)
         
         # Zestaw kolumn w columnTypes
         columnTypesColumns = set(columnTypes['column'])
-        print("columns in columnTypes:", columnTypesColumns)
+        # print("columns in columnTypes:", columnTypesColumns)
         
         # Sprawdzenie różnicy między kolumnami w data i columnTypes
         if columns != columnTypesColumns:
@@ -132,7 +133,7 @@ class Data:
             
             # Znalezienie kolumn do dodania
             columnsToAdd = columns - columnTypesColumns
-            print("columns to add:", columnsToAdd)
+            # print("columns to add:", columnsToAdd)
             
             # Tworzenie DataFrame dla brakujących kolumn
             new_columns = pd.DataFrame([
@@ -151,7 +152,7 @@ class Data:
             
             # Dodanie nowych kolumn do columnTypes
             columnTypes = pd.concat([columnTypes, new_columns], ignore_index=True)
-            print("updateColumnTypes - updated columnTypes:", columnTypes)
+            # print("updateColumnTypes - updated columnTypes:", columnTypes)
             
             # Zapis zaktualizowanego columnTypes
             Data.set_columnTypes(columnTypes)
@@ -377,7 +378,10 @@ class Data:
         non_null_data = data[col].dropna()
         
         # MinMaxScaler wymaga danych w formacie 2D, więc przekształcamy
-        scaler = MinMaxScaler(feature_range=(0, 1))
+        # scaler = MinMaxScaler(feature_range=(0, 1))
+        # normalized_values = scaler.fit_transform(non_null_data.values.reshape(-1, 1))
+
+        scaler = StandardScaler()
         normalized_values = scaler.fit_transform(non_null_data.values.reshape(-1, 1))
         
         # Tworzymy nową kolumnę z zachowaniem brakujących wartości
@@ -396,23 +400,31 @@ class Data:
         Data.set_data(data)
         Data.updateColumnTypes()
         columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
+        # tu jeszcze column types było git (tak samo w obu)
 
         # Wyświetlenie obu DataFrame
-        print("df_cols:")
-        print(df_cols)
+        # print("df_cols:")
+        # print(df_cols)
 
-        print("\ncolumnTypes:")
-        print(columnTypes)
+        # print("\ncolumnTypes:")
+        # print(columnTypes)
 
-        print("\ndata:")
-        print(data)
+        # print("\ndata:")
+        # print(data)
 
-        #iteracja po kolumnach i normalizacja tych, które są numerical
+        # iteracja po kolumnach i normalizacja tych, które są numerical
         for index, row in columnTypes.iterrows():
                 if row['column'] == 'id':  # Jeśli kolumna ma wartość 'id', pomiń ten wiersz
                     continue  # Pomiń dalszą część iteracji dla tego wiersza
                 if row['type'] == 'numerical':
                     Data.normalize_column(row['column'])
+
+        if isinstance(Data.get_columnTypes(), list) and all(isinstance(item, dict) for item in Data.get_columnTypes()):
+            print('słowniki zamiast dataframe')
+            Data.set_columnTypes(pd.DataFrame(Data.get_columnTypes()))
+
+        print('columnTypes3\n', Data.get_columnTypes())
+        #po tym juz się nie zgadzają columnTypes wiec dodałam tego ifa powyżej
 
     @staticmethod
     def delete_column(df):
