@@ -127,6 +127,7 @@ def normalize_data():
             print("\nresultData:")
             print(resultData)
             resultColumnTypes = Data.get_columnTypes().copy()
+            print("resultColumnTypes", resultColumnTypes)
             result = {
                 "data": resultData.to_dict(orient="records"),
                 "types": resultColumnTypes.to_dict(orient="records")  

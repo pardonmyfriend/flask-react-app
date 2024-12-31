@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "ES2020", // Określa wersję ECMAScript do której będzie kompilowany kod
+      "module": "ESNext", // Określa moduł, który będzie używany (dla Playwrighta najlepiej ESNext)
+      "moduleResolution": "Node", // Określa, jak będą rozwiązywane moduły (opcja dla Node.js)
+      "strict": true, // Używa trybu "strict" dla pełnej walidacji kodu
+      "esModuleInterop": true, // Umożliwia importowanie modułów CommonJS
+      "skipLibCheck": true, // Pomija sprawdzanie typów w bibliotekach (przyspiesza kompilację)
+      "forceConsistentCasingInFileNames": true, // Wymusza jednolitą wielkość liter w nazwach plików
+      "resolveJsonModule": true, // Pozwala na importowanie plików JSON
+      "types": ["@playwright/test"] // Ustawia Playwright jako typy w projekcie
+    },
+    "include": [
+      "tests/**/*.ts" // Określa, które pliki TypeScript będą uwzględniane
+    ]
+  }
+  

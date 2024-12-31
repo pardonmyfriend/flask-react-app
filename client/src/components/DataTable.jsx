@@ -552,7 +552,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
               position: "relative",
             }}
           >
-            Your file
+            Data
             <Button
               variant="contained"
               onClick={handleNormalizeData}
