@@ -38,10 +38,11 @@ def upload_file():
         df = Data.read_data(file)
         if Data.validate_data(df):
             df = Data.map_data_id(df)
+            # print(df)
             Data.set_data(df)
             dat = Data.get_data()
-            print("\ndata:")
-            print(dat)
+            # print("\ndata:")
+            # print(dat)
             nullValuesAnalysis = Data.analyze_null_values(df)
             uniqueValuesAnalysis = Data.analyze_unique_values(df)
             uniqueValuesList = Data.unique_values_to_list(df)
@@ -60,15 +61,16 @@ def upload_file():
                 for item in columnTypesList
             ]
             Data.set_columnTypes(mappedColumnTypes)
-            print("mappedColumnTypes: ", mappedColumnTypes)
+            # print("\ncolumnTypes:\n", Data.get_columnTypes())
+            # print("mappedColumnTypes: ", mappedColumnTypes)
             df = Data.unify_types(df)
-            print("df:", df)
+            # print("df:", df)
             data = df.to_dict(orient='records')
             result = {
                 "data": data,
                 "types": mappedColumnTypes,
             }
-            print(jsonify(result))
+            # print(jsonify(result))
             return jsonify(result), 200
         else:
             return jsonify({"error":"Minimum number of rows: 10"}), 400
@@ -120,13 +122,15 @@ def normalize_data():
     else:
         try:
             data = res  # Parsowanie JSON
-            print("Received JSON:", data)
+            # print("Data:\n", data)
+            # print("Received JSON:", data)
             Data.normalize_numerical(data)
-            print("jestem po normalize_data w kontrolerze")
+            # print("jestem po normalize_data w kontrolerze")
             resultData = Data.get_data().copy()
-            print("\nresultData:")
-            print(resultData)
+            # print("\nresultData:\n")
+            # print(resultData)
             resultColumnTypes = Data.get_columnTypes().copy()
+            # print("ResultColumnTypes\n", resultColumnTypes)
             result = {
                 "data": resultData.to_dict(orient="records"),
                 "types": resultColumnTypes.to_dict(orient="records")  
@@ -134,7 +138,7 @@ def normalize_data():
 
         except json.JSONDecodeError:
             print("Invalid JSON data received.")
-        print("result", jsonify(result).get_data(as_text=True))
+        # print("result", jsonify(result).get_data(as_text=True))
         return jsonify(result), 200
     
 @data_blueprint.route('/delete_column', methods=['POST'])
