@@ -47,6 +47,8 @@ def load_dataset_service(name):
     df['target'] = pd.Categorical.from_codes(dataset.target, dataset.target_names)
 
     df = Data.map_data_id(df)
+    Data.set_data(df)
+    dat = Data.get_data()
 
     nullValuesAnalysis = Data.analyze_null_values(df)
     uniqueValuesAnalysis = Data.analyze_unique_values(df)
@@ -66,7 +68,7 @@ def load_dataset_service(name):
         for item in columnTypesList
     ]
     Data.set_columnTypes(mappedColumnTypes)
-    print("columnTypes:", Data.get_columnTypes())
+    # print("columnTypes:", Data.get_columnTypes())
     df = Data.unify_types(df)
     data = df.to_dict(orient='records')
 
