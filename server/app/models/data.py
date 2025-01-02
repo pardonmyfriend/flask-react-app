@@ -142,7 +142,7 @@ class Data:
                     'type': 'numerical',
                     'class': False,
                     'nullCount': 0,
-                    'handleNullValues': 'Ignore',
+                    'handleNullValues': 'Drop rows',
                     'uniqueValuesCount': 2,
                     'uniqueValues': [0, 1],
                     'valueToFillWith': None
@@ -270,7 +270,8 @@ class Data:
                 print("B1")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    data = pd.DataFrame(Data.get_data().copy())
                 #data[colName] = Data.handleNullValues(col)
                 print("colName", colName)
                 print("data[colName]", data[colName])
@@ -293,7 +294,8 @@ class Data:
                 print("B2")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    data = pd.DataFrame(Data.get_data().copy())
                 #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
@@ -311,7 +313,8 @@ class Data:
                 print("C1")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    data = pd.DataFrame(Data.get_data().copy())
                 #data[colName] = Data.handleNullValues(col)
                 #ONE-HOT
                 data = pd.get_dummies(data, columns=[colName])
@@ -324,7 +327,8 @@ class Data:
                 print("C2")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    data = pd.DataFrame(Data.get_data().copy())
                 #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
@@ -487,6 +491,12 @@ class Data:
         new_data = new_data.replace({np.nan: None})
         Data.set_data(new_data)
         Data.updateColumnTypes()
+
+    @staticmethod
+    def replaceNaN(df):
+        df = pd.DataFrame(df)
+        df = df.replace({np.nan: None})
+        return df
 
 
 

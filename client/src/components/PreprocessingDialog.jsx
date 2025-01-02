@@ -184,11 +184,11 @@ function PreprocessingDialog({ open, onClose, selectedOption, onSelectChange, co
                 }}
               >
                 {/* Opcje radzenia sobie z nullami */}
-                {cols[index].handleNullValues !== 'Drop rows' && (
+                {/* {cols[index].handleNullValues !== 'Drop rows' && (
                   <MenuItem key={index + 20} value="Ignore">Ignore</MenuItem>
-                )}
+                )} */}
                 <MenuItem key={index + 21} value="Drop rows">Drop rows</MenuItem>
-                <MenuItem key={index + 22} value="Drop column">Drop column</MenuItem>
+                {/* <MenuItem key={index + 22} value="Drop column">Drop column</MenuItem> */}
 
                 {/* Opcje zależne od typu kolumny */}
                 {cols[index].type === 'numerical' ? [

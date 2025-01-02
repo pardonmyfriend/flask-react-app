@@ -399,7 +399,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
         setSelectedColumn(null); // Resetuj wybraną kolumnę
       }
     }
-    newCols[index].handleNullValues = "Ignore";
+    newCols[index].handleNullValues = "Drop rows";
     setCols(newCols); // Ustawiamy stan
     console.log("newCols: ", newCols);
   };
@@ -448,7 +448,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
     } else {
       // Jeśli checkbox jest odznaczony:
       newCols[columnId].class = "false"; // Odznaczamy checkbox dla columnId
-      newCols[columnId].handleNullValues = "Ignore";
+      newCols[columnId].handleNullValues = "Drop rows";
     }
     setCols(newCols); // Ustawiamy stan
   };

@@ -53,7 +53,7 @@ def upload_file():
                     "type": types_dict.get(item["type"], "nominal"),
                     "class": 'false',
                     "nullCount": int(nullValuesAnalysis.get(item["column"], 0)),
-                    "handleNullValues": 'Ignore',
+                    "handleNullValues": 'Drop rows',
                     "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
                     "uniqueValues": uniqueValuesList.get(item["column"], []),
                     "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else 0
@@ -100,8 +100,9 @@ def set_types():
             Data.change_types(data)
             print("jestem po change_types w kontrolerze")
             resultData = Data.get_data().copy()
+            resultData = Data.replaceNaN(resultData)
             print("\nresultData:")
-            print(resultData)
+            print(pd.DataFrame(resultData))
             resultColumnTypes = Data.get_columnTypes().copy()
             result = {
                 "data": resultData.to_dict(orient="records"),
