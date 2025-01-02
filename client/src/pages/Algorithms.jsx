@@ -57,7 +57,7 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
       }
     })
     .catch(error => {
-      console.error(`Błąd podczas wywoływania ${algorithm}:`, error);
+      console.error(`Error for ${algorithm}:`, error);
     });
   };
 

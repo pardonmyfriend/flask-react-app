@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Fade from '@mui/material/Fade';
+import { Alert } from '@mui/material';
 
 
 const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned, columnTypesAligned }) => {
@@ -184,6 +185,19 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
 
   return (
     <>
+      {!file && !data && (
+        <Alert 
+          severity="info" 
+          sx={{ marginBottom: '20px', borderRadius: '10px', padding: '10px' }}
+        >
+          Please ensure your file is properly formatted: the first row should contain column names, and subsequent rows should include values for each column. Avoid null values where possible. The analyses focus on numeric data, but encoding categorical values is supported. You can include a target column for classification tasks.
+        </Alert>
+      )}
+      {data && !file && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          A dataset from the sample database has already been selected. To upload your own file, please remove the current selection first.
+        </Alert>
+      )}
       <Box
         {...getRootProps()}
         sx={{
@@ -210,7 +224,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
           </Typography>
         ) : data ? (
           <Typography variant="body1" color="text.secondary" sx={{ marginBottom: "16px" }}>
-            You have already selected a dataset. Please deselect it to upload your file.
+            File uploading not available.
           </Typography>
         ) : (
           <>
