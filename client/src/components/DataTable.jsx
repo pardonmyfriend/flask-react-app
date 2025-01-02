@@ -394,7 +394,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
         setSelectedColumn(null); // Resetuj wybraną kolumnę
       }
     }
-
+    newCols[index].handleNullValues = "Ignore";
     setCols(newCols); // Ustawiamy stan
     console.log("newCols: ", newCols);
   };
@@ -433,6 +433,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
       // Jeśli checkbox jest zaznaczony:
       newCols[columnId].type = "categorical";
       newCols[columnId].class = "true";
+      newCols[columnId].handleNullValues = "Drop rows";
       // Odznaczamy wszystkie inne kolumny
       newCols.forEach((col, index) => {
         if (index !== columnId) {
@@ -442,6 +443,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
     } else {
       // Jeśli checkbox jest odznaczony:
       newCols[columnId].class = "false"; // Odznaczamy checkbox dla columnId
+      newCols[columnId].handleNullValues = "Ignore";
     }
     setCols(newCols); // Ustawiamy stan
   };
@@ -562,7 +564,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
                 color: "black",
               }}
             >
-              Normalize
+              Standarize
             </Button>
             <Button
               variant="contained"

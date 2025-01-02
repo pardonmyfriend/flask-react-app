@@ -158,14 +158,19 @@ class Data:
             Data.set_columnTypes(columnTypes)
 
     @staticmethod
-    def handleNullValues(col):
+    def handleNullValues(colName, col, handleNullValues, valueToFillWith):
         print("jestem w handleNullValues")
-        colName = col['column']
-        data = Data.get_data().copy()
+        print("col", col)
+        #colName = col['column']
+        data = pd.DataFrame(Data.get_data().copy())
         columnTypes = Data.get_columnTypes().copy()
         if not isinstance(columnTypes, pd.DataFrame):
             columnTypes = pd.DataFrame(columnTypes)
-        handleNullValues = col['handleNullValues']
+        column_data = columnTypes.loc[columnTypes['column'] == colName]
+        print("column_data: ", column_data)
+        #handleNullValues = column_data['handleNullValues'].iloc[0]
+        print("handleNullValues: ", handleNullValues)
+        #handleNullValues = handleNullValues.iloc[1]
         print("handleNullValues: ", handleNullValues)
         print("data: ", data)
         if handleNullValues == 'Drop rows':
@@ -179,22 +184,30 @@ class Data:
             median = data[colName].median()
             data[colName] = data[colName].fillna(median)
         elif handleNullValues == 'Fill with specific value':
-            print("valueToFillWith", col['valueToFillWith'])
+            print("valueToFillWith", column_data['valueToFillWith'])
             print("data[colName]", data[colName])
-            valueToFillWith = col['valueToFillWith']
+            #valueToFillWith = column_data['valueToFillWith'].iloc[1]
             data[colName] = data[colName].fillna(valueToFillWith)
+        elif handleNullValues == 'Fill with most common value':
+            print("wypełniam najczęstszą wartością")
+            print("valueToFillWith", column_data['valueToFillWith'])
+            print("data[colName]", data[colName])
+            mostCommon = data[colName].mode()[0]
+            print(mostCommon)
+            data[colName] = data[colName].fillna(mostCommon)
         elif handleNullValues == 'Ignore':
             pass
         print("data bez nulli: ", data)
         column_data = columnTypes.loc[columnTypes['column'] == colName]
         if not column_data.empty and handleNullValues != 'Ignore':
             column_data['nullCount'] = 0
+            #data.loc[column_data.index, 'nullCount'] = 0
         Data.set_data(data)
         Data.set_columnTypes(columnTypes)
         print("data bez nulli po zapisie: ", Data.get_data())
     
     @staticmethod
-    def change_single_column_type(col, old_type, new_type):
+    def change_single_column_type(col, old_type, new_type, handleNullvalues, valueToFillWith):
         print("1")
         df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
         print("2")
@@ -229,17 +242,23 @@ class Data:
             if new_type == 'nominal' or new_type == 'categorical':
                 print("A1")
                 #ZMIANA TYPU
-                #zmieniam typ kolumny w kopii data na string
-                data.loc[:, colName] = data[colName].astype(str)
                 #zmieniam typ kolumny w kopii columnTypes na nominal lub categorical
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
                 #ZAPIS DANYCH I
                 Data.set_data(data)
                 Data.set_columnTypes(df_defaultTypes)
                 #UZUPELNIAM NULLE
+                print("czy są nulle:", data[colName].isnull().any())
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(data[colName])
+                    Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
+                    data = pd.DataFrame(Data.get_data().copy())
                 #data[colName] = Data.handleNullValues(col)
+                print("jestem po handleNullValues")
+                print("data", data)
+                #zmieniam typ kolumny w kopii data na string
+                data.loc[:, colName] = data[colName].astype(str)
+                print("jestem po zmianie na str")
+                print("data", data)
                 #ZAPIS DANYCH II
                 Data.set_data(data)
             else:
@@ -251,7 +270,7 @@ class Data:
                 print("B1")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(data[colName])
+                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                 #data[colName] = Data.handleNullValues(col)
                 print("colName", colName)
                 print("data[colName]", data[colName])
@@ -274,7 +293,7 @@ class Data:
                 print("B2")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(data[colName])
+                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                 #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
@@ -292,7 +311,7 @@ class Data:
                 print("C1")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(data[colName])
+                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                 #data[colName] = Data.handleNullValues(col)
                 #ONE-HOT
                 data = pd.get_dummies(data, columns=[colName])
@@ -305,7 +324,7 @@ class Data:
                 print("C2")
                 #UZUPELNIAM NULLE
                 if data[colName].isnull().any():
-                    data[colName] = Data.handleNullValues(data[colName])
+                    data[colName] = Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                 #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
@@ -325,7 +344,7 @@ class Data:
         df_cols = pd.DataFrame(df['cols']).drop(columns=['headerName', 'width'])
         df_cols = df_cols.rename(columns={'field': 'column'})
         df_defaultTypes = pd.DataFrame(Data.get_columnTypes().copy())
-        data = Data.get_data()
+        data = pd.DataFrame(Data.get_data().copy())
         data = data.replace({np.nan: None})
         df_cols = df_cols.replace({np.nan: None})
         df_defaultTypes = df_defaultTypes.replace({np.nan: None})
@@ -356,10 +375,15 @@ class Data:
                 print("matching row", df_defaultTypes[df_defaultTypes['column'] == row['column']])
                 if row['type'] != matching_row.iloc[0]['type']:
                     print("będę zmieniać typ i wypełniać nulle w kolumnie ", row['column'])
-                    Data.change_single_column_type(row, matching_row.iloc[0]['type'], row['type'])
+                    print("handleNullValues: ", row['handleNullValues'])
+                    print("valueToFillWith:", row['valueToFillWith'])
+                    Data.change_single_column_type(row, matching_row.iloc[0]['type'], row['type'], row['handleNullValues'], row['valueToFillWith'])
                 else:
                     print("będę wypełniać nulle w kolumnie ", row['column'])
-                    Data.handleNullValues(row)
+                    print("row", row)
+                    print("handleNullValues: ", row['handleNullValues'])
+                    print("valueToFillWith:", row['valueToFillWith'])
+                    Data.handleNullValues(row['column'], data[row['column']], row['handleNullValues'], row['valueToFillWith'])
                     #Data.set_data(df_cols)
         data = pd.DataFrame(Data.get_data().copy())
         data = data.replace({np.nan: None})
