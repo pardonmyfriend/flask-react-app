@@ -26,6 +26,8 @@ types_dict = {
 def load_dataset_by_name(name):
     if name == "iris":
         return load_iris(as_frame=True)
+    if name == "digits":
+        return load_digits(as_frame=True)
     elif name == "wine":
         return load_wine(as_frame=True)
     elif name == "breast_cancer":

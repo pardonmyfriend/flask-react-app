@@ -13,7 +13,6 @@ from sklearn.svm import SVC
 
 from sklearn.metrics import pairwise_distances, silhouette_score, silhouette_samples
 from sklearn.manifold import trustworthiness
-from sklearn.preprocessing import StandardScaler
 from sklearn.tree import _tree
 
 from scipy.stats import entropy
@@ -23,9 +22,6 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     accuracy_score,
-    roc_curve,
-    precision_recall_curve,
-    auc
 )
 
 def get_algorithm_info_service(algorithm_name, params, df, target):
@@ -178,9 +174,6 @@ def run_kmeans_service(df, params, target):
     df = pd.DataFrame(df)
     X, y = preprocess_data(df, target)
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
     kmeans = KMeans(
         n_clusters=params.get('n_clusters'),
         init=params.get('init'),
@@ -190,7 +183,7 @@ def run_kmeans_service(df, params, target):
         algorithm=params.get('algorithm'),
     )
     
-    clusters = kmeans.fit_predict(X_scaled)
+    clusters = kmeans.fit_predict(X)
     
     df_cluster = pd.DataFrame(X)
     df_cluster['cluster'] = clusters
@@ -198,7 +191,7 @@ def run_kmeans_service(df, params, target):
 
     cluster_sizes = df_cluster['cluster'].value_counts().to_dict()
 
-    silhouette_avg = silhouette_score(X_scaled, clusters)
+    silhouette_avg = silhouette_score(X, clusters)
 
     feature_columns = df_cluster.select_dtypes(include=[np.number]).columns.difference(['cluster', 'id'])
 
@@ -207,10 +200,9 @@ def run_kmeans_service(df, params, target):
     ).reset_index(name='intra-cluster distance')
 
     centroids = kmeans.cluster_centers_
-    centroids_original = scaler.inverse_transform(centroids)
 
     centroids_df = pd.DataFrame(
-        centroids_original, columns=X.columns
+        centroids, columns=X.columns
     ).reset_index().rename(columns={"index": "cluster"})
 
     centroid_matrix = centroids_df[feature_columns].values

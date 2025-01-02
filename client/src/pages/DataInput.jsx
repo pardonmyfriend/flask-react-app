@@ -4,8 +4,8 @@ import FileUploader from '../components/FileUploader';
 import Datasets from '../components/Datasets';
 import { AppBar, Tab, Tabs, Box } from '@mui/material';
 
-const DataInput = ({ file, setFile, selectedDataset, setSelectedDataset, data, setData, setColumnTypes, onProceed, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, columnTypesAligned, setColumnTypesAligned }) => {
-    const [activeTab, setActiveTab] = useState(0)
+const DataInput = ({ file, setFile, selectedDataset, setSelectedDataset, data, setData, setColumnTypes, onProceed, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, columnTypesAligned, setColumnTypesAligned, dataTab, setDataTab }) => {
+    const [activeTab, setActiveTab] = useState(dataTab);
 
   return (
     <Box>
@@ -51,6 +51,7 @@ const DataInput = ({ file, setFile, selectedDataset, setSelectedDataset, data, s
                 setAlgorithmSelected={setAlgorithmSelected}
                 columnTypesAligned={columnTypesAligned}
                 setColumnTypesAligned={setColumnTypesAligned}
+                setDataTab={setDataTab}
             />
         </TabPanel>
     </Box>
