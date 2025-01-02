@@ -49,7 +49,7 @@ const Preview = ({ data, columnTypes, onProceed }) => {
           }}
         >
           Data preview
-        </h2>
+        </h1>
         <DataGrid
           key={rows.length}
           rows={rows}

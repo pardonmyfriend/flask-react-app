@@ -56,7 +56,7 @@ def upload_file():
                     "handleNullValues": 'Ignore',
                     "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
                     "uniqueValues": uniqueValuesList.get(item["column"], []),
-                    "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else None
+                    "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else 0
                 }
                 for item in columnTypesList
             ]
