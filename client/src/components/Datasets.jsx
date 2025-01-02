@@ -8,11 +8,11 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
 
   const datasets = [
       { id: "iris", name: "Iris Dataset" },
-      { id: "digits", name: "Digits Dataset" },
       { id: "wine", name: "Wine Dataset" },
       { id: "breast_cancer", name: "Breast Cancer Dataset" },
-      { id: "california_housing", name: "California Housing Dataset" },
-      { id: "diabetes", name: "Diabetes Dataset" },
+      { id: "air_quality", name: "Air Quality Dataset" },
+      { id: "weather_forecast", name: "Weather Forecast Dataset" },
+      { id: "cancer", name: "Cancer Dataset" },
     ];
 
   const resetState = () => {

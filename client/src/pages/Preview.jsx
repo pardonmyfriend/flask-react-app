@@ -40,7 +40,7 @@ const Preview = ({ data, columnTypes, onProceed }) => {
     return (
       <Box>
         <ToastContainer position="top-right" autoClose={3000} />
-        <h2
+        <h1
           style={{
             display: "flex",
             justifyContent: "center",
@@ -63,7 +63,7 @@ const Preview = ({ data, columnTypes, onProceed }) => {
           showColumnVerticalBorder={true}
           disableColumnResize
           sx={{
-            height: '450px',
+            height: 700,
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: "bold",
               fontSize: "17px",
