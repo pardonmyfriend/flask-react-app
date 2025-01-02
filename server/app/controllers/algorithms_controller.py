@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify
+import pandas as pd
+from app.models.data import Data
 
 from app.services.algorithms_service import (
     get_algorithm_info_service,
@@ -36,11 +38,15 @@ def run_pca():
     target = request_data.get('target', '')
 
     print(params)
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
 
     try:
         response = run_pca_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
     
 
@@ -51,10 +57,15 @@ def run_tsne():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_tsne_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
 
 @algorithms_blueprint.route('/run_K-Means', methods=['POST'])
@@ -64,10 +75,15 @@ def run_kmeans():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_kmeans_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
     
 @algorithms_blueprint.route('/run_DBSCAN', methods=['POST'])
@@ -77,10 +93,15 @@ def run_dbscan():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_dbscan_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
     
 @algorithms_blueprint.route('/run_Agglomerative Clustering', methods=['POST'])
@@ -90,10 +111,15 @@ def run_agglomerative_clustering():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_agglomerative_clustering_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
     
 @algorithms_blueprint.route('/run_KNN', methods=['POST'])
@@ -103,10 +129,15 @@ def run_knn():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_knn_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
     
 @algorithms_blueprint.route('/run_Decision Tree', methods=['POST'])
@@ -116,10 +147,15 @@ def run_decision_tree():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_decision_tree_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
     
 @algorithms_blueprint.route('/run_SVM', methods=['POST'])
@@ -129,9 +165,14 @@ def run_svm():
     params = request_data.get('params', {})
     target = request_data.get('target', '')
 
+    print("df:", pd.DataFrame(df))
+    df = Data.replaceNaN(df)
+    print("df:", pd.DataFrame(df))
+
     try:
         response = run_svm_service(df, params, target)
         return jsonify(response), 200
     except ValueError as e:
+        print({'error': str(e)})
         return jsonify({'error': str(e)}), 400
 

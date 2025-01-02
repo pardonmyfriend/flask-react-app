@@ -71,6 +71,8 @@ const Summary = ({ data, target }) => {
   };
 
   const renderClassesCountsPlot = () => {
+    if (!analysis.target_analysis) return null;
+    
     const classes = Object.keys(analysis.target_analysis);
     const classesCounts = Object.values(analysis.target_analysis);
 

@@ -38,6 +38,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
     const fileExtension = file.name.split('.').pop().toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
       toast.error("Invalid file type. Please upload a CSV or Excel file.");
+      resetState();
       return false;
     }
     return true;
@@ -118,11 +119,35 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
         if (responseData.data && responseData.data.length > 0) {
           const data = responseData.data;
           console.log("data:", data);
+          //const columnTypes = responseData.types;
+
+          // Znalezienie nazwy kolumny, która ma target === true
+          // const targetColumn = columnTypes.find((col) => col.target === "true")?.column;
+          // console.log("TargeColumn:", targetColumn)
+
           const keys = Object.keys(data[0]);
 
           const orderedKeys = keys.includes('id') 
           ? ['id', ...keys.filter((key) => key !== 'id')] 
           : keys;
+
+          //  // Sortowanie kluczy: target na końcu, 'id' jako pierwszy (jeśli istnieje)
+          // const orderedKeys = [
+          //   ...keys.filter((key) => key !== 'id' && key !== targetColumn), // Wszystkie oprócz 'id' i target
+          //   'id', // 'id' jako pierwszy
+          //   targetColumn, // target jako ostatni
+          // ].filter(Boolean); // Usuwa undefined, gdy targetColumn jest pusty
+
+          // const orderedKeys = targetColumn
+          // ? [
+          //     'id', // 'id' zawsze na początku
+          //     ...keys.filter((key) => key !== 'id' && key !== targetColumn), // Pozostałe klucze bez 'id' i target
+          //     targetColumn, // targetColumn na końcu
+          //   ]
+          // : [
+          //     'id', // 'id' zawsze na początku
+          //     ...keys.filter((key) => key !== 'id'), // Pozostałe klucze bez 'id'
+          //   ];
           
           const cols = orderedKeys.map((key) => ({
             field: key,
@@ -138,16 +163,29 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
           
           setColumnTypes(updatedColumnTypesRows);
 
-          const updatedCols = cols.map((item, index) => ({
-            ...item,
-            type: columnTypes[index].type,
-            class: columnTypes[index].class,
-            nullCount: columnTypes[index].nullCount,
-            handleNullValues: columnTypes[index].handleNullValues,
-            uniqueValuesCount: columnTypes[index].uniqueValuesCount,
-            uniqueValues: columnTypes[index].uniqueValues,
-            valueToFillWith: columnTypes[index].valueToFillWith
-          }))
+          // Zaktualizuj cols - dopasowanie na podstawie nazw kolumn
+          console.log("columnTypes", columnTypes)
+          console.log("updatedColumnTypesRows", updatedColumnTypesRows)
+          const updatedCols = cols.map((item) => {
+            // Znajdź pasującą kolumnę w ColumnTypes
+            const matchingColumnType = columnTypes.find(
+              ({ column }) => column.toLowerCase() === item.field.toLowerCase()
+            );
+            console.log("matchingColumnType", matchingColumnType)
+            console.log("matchingColumnType for", item.field, matchingColumnType);
+            // Przypisz dane z matchingColumnType, jeśli istnieje
+            return {
+              ...item,
+              type: matchingColumnType ? matchingColumnType.type : undefined,
+              class: matchingColumnType ? matchingColumnType.class : undefined,
+              nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+              handleNullValues: matchingColumnType ? matchingColumnType.handleNullValues : undefined,
+              uniqueValuesCount: matchingColumnType ? matchingColumnType.uniqueValuesCount : undefined,
+              uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+              valueToFillWith: matchingColumnType ? matchingColumnType.valueToFillWith : undefined,
+            };
+          });
+
           console.log("columns with types:", updatedCols);
 
           setUploadProgress(100);
@@ -166,17 +204,21 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
                 background: "#3fbdbd",
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
             }});
+            resetState();
           } catch (e) {
               console.error('Błąd parsowania odpowiedzi błędu:', e);
+              resetState();
           }
         console.error('Błąd podczas przesyłania pliku');
         setUploadProgress(0);
+        resetState();
       }
     };
   
     xhr.onerror = () => {
       toast.error("Error connecting to the server. Please try again later.");
       setUploadProgress(0);
+      resetState();
     };
   
     xhr.send(formData);

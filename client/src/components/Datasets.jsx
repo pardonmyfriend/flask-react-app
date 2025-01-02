@@ -90,7 +90,10 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
             type: matchingColumnType ? matchingColumnType.type : undefined,
             class: matchingColumnType ? matchingColumnType.class : undefined,
             nullCount: matchingColumnType ? matchingColumnType.nullCount : undefined,
+            handleNullValues: matchingColumnType ? matchingColumnType.handleNullValues : undefined,
+            uniqueValuesCount: matchingColumnType ? matchingColumnType.uniqueValuesCount : undefined,
             uniqueValues: matchingColumnType ? matchingColumnType.uniqueValues : undefined,
+            valueToFillWith: matchingColumnType ? matchingColumnType.valueToFillWith : undefined,
           };
         });
 
