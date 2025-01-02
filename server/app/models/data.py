@@ -398,6 +398,8 @@ class Data:
         data = pd.DataFrame(df['rows'])
         data = data.replace({np.nan: None})
         Data.set_data(data)
+        print('data\n', Data.get_data())
+        print('columnTypes1\n', Data.get_columnTypes())
         Data.updateColumnTypes()
         columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
         # tu jeszcze column types było git (tak samo w obu)

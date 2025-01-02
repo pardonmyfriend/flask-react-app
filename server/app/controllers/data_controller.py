@@ -201,6 +201,10 @@ def get_data_summary():
     target = request_data.get('target', '')
     
     df = pd.DataFrame(df)
+    print(df)
+    rows_with_nan = df[df.isna().any(axis=1)]
+    print(rows_with_nan)
+
     df = df.drop(columns=['id'], errors='ignore')
 
     try:
@@ -212,6 +216,8 @@ def get_data_summary():
             # "missing_data": get_missing_data(df),
             # "distribution": get_distributions(df)
         }
+
+        print(response['basic_stats'])
         return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

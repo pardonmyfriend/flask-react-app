@@ -43,7 +43,9 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
       const targetColumn = updatedColumns.find((col) => col.class === "true");
       if (targetColumn) {
         console.log("Target column found:", targetColumn);
-        setTarget(targetColumn.field); // Ustawienie wartości field jako target
+        if (!target) {
+          setTarget(targetColumn.field); // Ustawienie wartości field jako target
+        }
       }
       else {
         console.log("No target column found or field is missing.");
@@ -242,11 +244,14 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
     renderHeader: () => (
       <div style={{ display: "flex", alignItems: "center" }}>
       {/* Jeśli column.class jest true, wyświetl ikonę przed nazwą */}
-      {column.class === "true" && (
+      {/* {column.class === "true" && (
+        <span style={{ marginRight: "8px" }}>🎯</span> // Ikona przed nazwą
+      )} */}
+      {column.field === target && (
         <span style={{ marginRight: "8px" }}>🎯</span> // Ikona przed nazwą
       )}
         {column.headerName}
-        {column.class !== "true" && column.field !== "id" && (
+        {column.field !== target && column.field !== "id" && (
         <IconButton
           aria-label={`Delete`}
           size="small"
@@ -506,15 +511,16 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
 
         <TabPanel value={activeTab} index={0}>
           <ToastContainer position="top-right" autoClose={3000} />
-          <h2
+          <Box
             style={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               position: "relative",
+              height: 50,
             }}
           >
-            Your file
+            {/* Data */}
             <Button
               variant="contained"
               onClick={handleNormalizeData}
@@ -538,7 +544,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
             >
               Delete selected
             </Button>
-          </h2>
+          </Box>
         
           <DataGrid
             key={rows.length + JSON.stringify(rows)}
@@ -557,7 +563,7 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
             apiRef={apiRef}
             onStateChange={handleStateChange}
             sx={{
-              height: 400,
+              height: 700,
               "& .MuiDataGrid-columnHeaderTitle": {
                 fontWeight: "bold",
                 fontSize: "17px",
