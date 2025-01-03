@@ -7,6 +7,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Fade from '@mui/material/Fade';
+import { Alert } from '@mui/material';
 
 
 const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned, columnTypesAligned }) => {
@@ -38,6 +39,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
     const fileExtension = file.name.split('.').pop().toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
       toast.error("Invalid file type. Please upload a CSV or Excel file.");
+      resetState();
       return false;
     }
     return true;
@@ -118,11 +120,35 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
         if (responseData.data && responseData.data.length > 0) {
           const data = responseData.data;
           console.log("data:", data);
+          //const columnTypes = responseData.types;
+
+          // Znalezienie nazwy kolumny, która ma target === true
+          // const targetColumn = columnTypes.find((col) => col.target === "true")?.column;
+          // console.log("TargeColumn:", targetColumn)
+
           const keys = Object.keys(data[0]);
 
           const orderedKeys = keys.includes('id') 
           ? ['id', ...keys.filter((key) => key !== 'id')] 
           : keys;
+
+          //  // Sortowanie kluczy: target na końcu, 'id' jako pierwszy (jeśli istnieje)
+          // const orderedKeys = [
+          //   ...keys.filter((key) => key !== 'id' && key !== targetColumn), // Wszystkie oprócz 'id' i target
+          //   'id', // 'id' jako pierwszy
+          //   targetColumn, // target jako ostatni
+          // ].filter(Boolean); // Usuwa undefined, gdy targetColumn jest pusty
+
+          // const orderedKeys = targetColumn
+          // ? [
+          //     'id', // 'id' zawsze na początku
+          //     ...keys.filter((key) => key !== 'id' && key !== targetColumn), // Pozostałe klucze bez 'id' i target
+          //     targetColumn, // targetColumn na końcu
+          //   ]
+          // : [
+          //     'id', // 'id' zawsze na początku
+          //     ...keys.filter((key) => key !== 'id'), // Pozostałe klucze bez 'id'
+          //   ];
           
           const cols = orderedKeys.map((key) => ({
             field: key,
@@ -179,17 +205,21 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
                 background: "#3fbdbd",
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
             }});
+            resetState();
           } catch (e) {
               console.error('Błąd parsowania odpowiedzi błędu:', e);
+              resetState();
           }
         console.error('Błąd podczas przesyłania pliku');
         setUploadProgress(0);
+        resetState();
       }
     };
   
     xhr.onerror = () => {
       toast.error("Error connecting to the server. Please try again later.");
       setUploadProgress(0);
+      resetState();
     };
   
     xhr.send(formData);
@@ -197,6 +227,19 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
 
   return (
     <>
+      {!file && !data && (
+        <Alert 
+          severity="info" 
+          sx={{ marginBottom: '20px', borderRadius: '10px', padding: '10px' }}
+        >
+          Please ensure your file is properly formatted: the first row should contain column names, and subsequent rows should include values for each column. Avoid null values where possible. The analyses focus on numeric data, but encoding categorical values is supported. You can include a target column for classification tasks.
+        </Alert>
+      )}
+      {data && !file && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          A dataset from the sample database has already been selected. To upload your own file, please remove the current selection first.
+        </Alert>
+      )}
       <Box
         {...getRootProps()}
         sx={{
@@ -223,7 +266,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
           </Typography>
         ) : data ? (
           <Typography variant="body1" color="text.secondary" sx={{ marginBottom: "16px" }}>
-            You have already selected a dataset. Please deselect it to upload your file.
+            File uploading not available.
           </Typography>
         ) : (
           <>

@@ -21,6 +21,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [algorithmSelected, setAlgorithmSelected] = useState(false);
   const [target, setTarget] = useState(null); //do zmiany
   const [algTab, setAlgTab] = useState(0);
+  const [dataTab, setDataTab] = useState(0);
 
   const totalSteps = steps.length;
   const completedSteps = Object.keys(completed).length;
@@ -100,6 +101,8 @@ function ProgressStepper({ steps, stepContent }) {
               setColumnTypes: setColumnTypes,
               algTab: algTab,
               setAlgTab: setAlgTab,
+              dataTab: dataTab,
+              setDataTab: setDataTab,
               target: target,
               setTarget: setTarget,
               columnTypesAligned: columnTypesAligned,

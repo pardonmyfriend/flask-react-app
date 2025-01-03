@@ -53,10 +53,10 @@ def upload_file():
                     "type": types_dict.get(item["type"], "nominal"),
                     "class": 'false',
                     "nullCount": int(nullValuesAnalysis.get(item["column"], 0)),
-                    "handleNullValues": 'Ignore',
+                    "handleNullValues": 'Drop rows',
                     "uniqueValuesCount": int(uniqueValuesAnalysis.get(item["column"], 0)),
                     "uniqueValues": uniqueValuesList.get(item["column"], []),
-                    "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else None
+                    "valueToFillWith": uniqueValuesList.get(item["column"], [])[0] if uniqueValuesList.get(item["column"], []) else 0
                 }
                 for item in columnTypesList
             ]
@@ -100,8 +100,9 @@ def set_types():
             Data.change_types(data)
             print("jestem po change_types w kontrolerze")
             resultData = Data.get_data().copy()
+            resultData = Data.replaceNaN(resultData)
             print("\nresultData:")
-            print(resultData)
+            print(pd.DataFrame(resultData))
             resultColumnTypes = Data.get_columnTypes().copy()
             result = {
                 "data": resultData.to_dict(orient="records"),
@@ -201,6 +202,10 @@ def get_data_summary():
     target = request_data.get('target', '')
     
     df = pd.DataFrame(df)
+    print(df)
+    rows_with_nan = df[df.isna().any(axis=1)]
+    print(rows_with_nan)
+
     df = df.drop(columns=['id'], errors='ignore')
 
     try:
@@ -212,6 +217,8 @@ def get_data_summary():
             # "missing_data": get_missing_data(df),
             # "distribution": get_distributions(df)
         }
+
+        print(response['basic_stats'])
         return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

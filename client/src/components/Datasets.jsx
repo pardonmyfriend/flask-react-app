@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { List, ListItemButton, ListItemText, Button, Box,  Chip, Alert } from '@mui/material';
 
-const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProceed, setColumnTypes, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned }) => {
+const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProceed, setColumnTypes, setTarget, setAlgTab, setAlgorithmName, setParams, setAlgorithmSelected, setColumnTypesAligned, setDataTab }) => {
   const [temporarySelectedDataset, setTemporarySelectedDataset] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const datasets = [
       { id: "iris", name: "Iris Dataset" },
-      { id: "digits", name: "Digits Dataset" },
       { id: "wine", name: "Wine Dataset" },
       { id: "breast_cancer", name: "Breast Cancer Dataset" },
-      { id: "california_housing", name: "California Housing Dataset" },
-      { id: "diabetes", name: "Diabetes Dataset" },
+      // { id: "air_quality", name: "Air Quality Dataset" },
+      // { id: "weather_forecast", name: "Weather Forecast Dataset" },
+      { id: "cancer", name: "Cancer Dataset" },
+      // { id: "digits", name: "Digits Dataset" },
     ];
 
   const resetState = () => {
@@ -24,6 +25,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
     setAlgorithmName('')
     setParams({})
     setAlgorithmSelected(false);
+    setDataTab(0);
     onProceed(false);
   };
 
@@ -103,6 +105,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
         console.log("updatedColumnTypesRows", updatedColumnTypesRows)
         setColumnTypes(updatedColumnTypesRows);
         setData({ rows: data, columns: updatedCols });
+        setDataTab(1);
         onProceed(true);
 
     } catch (err) {
@@ -126,7 +129,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
       )}
       <Box
         sx={{
-          maxHeight: 200,
+          maxHeight: 210,
           overflowY: "auto",
           border: "1px solid #ccc",
         }}

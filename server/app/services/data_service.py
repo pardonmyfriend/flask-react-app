@@ -3,11 +3,10 @@ from sklearn.datasets import (
     load_digits, 
     load_wine, 
     load_breast_cancer, 
-    fetch_california_housing, 
-    load_diabetes
 )
 import pandas as pd
 import numpy as np
+import os
 
 from app.models.data import Data
 
@@ -27,24 +26,41 @@ types_dict = {
 def load_dataset_by_name(name):
     if name == "iris":
         return load_iris(as_frame=True)
-    elif name == "digits":
+    if name == "digits":
         return load_digits(as_frame=True)
     elif name == "wine":
         return load_wine(as_frame=True)
     elif name == "breast_cancer":
         return load_breast_cancer(as_frame=True)
-    elif name == "california_housing":
-        return fetch_california_housing(as_frame=True)
-    elif name == "diabetes":
-        return load_diabetes(as_frame=True)
+    elif name == "air_quality":
+        file_path = os.path.join(os.path.dirname(__file__), 'datasets', 'air_quality_dataset.csv')
+        df = pd.read_csv(file_path)
+        df.rename(columns={'Air Quality': 'target'}, inplace=True)
+        df['id'] = range(1, len(df) + 1)
+        return df
+    elif name == "cancer":
+        file_path = os.path.join(os.path.dirname(__file__), 'datasets', 'cancer_dataset.csv')
+        df = pd.read_csv(file_path)
+        df.rename(columns={'diagnosis': 'target'}, inplace=True)
+        df['id'] = range(1, len(df) + 1)
+        return df
+    elif name == "weather_forecast":
+        file_path = os.path.join(os.path.dirname(__file__), 'datasets', 'weather_forecast_dataset.csv')
+        df = pd.read_csv(file_path)
+        df.rename(columns={'Rain': 'target'}, inplace=True)
+        df['id'] = range(1, len(df) + 1)
+        return df
     else:
         return None
     
 def load_dataset_service(name):
     dataset = load_dataset_by_name(name)
-    
-    df = pd.DataFrame(dataset.data, columns=dataset.feature_names)
-    df['target'] = pd.Categorical.from_codes(dataset.target, dataset.target_names)
+
+    if name == "air_quality" or name == "cancer" or name == "weather_forecast":
+        df = dataset
+    else:
+        df = pd.DataFrame(dataset.data, columns=dataset.feature_names)
+        df['target'] = pd.Categorical.from_codes(dataset.target, dataset.target_names)
 
     df = Data.map_data_id(df)
     Data.set_data(df)
