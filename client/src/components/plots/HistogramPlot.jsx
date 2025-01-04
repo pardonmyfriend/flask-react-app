@@ -16,6 +16,7 @@ const HistogramPlot = ({ xData, title, xTitle, yTitle}) => {
         title: title,
         xaxis: { title: xTitle },
         yaxis: { title: yTitle },
+        bargap: 0.05,
       }}
       config={{
         responsive: true,

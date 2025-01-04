@@ -115,9 +115,9 @@ function TSNE({ tsneData, target, params }) {
         return (
             <HistogramPlot 
                 xData={originalDistancesFlat}
-                title={"Histogram of distances in original space"}
+                title={"Histogram of Distances in Original Space"}
                 xTitle={"Distance"}
-                yTitle={"Pair count"}
+                yTitle={"Pair Count"}
             />
         );
     };
@@ -128,9 +128,9 @@ function TSNE({ tsneData, target, params }) {
         return (
             <HistogramPlot 
                 xData={tsneDistancesFlat}
-                title={"Histogram of distances in t-SNE space"}
+                title={"Histogram of Distances in t-SNE Space"}
                 xTitle={"Distance"}
-                yTitle={"Pair count"}
+                yTitle={"Pair Count"}
             />
         );
     };
@@ -196,7 +196,7 @@ function TSNE({ tsneData, target, params }) {
             }
 
             <DataDescription
-                title="Distribution of pairwise distances"
+                title="Distribution of Pairwise Distances"
                 description="This histograms represent the distribution of pairwise distances in the original high-dimensional space and t-SNE reduced-dimensional space."
             >
                 {renderHistogramForOriginalSpace()}

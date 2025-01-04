@@ -199,7 +199,7 @@ function AgglomerativeClustering({ aggData, params }) {
             <BarPlot 
                 xData={mappedClusters}
                 yData={distances}
-                title="Intra-cluster Distances"
+                title="Intra-Cluster Distances"
                 xTitle="Cluster"
                 yTitle="Average Distance"
             />
@@ -314,16 +314,6 @@ function AgglomerativeClustering({ aggData, params }) {
                     {renderSilhouetteScore()}
                 </>
             </DataDescription>
-
-            {/* {renderAggDataframe()}
-            {renderScatterPlot()}
-            {renderClusterSizes()}
-            {renderDendrogram()}
-            {renderIntraClusterDistances()}
-            {renderInterClusterDistances()}
-            {renderSilhouetteScores()}
-            {renderSilhouetteScore()} */}
-            
         </div>
     );
 }
