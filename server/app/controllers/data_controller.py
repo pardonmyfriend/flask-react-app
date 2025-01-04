@@ -6,7 +6,11 @@ from app.services.data_service import (
     get_basic_stats,
     analyze_target,
     get_correlation_matrix,
-    get_distributions
+    get_data_for_box_plot,
+    calculate_histograms,
+    analyze_categorical_features,
+    kolmogorov_smirnov_test,
+    calculate_skewness_and_kurtosis
 )
 import json
 
@@ -202,23 +206,24 @@ def get_data_summary():
     target = request_data.get('target', '')
     
     df = pd.DataFrame(df)
-    print(df)
-    rows_with_nan = df[df.isna().any(axis=1)]
-    print(rows_with_nan)
 
     df = df.drop(columns=['id'], errors='ignore')
+
+    for column in df.select_dtypes(include=['bool']).columns:
+        df[column] = df[column].astype(int)
 
     try:
         response = {
             "basic_stats": get_basic_stats(df),
             "target_analysis": analyze_target(df, target) if target else None,
             "correlation_matrix": get_correlation_matrix(df),
-            # "pair_plot": get_pair_plot_data(df, target) if target else None,
-            # "missing_data": get_missing_data(df),
-            # "distribution": get_distributions(df)
+            "box_plot": get_data_for_box_plot(df),
+            "histograms": calculate_histograms(df),
+            "categorical_features": analyze_categorical_features(df, target),
+            "skewness_and_kurtosis": calculate_skewness_and_kurtosis(df),
+            "kolmogorov_smirnov_test": kolmogorov_smirnov_test(df),
         }
 
-        print(response['basic_stats'])
         return jsonify(response), 200
     except ValueError as e:
         return jsonify({'error': str(e)}), 400

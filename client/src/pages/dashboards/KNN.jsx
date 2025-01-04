@@ -103,6 +103,11 @@ function KNN({ knnData, params }) {
                 xData={trainClasses}
                 yData1={trainCounts}
                 yData2={testCounts}
+                title={'Class Distribution in Train and Test Sets'}
+                name1={'Train Set'}
+                name2={'Test Set'}
+                xTitle={'Class'}
+                yTitle={'Count'}
             />
         );
     };

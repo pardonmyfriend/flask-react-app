@@ -7,6 +7,8 @@ from sklearn.datasets import (
 import pandas as pd
 import numpy as np
 import os
+from itertools import combinations
+from scipy.stats import kstest
 
 from app.models.data import Data
 
@@ -106,11 +108,47 @@ def get_correlation_matrix(df):
     corr = df.select_dtypes(include=[np.number]).corr()
     return corr.round(2).to_dict()
 
-def get_distributions(df):
-    print("get_distributions")
-    distributions = {}
-    for column in df.select_dtypes(include=[np.number]).columns:
-        distributions[column] = {
-            "histogram": df[column].dropna().value_counts(bins=10).to_dict()
+def get_data_for_box_plot(df):
+    numeric_df = df.select_dtypes(include='number').dropna()
+    return numeric_df.to_dict(orient='records')
+
+def calculate_histograms(data):
+    histograms = {}
+    for column in data.select_dtypes(include=[np.number]).columns:
+        histograms[column] = data[column].dropna().tolist()
+    return histograms
+
+def analyze_categorical_features(data, target=None):
+    categorical_analysis = {}
+    for column in data.select_dtypes(include=['object', 'category']).columns:
+        if column == target:
+            continue
+        
+        unique_values = data[column].nunique()
+        
+        if unique_values <= 10:
+            counts = data[column].value_counts()
+            categorical_analysis[column] = {
+                'labels': counts.index.tolist(),
+                'values': counts.values.tolist()
+            }
+    return categorical_analysis
+
+def kolmogorov_smirnov_test(data):
+    ks_results = {}
+    for column in data.select_dtypes(include=[np.number]).columns:
+        result = kstest(data[column].dropna(), 'norm')
+        ks_results[column] = {
+            'statistic': result.statistic,
+            'p_value': result.pvalue
         }
-    return distributions
+    return ks_results
+
+def calculate_skewness_and_kurtosis(data):
+    stats = {}
+    for column in data.select_dtypes(include=[np.number]).columns:
+        stats[column] = {
+            'skewness': data[column].skew(),
+            'kurtosis': data[column].kurtosis()
+        }
+    return stats
