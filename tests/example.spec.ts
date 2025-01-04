@@ -196,8 +196,7 @@ test('test3', async () => {
       await browser.close();
       });
 
-      test.only('test6', async () => {
-
+      test('test6', async () => {
         test.setTimeout(60000);
         const browser = await chromium.launch({ headless: false }); // Ustawienie headless: false
         const page = await browser.newPage();
@@ -226,6 +225,128 @@ test('test3', async () => {
         await browser.close();
         });
 
+        test('ShouldPerformKMeansSuccessfully', async () => {
+          const browser = await chromium.launch({ headless: false });
+          const page = await browser.newPage();
+          await page.goto('http://localhost:3000/');
+          await page.getByRole('button', { name: 'Get started!' }).click();
+          await page.getByRole('tab', { name: 'Choose dataset' }).click();
+          await page.getByRole('button', { name: 'Iris Dataset' }).click();
+          await page.getByRole('button', { name: 'CONFIRM' }).click();
+          await page.locator('button:nth-child(3)').click();
+          await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+          await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+          await page.getByRole('tab', { name: 'Cluster analysis' }).click();
+          await page.getByRole('button', { name: 'K-Means' }).click();
+          await page.getByRole('button', { name: 'Save' }).click();
+          await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+          await browser.close();
+          });
+
+  test('ShouldPerformPCASuccessfully', async () => {
+    const startTime = Date.now(); 
+    const browser = await chromium.launch({ headless: false });
+    const page = await browser.newPage();
+    await page.goto('http://localhost:3000/');
+    await page.getByRole('button', { name: 'Get started!' }).click();
+    await page.locator('input[type="file"]').setInputFiles('Iris.csv');
+    await page.getByRole('button').nth(3).click();
+    await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+    await page.getByRole('button', { name: 'PCA' }).click();
+    await page.getByRole('button', { name: 'Save' }).click();
+    await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+    await browser.close();
+    const endTime = Date.now(); 
+    const duration = (endTime - startTime) / 1000; 
+    console.log(`Test completed in ${duration.toFixed(2)} seconds.`);
+    });
+
+    test('ShouldPerformPCASuccessfully2', async () => {
+      test.setTimeout(100000);
+      const numOfRuns = 10; // liczba powtórzeń
+      let totalDuration = 0;
+    
+      for (let i = 0; i < numOfRuns; i++) {
+        const startTime = Date.now();
+    
+        const browser = await chromium.launch({ headless: false });
+        const page = await browser.newPage();
+    
+        // Wykonaj test
+        await page.goto('http://localhost:3000/');
+        await page.getByRole('button', { name: 'Get started!' }).click();
+        await page.locator('input[type="file"]').setInputFiles('Iris.csv');
+        await page.getByRole('button').nth(3).click();
+        await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+        await page.getByRole('button', { name: 'Apply' }).click();
+        await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+        await page.getByRole('button', { name: 'PCA' }).click();
+        await page.getByRole('button', { name: 'Save' }).click();
+        await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+    
+        await browser.close();
+    
+        const endTime = Date.now();
+        const duration = (endTime - startTime) / 1000;
+        totalDuration += duration; // dodaj czas trwania tego testu do sumy
+        console.log(`Run ${i + 1} completed in ${duration.toFixed(2)} seconds.`);
+      }
+    
+      const averageDuration = totalDuration / numOfRuns; // oblicz średni czas
+      console.log(`Average test duration over ${numOfRuns} runs: ${averageDuration.toFixed(2)} seconds.`);
+    });
+
+
+
+    test('ShouldPerformtSNESuccessfully', async () => {
+      const browser = await chromium.launch({ headless: false });
+      const page = await browser.newPage();
+      await page.goto('http://localhost:3000/');
+      await page.getByRole('button', { name: 'Get started!' }).click();
+      await page.locator('input[type="file"]').setInputFiles('Iris.csv');
+      await page.getByRole('button').nth(3).click();
+      await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+      await page.getByRole('button', { name: 'Apply' }).click();
+      await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+      await page.getByRole('button', { name: 't-SNE' }).click();
+      await page.getByRole('button', { name: 'Save' }).click();
+      await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+      await browser.close();
+      });
+
+      test.only('ShouldPerformtSNESuccessfully2', async () => {
+        test.setTimeout(100000);
+        const numOfRuns = 10; // liczba powtórzeń
+        let totalDuration = 0;
+      
+        for (let i = 0; i < numOfRuns; i++) {
+          const startTime = Date.now();
+      
+          const browser = await chromium.launch({ headless: false });
+          const page = await browser.newPage();
+          await page.goto('http://localhost:3000/');
+          await page.getByRole('button', { name: 'Get started!' }).click();
+          await page.locator('input[type="file"]').setInputFiles('Iris.csv');
+          await page.getByRole('button').nth(3).click();
+          await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+          await page.getByRole('button', { name: 'Apply' }).click();
+          await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+          await page.getByRole('button', { name: 't-SNE' }).click();
+          await page.getByRole('button', { name: 'Save' }).click();
+          await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+          await browser.close();
+      
+          const endTime = Date.now();
+          const duration = (endTime - startTime) / 1000;
+          totalDuration += duration; // dodaj czas trwania tego testu do sumy
+          console.log(`Run ${i + 1} completed in ${duration.toFixed(2)} seconds.`);
+        }
+      
+        const averageDuration = totalDuration / numOfRuns; // oblicz średni czas
+        console.log(`Average test duration over ${numOfRuns} runs: ${averageDuration.toFixed(2)} seconds.`);
+      });
   
 
     
