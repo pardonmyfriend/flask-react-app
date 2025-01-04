@@ -44,8 +44,8 @@ function ParamsDialog({ open, onClose, onSaveParams, algorithmName, paramsInfo, 
     };
 
     return (
-      <Box key={paramName} display="flex" alignItems="center" mb={2}>
-        <Typography variant="body1" component="label" sx={{ minWidth: '150px', marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+      <Box key={paramName} display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="body1" component="label" sx={{ minWidth: '170px', marginRight: '8px', display: 'flex', alignItems: 'center' }}>
           {paramName}
           {description && (
             <Tooltip title={description} arrow>

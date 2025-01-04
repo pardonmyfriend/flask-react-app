@@ -298,7 +298,7 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
 
       {file && (
         showSuccessBox || data ? (
-          <Fade in={showSuccessBox} timeout={1000}>
+          <Fade in={showSuccessBox} timeout={500}>
             <Box
               sx={{
                 display: "flex",

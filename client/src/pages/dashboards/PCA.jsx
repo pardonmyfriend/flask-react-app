@@ -174,13 +174,13 @@ function PCA({ pcaData, target, params }) {
                     autosize: true,
                     title: 'Explained Variance',
                     xaxis: {
-                        title: 'Principal component',
+                        title: 'Principal Component',
                         automargin: true,
                         showgrid: true,
                         zeroline: false,
                     },
                     yaxis: {
-                        title: 'Explained variance (%)',
+                        title: 'Explained Variance (%)',
                         automargin: true,
                         showgrid: true,
                         zeroline: false,

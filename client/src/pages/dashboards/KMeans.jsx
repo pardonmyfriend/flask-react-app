@@ -120,7 +120,7 @@ function KMeans({ kmeansData, params }) {
             <BarPlot 
                 xData={mappedClusters}
                 yData={distances}
-                title="Intra-cluster Distances"
+                title="Intra-Cluster Distances"
                 xTitle="Cluster"
                 yTitle="Average Distance"
             />

@@ -1,7 +1,7 @@
 import React from 'react';
 import ResponsivePlot from './ResponsivePlot';
 
-const BarPlotGroup = ({ xData, yData1, yData2 }) => {
+const BarPlotGroup = ({ xData, yData1, yData2, title, name1, name2, xTitle, yTitle }) => {
     return (
         <ResponsivePlot
             data = {[
@@ -9,27 +9,27 @@ const BarPlotGroup = ({ xData, yData1, yData2 }) => {
                     x: xData,
                     y: yData1,
                     type: 'bar',
-                    name: 'Train Set',
+                    name: name1,
                     marker: { color: 'rgba(63, 189, 189, 0.6)' },
                 },
                 {
                     x: xData,
                     y: yData2,
                     type: 'bar',
-                    name: 'Test Set',
+                    name: name2,
                     marker: { color: 'rgba(76, 125, 157, 0.6)' },
                 }
             ]}
             layout = {{
-                title: 'Class Distribution in Train and Test Sets',
+                title: title,
                 barmode: 'group',
-                xaxis: { title: 'Classes' },
-                yaxis: { title: 'Counts' },
+                xaxis: { title: xTitle },
+                yaxis: { title: yTitle },
                 legend: {
                     orientation: 'h',
                     x: 0.5,
                     xanchor: 'center',
-                    y: -0.2,
+                    y: -0.3,
                 },
             }}
             config={{
