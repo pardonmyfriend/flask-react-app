@@ -1,6 +1,5 @@
 import React from 'react'
 import { Typography } from '@mui/material';
-import ResponsivePlot from "../../components/plots/ResponsivePlot";
 import DataPresentation from "../../components/plots/DataPresentation";
 import ScatterPlot from "../../components/plots/ScatterPlot";
 import BarPlotGroup from '../../components/plots/BarPlotGroup';
@@ -86,7 +85,7 @@ function KNN({ knnData, params }) {
         return (
             <ScatterPlot
                 data={[...data, incorrectPoints]}
-                title={'Predicted classes visualized with PCA'}
+                title={'Predicted Classes Visualized with PCA'}
                 xTitle={'PC1'}
                 yTitle={'PC2'}
             />

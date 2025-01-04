@@ -87,7 +87,7 @@ function DecisionTree({ treeData, params }) {
         return (
             <ScatterPlot
                 data={[...data, incorrectPoints]}
-                title={'Predicted classes visualized with PCA'}
+                title={'Predicted Classes Visualized with PCA'}
                 xTitle={'PC1'}
                 yTitle={'PC2'}
             />
@@ -190,7 +190,7 @@ function DecisionTree({ treeData, params }) {
                     yaxis: { showgrid: false, zeroline: false, visible: false },
                     showlegend: false,
                 }}
-                bigger={true}
+                divHeight={'700px'}
             />
         );
     };

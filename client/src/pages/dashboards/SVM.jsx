@@ -84,7 +84,7 @@ function SVM({ svmData, params }) {
         return (
             <ScatterPlot
                 data={[...data, incorrectPoints]}
-                title={'Predicted classes visualized with PCA'}
+                title={'Predicted Classes Visualized with PCA'}
                 xTitle={'PC1'}
                 yTitle={'PC2'}
             />
