@@ -316,7 +316,60 @@ test('test3', async () => {
       await browser.close();
       });
 
-      test.only('ShouldPerformtSNESuccessfully2', async () => {
+      test.only('ShouldDropRowsSuccessfully', async () => {
+      test.setTimeout(100000);
+      const numOfRuns = 10; // liczba powtórzeń
+      let totalDuration = 0;
+    
+      for (let i = 0; i < numOfRuns; i++) {
+        const startTime = Date.now();
+    
+        const browser = await chromium.launch({ headless: false });
+        const page = await browser.newPage();
+        await page.goto('http://localhost:3000/');
+        await page.getByRole('button', { name: 'Get started!' }).click();
+        await page.locator('input[type="file"]').setInputFiles('Iris(1).csv');
+        await page.getByRole('button').nth(3).click();
+        const numberBeforeDrop = page.locator('p.MuiTablePagination-displayedRows');
+        const elementText1 = await numberBeforeDrop.textContent();
+
+        const match1 = elementText1?.match(/–10 of (\d+)/);
+
+          if (match1) {
+            const total = parseInt(match1[1], 10); 
+            console.log("total before Drop Rows: ", total)
+            expect(total).toBe(150); 
+          } else {
+            throw new Error('Nie udało się znaleźć liczby w tekście elementu');
+          }
+
+        await page.locator('div:nth-child(2) > button:nth-child(3)').click();
+        await page.getByRole('button', { name: 'Apply' }).click();
+        await page.waitForTimeout(2000); 
+        const numberAfterDrop = page.locator('p.MuiTablePagination-displayedRows');
+        const elementText = await numberAfterDrop.textContent();
+        const match = elementText?.match(/–10 of (\d+)/);
+          if (match) {
+            const total = parseInt(match[1], 10); 
+            console.log("total after Drop Rows: ", total)
+            expect(total).toBe(147); 
+          } else {
+            throw new Error('Could not find number in textContent');
+          }
+        await browser.close();
+    
+        const endTime = Date.now();
+        const duration = (endTime - startTime) / 1000;
+        totalDuration += duration; // dodaj czas trwania tego testu do sumy
+        console.log(`Run ${i + 1} completed in ${duration.toFixed(2)} seconds.`);
+      }
+    
+      const averageDuration = totalDuration / numOfRuns; // oblicz średni czas
+      console.log(`Average test duration over ${numOfRuns} runs: ${averageDuration.toFixed(2)} seconds.`);
+    });
+    
+
+      test('ShouldPerformtSNESuccessfully2', async () => {
         test.setTimeout(100000);
         const numOfRuns = 10; // liczba powtórzeń
         let totalDuration = 0;
