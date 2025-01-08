@@ -31,10 +31,6 @@ function App() {
         ) : (
           <ProgressStepper steps={pages} stepContent={pageContent} />
         )}
-        {/* <ProgressStepper 
-          steps={pages}
-          stepContent={pageContent}
-        /> */}
       </div>
     </ThemeProvider>
   );

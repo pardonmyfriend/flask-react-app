@@ -610,7 +610,7 @@ def run_decision_tree_service(df, params, target):
                     "feature": int(node["feature"]) if node["feature"] is not None else None,
                     "threshold": float(node["threshold"]) if node["threshold"] is not None else None,
                     "samples": int(node["samples"]),
-                    "value": [float(v) for v in node["value"][0]]  # Serializacja wartości w liściach
+                    "value": [float(v) for v in node["value"][0]]
                 }
                 for node in tree_structure["nodes"]
             ],

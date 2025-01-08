@@ -19,7 +19,7 @@ function ProgressStepper({ steps, stepContent }) {
   const [algorithmName, setAlgorithmName] = useState('');
   const [params, setParams] = useState({});
   const [algorithmSelected, setAlgorithmSelected] = useState(false);
-  const [target, setTarget] = useState(null); //do zmiany
+  const [target, setTarget] = useState(null);
   const [algTab, setAlgTab] = useState(0);
   const [dataTab, setDataTab] = useState(0);
 
@@ -43,7 +43,6 @@ function ProgressStepper({ steps, stepContent }) {
     newCompleted[activeStep] = true;
     setCompleted(newCompleted)
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    //setActiveStepFulfilled(0);
     setCanProceedToNextStep(false);
   };
 
@@ -127,7 +126,6 @@ function ProgressStepper({ steps, stepContent }) {
           <Fab 
             color="primary" 
             onClick={handleNext}
-            //disabled={activeStep === totalSteps - 1}
             disabled={!canProceedToNextStep}
             sx={{
               position: 'fixed',

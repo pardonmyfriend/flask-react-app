@@ -65,23 +65,19 @@ def upload_file():
                 for item in columnTypesList
             ]
             Data.set_columnTypes(mappedColumnTypes)
-            # print("\ncolumnTypes:\n", Data.get_columnTypes())
-            # print("mappedColumnTypes: ", mappedColumnTypes)
             df = Data.unify_types(df)
-            # print("df:", df)
             data = df.to_dict(orient='records')
             result = {
                 "data": data,
                 "types": mappedColumnTypes,
             }
-            # print(jsonify(result))
             return jsonify(result), 200
         else:
             return jsonify({"error":"Minimum number of rows: 10"}), 400
     else:
         return jsonify({"error":"Unsupported file type"}), 400
     
-@data_blueprint.route('/load_dataset/<string:dataset>', methods=['POST'])
+@data_blueprint.route('/load_dataset/<string:dataset>', methods=['GET'])
 def load_dataset(dataset):
     try:
         response = load_dataset_service(dataset)

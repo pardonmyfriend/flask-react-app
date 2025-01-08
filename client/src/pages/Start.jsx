@@ -14,7 +14,6 @@ const StartPage = ({ onClick }) => {
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        // background: 'linear-gradient(135deg, #3FBDBD, #2D91A3)',
         color: '#ffffff',
         textAlign: 'center',
         overflow: 'hidden',
@@ -27,8 +26,6 @@ const StartPage = ({ onClick }) => {
           borderRadius: '16px',
           padding: '30px',
           width: '80%',
-        //   maxWidth: '800px',
-        //   boxShadow: '0px 8px 20px rgba(0, 0, 0, 0.3)',
         }}
       >
         <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>
@@ -40,9 +37,6 @@ const StartPage = ({ onClick }) => {
           provides an intuitive, step-by-step interface to turn raw data into meaningful insights.
         </Typography>
         <Divider sx={{ mb: 2, borderColor: 'rgba(255, 255, 255, 0.3)' }} />
-        {/* <Typography variant="h4" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
-          Features
-        </Typography> */}
         <List sx={{ color: 'white' }}>
           {[
             "Upload your data or choose from sample datasets.",

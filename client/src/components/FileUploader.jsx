@@ -120,35 +120,12 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
         if (responseData.data && responseData.data.length > 0) {
           const data = responseData.data;
           console.log("data:", data);
-          //const columnTypes = responseData.types;
-
-          // Znalezienie nazwy kolumny, która ma target === true
-          // const targetColumn = columnTypes.find((col) => col.target === "true")?.column;
-          // console.log("TargeColumn:", targetColumn)
 
           const keys = Object.keys(data[0]);
 
           const orderedKeys = keys.includes('id') 
           ? ['id', ...keys.filter((key) => key !== 'id')] 
           : keys;
-
-          //  // Sortowanie kluczy: target na końcu, 'id' jako pierwszy (jeśli istnieje)
-          // const orderedKeys = [
-          //   ...keys.filter((key) => key !== 'id' && key !== targetColumn), // Wszystkie oprócz 'id' i target
-          //   'id', // 'id' jako pierwszy
-          //   targetColumn, // target jako ostatni
-          // ].filter(Boolean); // Usuwa undefined, gdy targetColumn jest pusty
-
-          // const orderedKeys = targetColumn
-          // ? [
-          //     'id', // 'id' zawsze na początku
-          //     ...keys.filter((key) => key !== 'id' && key !== targetColumn), // Pozostałe klucze bez 'id' i target
-          //     targetColumn, // targetColumn na końcu
-          //   ]
-          // : [
-          //     'id', // 'id' zawsze na początku
-          //     ...keys.filter((key) => key !== 'id'), // Pozostałe klucze bez 'id'
-          //   ];
           
           const cols = orderedKeys.map((key) => ({
             field: key,
@@ -257,7 +234,6 @@ const FileUploader = ({ file, setFile, data, setData, setColumnTypes, onProceed,
           sx={{ fontSize: 60, color: "#474747", marginBottom: "20px" }}
         />
 
-        {/* <input {...getInputProps()} /> */}
         {isDragActive ? (
           <Typography variant="body1" sx={{ marginBottom: "16px" }}>Drop the file here...</Typography>
         ) : file ? (

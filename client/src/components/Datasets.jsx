@@ -42,7 +42,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
 
     try {
         const response = await fetch(`http://localhost:5000/data/load_dataset/${temporarySelectedDataset}`, {
-          method: 'POST',
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -74,14 +74,6 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
           column: column.toUpperCase(),
           type: type,
         }));
-
-        // const updatedCols = cols.map((item, index) => ({
-        //   ...item,
-        //   type: columnTypes[index].type,
-        //   class: columnTypes[index].class,
-        //   nullCount: columnTypes[index].nullCount,
-        //   uniqueValues: columnTypes[index].uniqueValues
-        // }))
 
         const updatedCols = cols.map((item) => {
           const matchingColumnType = columnTypes.find(
@@ -138,7 +130,7 @@ const Datasets = ({ selectedDataset, setSelectedDataset, data, setData, onProcee
           {datasets.map((dataset) => (
             <ListItemButton
               key={dataset.id}
-              disabled={Boolean(!!data && !selectedDataset)} // Disable if data exists and no selectedDataset
+              disabled={Boolean(!!data && !selectedDataset)}
               selected={temporarySelectedDataset === dataset.id}
               onClick={() => handleTemporarySelect(dataset.id)}
               sx={{

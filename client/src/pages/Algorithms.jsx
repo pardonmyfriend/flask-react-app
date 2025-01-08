@@ -38,7 +38,6 @@ function Algorithms({ onProceed, algorithmName, setAlgorithmName, params, setPar
     setParamsInfo({});
     setParams({})
     setAlgTab(activeTab)
-    // setAlgorithmSelected(false);
     fetch(`http://localhost:5000/algorithms/get_algorithm_info`, {
       method: 'POST',
       headers: {

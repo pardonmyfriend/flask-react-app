@@ -228,7 +228,7 @@ function DBSCAN({ dbscanData, params }) {
             >
                 <Typography 
                     variant="body1" 
-                    sx={{ textAlign: 'left' }} // Wyrównanie tylko dla tego przypadku
+                    sx={{ textAlign: 'left' }}
                 >
                     {params && Object.keys(params).map((paramName) => (
                         <span key={paramName}>
