@@ -149,7 +149,7 @@ function DecisionTree({ treeData, params }) {
         const allX = Object.values(positions).map(pos => pos.x);
         const xMin = Math.min(...allX);
         const xMax = Math.max(...allX);
-        const margin = 1; // Dodaj margines na tekst
+        const margin = 1;
 
         const getTextPosition = (nodeId) => {
             const parentEdge = treeData.tree_structure.edges.find(edge => edge.target === nodeId);

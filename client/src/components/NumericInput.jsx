@@ -6,10 +6,6 @@ function NumericInput({ min, max, defaultValue, step, precision, onChange, disab
   const [inputValue, setInputValue] = useState(defaultValue);
   const [isFocused, setIsFocused] = useState(false);
 
-  // useEffect(() => {
-  //   setInputValue(value);
-  // }, [value, disabled]);
-
   const roundToPrecision = (value) => {
     const factor = Math.pow(10, precision);
     return Math.round(value * factor) / factor;

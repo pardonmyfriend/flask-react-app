@@ -10,7 +10,7 @@
 }
 
 .App.no-padding {
-  padding: 0; /* Wyłącza padding dla strony startowej */
+  padding: 0;
   width: 100%;
   height: 100%;
   display: flex;
@@ -18,5 +18,4 @@
   justify-content: flex-start;
   align-items: center;
   box-sizing: border-box;
-  /* background-color: '#3FBDBD'; */
 }
