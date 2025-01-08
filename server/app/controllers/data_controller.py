@@ -81,7 +81,7 @@ def upload_file():
     else:
         return jsonify({"error":"Unsupported file type"}), 400
     
-@data_blueprint.route('/load_dataset/<string:dataset>', methods=['POST'])
+@data_blueprint.route('/load_dataset/<string:dataset>', methods=['GET'])
 def load_dataset(dataset):
     try:
         response = load_dataset_service(dataset)
