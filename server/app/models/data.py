@@ -220,11 +220,9 @@ class Data:
         print("5")
 
         #zmieniam class kolumny, jeśli class jest true
-        #matching_row['class'] = col['class']
         df_defaultTypes.loc[matching_row_index, 'class'] = col['class']
         print("6")
         #zmieniam handleNullValues
-        #matching_row['handleNullValues'] = col['handleNullValues']
         df_defaultTypes.loc[matching_row_index, 'handleNullValues'] = col['handleNullValues']
         print("7")
         #zmieniam valueToFill
@@ -232,7 +230,6 @@ class Data:
         print("8")
         print("col", col)
         print("col['valueToFill']", col['valueToFillWith'])
-        #matching_row['valueToFill'] = col['valueToFill']
         df_defaultTypes.loc[matching_row_index, 'valueToFillWith'] = col['valueToFillWith']
         print("9")
         if old_type == 'numerical':
@@ -272,7 +269,6 @@ class Data:
                 if data[colName].isnull().any():
                     Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                     data = pd.DataFrame(Data.get_data().copy())
-                #data[colName] = Data.handleNullValues(col)
                 print("colName", colName)
                 print("data[colName]", data[colName])
                 #ONE-HOT
@@ -296,7 +292,6 @@ class Data:
                 if data[colName].isnull().any():
                     Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                     data = pd.DataFrame(Data.get_data().copy())
-                #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
                 #ZAPIS DANYCH I
@@ -315,7 +310,6 @@ class Data:
                 if data[colName].isnull().any():
                     Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                     data = pd.DataFrame(Data.get_data().copy())
-                #data[colName] = Data.handleNullValues(col)
                 #ONE-HOT
                 data = pd.get_dummies(data, columns=[colName])
                 #ZAPIS DANYCH I
@@ -329,7 +323,6 @@ class Data:
                 if data[colName].isnull().any():
                     Data.handleNullValues(colName, data[colName], handleNullvalues, valueToFillWith)
                     data = pd.DataFrame(Data.get_data().copy())
-                #data[colName] = Data.handleNullValues(col)
                 #tylko nazwa typu się zmienia
                 df_defaultTypes.loc[matching_row_index, 'type'] = new_type
                 #ZAPIS DANYCH I
@@ -369,7 +362,6 @@ class Data:
                 continue  # Pomiń dalszą część iteracji dla tego wiersza
             print(f"index: {index}, row: {row}")
             print("jestem w forze przy kolumnie ", row['column'])
-            #match = any(d['column'] == row['column'] for d in df_defaultTypes)
             print("row[column]:", row['column'])
             print("df_defaultColumnTypes toList:", df_defaultTypes['column'].unique().tolist())
             if row['column'] in df_defaultTypes['column'].unique().tolist():
@@ -388,7 +380,6 @@ class Data:
                     print("handleNullValues: ", row['handleNullValues'])
                     print("valueToFillWith:", row['valueToFillWith'])
                     Data.handleNullValues(row['column'], data[row['column']], row['handleNullValues'], row['valueToFillWith'])
-                    #Data.set_data(df_cols)
         data = pd.DataFrame(Data.get_data().copy())
         data = data.replace({np.nan: None})
         Data.set_data(data)
@@ -430,17 +421,16 @@ class Data:
         print('columnTypes1\n', Data.get_columnTypes())
         Data.updateColumnTypes()
         columnTypes = pd.DataFrame(Data.get_columnTypes().copy())
-        # tu jeszcze column types było git (tak samo w obu)
 
         # Wyświetlenie obu DataFrame
-        # print("df_cols:")
-        # print(df_cols)
+        print("df_cols:")
+        print(df_cols)
 
-        # print("\ncolumnTypes:")
-        # print(columnTypes)
+        print("\ncolumnTypes:")
+        print(columnTypes)
 
-        # print("\ndata:")
-        # print(data)
+        print("\ndata:")
+        print(data)
 
         # iteracja po kolumnach i normalizacja tych, które są numerical
         for index, row in columnTypes.iterrows():
@@ -454,7 +444,6 @@ class Data:
             Data.set_columnTypes(pd.DataFrame(Data.get_columnTypes()))
 
         print('columnTypes3\n', Data.get_columnTypes())
-        #po tym juz się nie zgadzają columnTypes wiec dodałam tego ifa powyżej
 
     @staticmethod
     def delete_column(df):

@@ -241,10 +241,10 @@ const DataTable = ({ data, onProceed, onOpen, setData, setColumnTypes, target, s
 
   const handleStateChange = () => {
     const selectedIDs = apiRef.current.getSelectedRows();
-    const newSelectedRows = Array.from(selectedIDs.keys()); // Tworzy tablicę kluczy zaznaczonych wierszy.
+    const newSelectedRows = Array.from(selectedIDs.keys()); // Tworzy tablicę kluczy zaznaczonych wierszy
 
     if (JSON.stringify(newSelectedRows) !== JSON.stringify(selectedRows)) {
-      setSelectedRows(newSelectedRows); // Jeśli wartości są różne, aktualizuje stan.
+      setSelectedRows(newSelectedRows); // Jeśli wartości są różne, aktualizuje stan
     }
   };
 
